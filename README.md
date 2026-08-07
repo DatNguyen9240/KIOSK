@@ -1,0 +1,12 @@
+'Tính năng thu phí online:
+- Kết nối ví điện tử thu phí online
+- Báo cáo công nợ. (báo cáo công nợ ngày, báo cáo công nợ cần phải thu, báo cáo gia hạn theo trong ngày/tháng….)
+- Báo cáo chia theo từng Tháp (Tháp A1 – Tháp A2…..)
+- Tính năng nhắc gia hạn thẻ xe qua mail
+- Tính năng gia hạn thẻ tháng online: Cư dân vào hệ thống kiểm soát xe qua đường link web, và gia hạn thời gian giữ xe theo mong muốn, thanh toán phí và nhận phiếu thu.
+- Tính năng thanh toán phí giữ xe vãng lai online: Khách hàng thanh toán phí giữ xe qua kiosk (option) hoặc smart phone có kết nối internet bằng cách truy cập vào hệ thống thông qua link web, tìm xe bằng biển số, thanh toán phí giữ xe và nhận phiếu thu trước khi lấy xe ra khỏi bãi, quá thời gian lấy xe ra hệ thống sẽ yêu cầu thanh toán bổ sung.
+- Tìm xe trong hệ thống theo biển số xe, theo họ tên, theo số căn hộ (ra được toàn bộ xe trong 1 căn hộ), theo số thẻ xe.
+- Đăng ký thời gian dài, chọn theo tháng và tự động tính ra phí. (Chọn từ ngày đến ngày hoặc từ tháng đến tháng).
+- Tạo QRCode thu phí riêng cho từng giao dịch gia hạn hoặc xe vãng lai thanh toán phí. (Thời gian 120s để tạo lại 1 mã mới để đảm bảo an toàn)
+- Áp mã voucher giảm giá
+- App mobile kiểm soát xe vào ra tại trạm (dùng truong trường hợp máy trạm lỗi)
