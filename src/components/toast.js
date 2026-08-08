@@ -36,13 +36,21 @@ class ToastManager {
       info: 'ℹ'
     };
 
-    toast.className = `pointer-events-auto flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border transition-all duration-300 transform translate-y-2 opacity-0 text-sm font-medium ${styles[type] || styles.info}`;
+    toast.className = `pointer-events-auto relative flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border transition-all duration-300 transform translate-y-2 opacity-0 text-sm font-medium overflow-hidden ${styles[type] || styles.info}`;
 
     toast.innerHTML = `
       <span class="flex-shrink-0 w-6 h-6 rounded-full bg-white/20 flex items-center justify-center font-bold text-xs">${icons[type] || 'ℹ'}</span>
-      <span class="flex-1">${message}</span>
-      <button type="button" class="text-white/70 hover:text-white text-lg font-bold px-1 ml-2">&times;</button>
+      <span class="flex-1 text-sm">${message}</span>
+      <button type="button" class="self-center flex-shrink-0 text-white/60 hover:text-white text-base font-normal ml-1 transition" style="font-size:18px;line-height:1;padding:0;background:none;border:none;cursor:pointer;display:flex;align-items:center;position:relative;top:-1px;">&times;</button>
+      ${duration > 0 ? `<div class="absolute bottom-0 left-0 h-[3px] bg-white/30 rounded-full" style="width:100%;animation:toast-countdown ${duration}ms linear forwards"></div>` : ''}
     `;
+
+    if (!document.getElementById('toast-countdown-style')) {
+      const style = document.createElement('style');
+      style.id = 'toast-countdown-style';
+      style.textContent = `@keyframes toast-countdown { from { width: 100% } to { width: 0% } }`;
+      document.head.appendChild(style);
+    }
 
     const closeBtn = toast.querySelector('button');
     closeBtn.onclick = () => this.dismiss(toast);
