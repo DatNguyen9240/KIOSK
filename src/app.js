@@ -11,6 +11,8 @@ import { initMobileGateModule } from './modules/mobile-gate/index.js';
 import { toast } from './components/toast.js';
 import { UISelect } from './components/ui-select.js';
 import { UIDatepicker } from './components/ui-datepicker.js';
+import { UITable } from './components/ui-table.js';
+import { initRevenueChart, initTowerDonutChart } from './components/ui-chart.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainContentContainer = document.getElementById('main-app-content');
@@ -43,6 +45,51 @@ document.addEventListener('DOMContentLoaded', () => {
         toast.show(`Đã chọn: ${label}`, 'info');
       }
     });
+  }
+
+  // Notification Bell Handler (Auto-close on scroll & click outside, non-fixed positioning)
+  const notifBtn = document.getElementById('header-notif-btn');
+  const notifDropdown = document.getElementById('header-notif-dropdown');
+  const notifBadge = document.getElementById('header-notif-badge');
+  const notifCountPill = document.getElementById('notif-count-pill');
+  const markReadBtn = document.getElementById('mark-read-btn');
+
+  if (notifBtn && notifDropdown) {
+    const closeNotif = () => {
+      notifDropdown.classList.add('hidden');
+      window.removeEventListener('scroll', closeNotif);
+      document.removeEventListener('click', onClickOutside);
+    };
+
+    const onClickOutside = (e) => {
+      if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
+        closeNotif();
+      }
+    };
+
+    notifBtn.onclick = (e) => {
+      e.stopPropagation();
+      const isHidden = notifDropdown.classList.contains('hidden');
+
+      if (isHidden) {
+        notifDropdown.classList.remove('hidden');
+        window.addEventListener('scroll', closeNotif, { passive: true });
+        document.addEventListener('click', onClickOutside);
+      } else {
+        closeNotif();
+      }
+    };
+
+    if (markReadBtn) {
+      markReadBtn.onclick = () => {
+        if (notifBadge) notifBadge.classList.add('hidden');
+        if (notifCountPill) {
+          notifCountPill.textContent = '0 mới';
+          notifCountPill.className = 'px-2 py-0.5 bg-slate-100 text-slate-400 text-[10px] font-bold rounded-full';
+        }
+        toast.show('Đã đánh dấu đọc tất cả thông báo', 'success');
+      };
+    }
   }
 
   // Sidebar navigation active state handler
@@ -118,86 +165,12 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="lg:col-span-8 bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card space-y-4">
           <div class="flex items-center justify-between">
             <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Doanh thu theo ngày</h3>
-            <select class="px-3 py-1.5 bg-slate-50 border border-slate-200/80 rounded-xl text-xs font-bold text-slate-600 focus:outline-none">
-              <option>7 ngày qua</option>
-              <option>30 ngày qua</option>
-            </select>
+            <div id="chart-timeframe-select-wrap" class="w-32"></div>
           </div>
 
-          <!-- SVG Revenue Line Chart with Gradient Fill & Active Node Tooltip -->
-          <div class="relative h-[220px] w-full pt-4">
-            <svg class="w-full h-full overflow-visible" viewBox="0 0 600 180">
-              <defs>
-                <linearGradient id="chartGradient" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stop-color="#00A8CC" stop-opacity="0.35"/>
-                  <stop offset="100%" stop-color="#00A8CC" stop-opacity="0.0"/>
-                </linearGradient>
-              </defs>
-
-              <!-- Grid Lines -->
-              <line x1="40" y1="20" x2="580" y2="20" stroke="#F1F5F9" stroke-width="1.5" />
-              <text x="30" y="24" text-anchor="end" class="text-[10px] fill-slate-400 font-semibold">60M</text>
-
-              <line x1="40" y1="55" x2="580" y2="55" stroke="#F1F5F9" stroke-width="1.5" />
-              <text x="30" y="59" text-anchor="end" class="text-[10px] fill-slate-400 font-semibold">45M</text>
-
-              <line x1="40" y1="90" x2="580" y2="90" stroke="#F1F5F9" stroke-width="1.5" />
-              <text x="30" y="94" text-anchor="end" class="text-[10px] fill-slate-400 font-semibold">30M</text>
-
-              <line x1="40" y1="125" x2="580" y2="125" stroke="#F1F5F9" stroke-width="1.5" />
-              <text x="30" y="129" text-anchor="end" class="text-[10px] fill-slate-400 font-semibold">10M</text>
-
-              <line x1="40" y1="160" x2="580" y2="160" stroke="#E2E8F0" stroke-width="1.5" />
-              <text x="30" y="164" text-anchor="end" class="text-[10px] fill-slate-400 font-semibold">0</text>
-
-              <!-- Gradient Fill Area -->
-              <polygon points="
-                60,140
-                140,115
-                220,125
-                300,85
-                380,105
-                460,70
-                540,32
-                540,160
-                60,160" 
-                fill="url(#chartGradient)" />
-
-              <!-- Polyline Smooth Curve -->
-              <polyline fill="none" stroke="#00A8CC" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"
-                points="
-                  60,140
-                  140,115
-                  220,125
-                  300,85
-                  380,105
-                  460,70
-                  540,32" />
-
-              <!-- Data Dots -->
-              <circle cx="60" cy="140" r="4" fill="#FFFFFF" stroke="#00A8CC" stroke-width="2.5" />
-              <circle cx="140" cy="115" r="4" fill="#FFFFFF" stroke="#00A8CC" stroke-width="2.5" />
-              <circle cx="220" cy="125" r="4" fill="#FFFFFF" stroke="#00A8CC" stroke-width="2.5" />
-              <circle cx="300" cy="85" r="4" fill="#FFFFFF" stroke="#00A8CC" stroke-width="2.5" />
-              <circle cx="380" cy="105" r="4" fill="#FFFFFF" stroke="#00A8CC" stroke-width="2.5" />
-              <circle cx="460" cy="70" r="4" fill="#FFFFFF" stroke="#00A8CC" stroke-width="2.5" />
-              <circle cx="540" cy="32" r="5" fill="#00A8CC" stroke="#FFFFFF" stroke-width="2.5" />
-
-              <!-- Active Tooltip Pill on 08/05 (Matching demo-ui.png) -->
-              <g transform="translate(475, 8)">
-                <rect width="95" height="24" rx="12" fill="#00A8CC" />
-                <text x="47.5" y="16" text-anchor="middle" fill="#FFFFFF" font-size="11" font-weight="800">52.850.000 đ</text>
-              </g>
-
-              <!-- X-Axis Labels -->
-              <text x="60" y="176" text-anchor="middle" class="text-[10px] fill-slate-500 font-semibold">02/05</text>
-              <text x="140" y="176" text-anchor="middle" class="text-[10px] fill-slate-500 font-semibold">03/05</text>
-              <text x="220" y="176" text-anchor="middle" class="text-[10px] fill-slate-500 font-semibold">04/05</text>
-              <text x="300" y="176" text-anchor="middle" class="text-[10px] fill-slate-500 font-semibold">05/05</text>
-              <text x="380" y="176" text-anchor="middle" class="text-[10px] fill-slate-500 font-semibold">06/05</text>
-              <text x="460" y="176" text-anchor="middle" class="text-[10px] fill-slate-500 font-semibold">07/05</text>
-              <text x="540" y="176" text-anchor="middle" class="text-[10px] fill-slate-500 font-semibold">08/05</text>
-            </svg>
+          <!-- Chart.js Revenue Canvas -->
+          <div class="relative h-[220px] w-full pt-2">
+            <canvas id="revenue-chart-canvas"></canvas>
           </div>
         </div>
 
@@ -205,44 +178,37 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="lg:col-span-4 bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card flex flex-col justify-between space-y-4">
           <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Tower Breakdown</h3>
 
-          <!-- SVG Donut Chart with Center Text -->
-          <div class="relative flex items-center justify-center my-2">
-            <svg class="w-40 h-40" viewBox="0 0 100 100">
-              <!-- Segment 1: Tháp A1 (45%) -> Navy -->
-              <circle cx="50" cy="50" r="38" fill="transparent" stroke="#0B2C4D" stroke-width="14" stroke-dasharray="107.4 131.3" stroke-dashoffset="0" />
-              <!-- Segment 2: Tháp A2 (36%) -> Teal -->
-              <circle cx="50" cy="50" r="38" fill="transparent" stroke="#00A8CC" stroke-width="14" stroke-dasharray="85.9 152.8" stroke-dashoffset="-107.4" />
-              <!-- Segment 3: Tháp A3 (15%) -> Light Green -->
-              <circle cx="50" cy="50" r="38" fill="transparent" stroke="#7CB342" stroke-width="14" stroke-dasharray="35.8 202.9" stroke-dashoffset="-193.3" />
-            </svg>
-            <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span class="text-xs text-slate-400 font-bold">Tổng</span>
-              <span class="text-lg font-black text-slate-900 leading-tight">268.8 Tỷ</span>
+          <!-- Chart.js Donut Canvas with Center Text Overlay -->
+          <div class="relative flex items-center justify-center h-44 my-1">
+            <canvas id="tower-donut-canvas"></canvas>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full">
+              <div id="donut-center-label" class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5 leading-none">TỔNG DOANH THU</div>
+              <div id="donut-center-val" class="text-lg font-black text-[#0B2C4D] leading-none">258.04 Tỷ</div>
             </div>
           </div>
 
           <!-- Legends Breakdown List -->
           <div class="space-y-2 pt-2 border-t border-slate-100">
-            <div class="flex items-center justify-between text-xs font-semibold">
+            <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#0B2C4D]"></span>
                 <span class="text-slate-700">Tháp A1</span>
               </div>
-              <span class="font-bold text-slate-900">45%</span>
+              <span class="font-bold text-slate-900">45% (120.96 Tỷ)</span>
             </div>
-            <div class="flex items-center justify-between text-xs font-semibold">
+            <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#00A8CC]"></span>
                 <span class="text-slate-700">Tháp A2</span>
               </div>
-              <span class="font-bold text-slate-900">36%</span>
+              <span class="font-bold text-slate-900">36% (96.76 Tỷ)</span>
             </div>
-            <div class="flex items-center justify-between text-xs font-semibold">
+            <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
               <div class="flex items-center gap-2">
                 <span class="w-2.5 h-2.5 rounded-full bg-[#7CB342]"></span>
                 <span class="text-slate-700">Tháp A3</span>
               </div>
-              <span class="font-bold text-slate-900">15%</span>
+              <span class="font-bold text-slate-900">15% (40.32 Tỷ)</span>
             </div>
           </div>
         </div>
@@ -263,102 +229,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         <!-- Search Input -->
         <div class="relative">
-          <input type="text" id="debt-table-search" placeholder="Tìm tên cư dân, biển số..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
+          <input type="text" id="debt-table-search" placeholder="Tìm tên cư dân, biển số, căn hộ..." class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20" />
           <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         </div>
 
-        <!-- Data Table (Exact 5 rows matching demo-ui.png) -->
-        <div class="overflow-x-auto custom-scrollbar">
-          <table class="w-full text-left text-xs">
-            <thead class="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
-              <tr>
-                <th class="py-3 px-4 rounded-l-2xl">Cư dân</th>
-                <th class="py-3 px-4">Biển số</th>
-                <th class="py-3 px-4">Căn hộ</th>
-                <th class="py-3 px-4">Gói giữ xe</th>
-                <th class="py-3 px-4">Hết hạn</th>
-                <th class="py-3 px-4 rounded-r-2xl">Trạng thái</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-slate-100 font-semibold text-slate-800" id="debt-table-body">
-              
-              <!-- Row 1 -->
-              <tr class="hover:bg-slate-50/80 transition">
-                <td class="py-3.5 px-4 font-bold text-slate-900">Trần Văn Toàn</td>
-                <td class="py-3.5 px-4 font-mono font-bold text-slate-800">30F-124.55</td>
-                <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">A1-1005</span></td>
-                <td class="py-3.5 px-4 text-slate-600">Xe máy - 8 tháng</td>
-                <td class="py-3.5 px-4 text-slate-500">18/05/2024</td>
-                <td class="py-3.5 px-4">
-                  <span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-block">Đã thanh toán</span>
-                </td>
-              </tr>
-
-              <!-- Row 2 -->
-              <tr class="hover:bg-slate-50/80 transition">
-                <td class="py-3.5 px-4 font-bold text-slate-900">Nguyễn Thị Hằng</td>
-                <td class="py-3.5 px-4 font-mono font-bold text-slate-800">378-788-10</td>
-                <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">A3-0000</span></td>
-                <td class="py-3.5 px-4 text-slate-600">Ô tô - 12 tháng</td>
-                <td class="py-3.5 px-4 text-slate-500">20/05/2024</td>
-                <td class="py-3.5 px-4">
-                  <span class="px-3 py-1 bg-[#FEF0C7] text-[#DC6803] rounded-full font-extrabold text-[11px] inline-block">Chờ thanh toán</span>
-                </td>
-              </tr>
-
-              <!-- Row 3 -->
-              <tr class="hover:bg-slate-50/80 transition">
-                <td class="py-3.5 px-4 font-bold text-slate-900">Lù Văn Nam</td>
-                <td class="py-3.5 px-4 font-mono font-bold text-slate-800">514-222 22</td>
-                <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">A1-0012</span></td>
-                <td class="py-3.5 px-4 text-slate-600">Ô tô - 3 tháng</td>
-                <td class="py-3.5 px-4 text-slate-500">38/05/2024</td>
-                <td class="py-3.5 px-4">
-                  <span class="px-3 py-1 bg-[#FEE4E2] text-[#D92D20] rounded-full font-extrabold text-[11px] inline-block">Quá hạn</span>
-                </td>
-              </tr>
-
-              <!-- Row 4 -->
-              <tr class="hover:bg-slate-50/80 transition">
-                <td class="py-3.5 px-4 font-bold text-slate-900">Phạm Quang Huy</td>
-                <td class="py-3.5 px-4 font-mono font-bold text-slate-800">95C-867-89</td>
-                <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">A1-1006</span></td>
-                <td class="py-3.5 px-4 text-slate-600">Xe máy - 1 tháng</td>
-                <td class="py-3.5 px-4 text-slate-500">10/05/2024</td>
-                <td class="py-3.5 px-4">
-                  <span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-block">Đã thanh toán</span>
-                </td>
-              </tr>
-
-              <!-- Row 5 -->
-              <tr class="hover:bg-slate-50/80 transition">
-                <td class="py-3.5 px-4 font-bold text-slate-900">Vũ Phú Hùng</td>
-                <td class="py-3.5 px-4 font-mono font-bold text-slate-800">294-456-87</td>
-                <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">A1-1101</span></td>
-                <td class="py-3.5 px-4 text-slate-600">Ô tô - 5 tháng</td>
-                <td class="py-3.5 px-4 text-slate-500">10/05/2054</td>
-                <td class="py-3.5 px-4">
-                  <span class="px-3 py-1 bg-[#FEE4E2] text-[#912018] rounded-full font-extrabold text-[11px] inline-block">Nợ xấu</span>
-                </td>
-              </tr>
-
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Table Pagination Footer -->
-        <div class="flex items-center justify-between pt-3 border-t border-slate-100 text-xs text-slate-500 font-semibold">
-          <div>1 - 5 / 348</div>
-          <div class="flex items-center gap-1.5">
-            <button class="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-600">‹</button>
-            <button class="w-8 h-8 rounded-xl bg-[#0B2C4D] text-white font-bold flex items-center justify-center shadow-sm">1</button>
-            <button class="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-600">2</button>
-            <button class="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-600">3</button>
-            <span class="px-1 text-slate-400">...</span>
-            <button class="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-600">30</button>
-            <button class="w-8 h-8 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-600">›</button>
-          </div>
-        </div>
+        <!-- UITable Slot Container -->
+        <div id="dashboard-debt-table-wrap"></div>
 
       </div>
 
@@ -530,6 +406,102 @@ document.addEventListener('DOMContentLoaded', () => {
 
       </div>
     `;
+
+    // Initialize Revenue Line Chart
+    let revChartInstance = initRevenueChart(container.querySelector('#revenue-chart-canvas'), '7d');
+
+    // Initialize Timeframe UISelect
+    new UISelect({
+      container: container.querySelector('#chart-timeframe-select-wrap'),
+      options: [
+        { value: '7d', label: '7 ngày qua' },
+        { value: '30d', label: '30 ngày qua' }
+      ],
+      value: '7d',
+      onChange: (val, label) => {
+        if (revChartInstance) revChartInstance.destroy();
+        revChartInstance = initRevenueChart(container.querySelector('#revenue-chart-canvas'), val);
+        toast.show(`Cập nhật biểu đồ doanh thu: ${label}`, 'info');
+      }
+    });
+
+    // Donut Center Text Dynamic Elements
+    const donutLabel = container.querySelector('#donut-center-label');
+    const donutVal = container.querySelector('#donut-center-val');
+
+    const towerInfo = [
+      { label: 'THÁP A1 (45%)', val: '120.96 Tỷ' },
+      { label: 'THÁP A2 (36%)', val: '96.76 Tỷ' },
+      { label: 'THÁP A3 (15%)', val: '40.32 Tỷ' }
+    ];
+
+    // Initialize Tower Donut Chart with dynamic center hover text
+    initTowerDonutChart(container.querySelector('#tower-donut-canvas'), (idx) => {
+      if (!donutLabel || !donutVal) return;
+      if (idx !== null && towerInfo[idx]) {
+        donutLabel.textContent = towerInfo[idx].label;
+        donutVal.textContent = towerInfo[idx].val;
+      } else {
+        donutLabel.textContent = 'TỔNG DOANH THU';
+        donutVal.textContent = '258.04 Tỷ';
+      }
+    });
+
+    // Initialize UITable for Dashboard Debt Table
+    const dashboardDebtData = [
+      { residentName: 'Trần Văn Toàn', plateNumber: '30F-124.55', apartmentNumber: 'A1-1005', packageType: 'Xe máy - 8 tháng', dueDate: '18/05/2024', status: 'PAID' },
+      { residentName: 'Nguyễn Thị Hằng', plateNumber: '378-788-10', apartmentNumber: 'A3-0000', packageType: 'Ô tô - 12 tháng', dueDate: '20/05/2024', status: 'PENDING' },
+      { residentName: 'Lù Văn Nam', plateNumber: '514-222 22', apartmentNumber: 'A1-0012', packageType: 'Ô tô - 3 tháng', dueDate: '28/05/2024', status: 'EXPIRING_SOON' },
+      { residentName: 'Phạm Quang Huy', plateNumber: '95C-867-89', apartmentNumber: 'A1-1006', packageType: 'Xe máy - 1 tháng', dueDate: '10/05/2024', status: 'PAID' },
+      { residentName: 'Vũ Phú Hùng', plateNumber: '294-456-87', apartmentNumber: 'A1-1101', packageType: 'Ô tô - 5 tháng', dueDate: '10/05/2054', status: 'EXPIRING_SOON' },
+      { residentName: 'Hoàng Kim Anh', plateNumber: '30E-991.22', apartmentNumber: 'A2-0804', packageType: 'Ô tô - 6 tháng', dueDate: '01/06/2024', status: 'PAID' },
+      { residentName: 'Đỗ Tiến Đạt', plateNumber: '29A-773.19', apartmentNumber: 'A2-1502', packageType: 'Xe máy - 12 tháng', dueDate: '15/05/2024', status: 'PENDING' }
+    ];
+
+    const dashboardTable = new UITable({
+      container: container.querySelector('#dashboard-debt-table-wrap'),
+      pageSize: 5,
+      columns: [
+        { key: 'residentName', title: 'Cư dân', sortable: true, classNames: 'font-bold text-slate-900' },
+        { key: 'plateNumber', title: 'Biển số', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100/90 text-[#0B2C4D] font-mono font-bold rounded-lg border border-slate-200/50">${val}</span>` },
+        { key: 'apartmentNumber', title: 'Căn hộ', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">${val}</span>` },
+        { key: 'packageType', title: 'Gói giữ xe', sortable: true, classNames: 'text-slate-600' },
+        { key: 'dueDate', title: 'Hết hạn', sortable: true, classNames: 'text-slate-500 font-semibold' },
+        {
+          key: 'status', title: 'Trạng thái', sortable: true, render: (val) => {
+            if (val === 'PAID') return '<span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#027A48]"></span>Đã thanh toán</span>';
+            if (val === 'PENDING') return '<span class="px-3 py-1 bg-[#FEF0C7] text-[#DC6803] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#DC6803]"></span>Chờ thanh toán</span>';
+            return '<span class="px-3 py-1 bg-[#FEE4E2] text-[#D92D20] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#D92D20]"></span>Sắp hết hạn</span>';
+          }
+        },
+        {
+          key: 'actions', title: 'Thao tác', render: (_, row) => `
+            <button data-action="pay" class="px-3 py-1 bg-[#0B2C4D] hover:bg-slate-800 text-white rounded-xl text-[11px] font-bold shadow-xs transition">
+              Thanh toán
+            </button>
+          `
+        }
+      ],
+      data: dashboardDebtData,
+      onRowAction: (action, rowData) => {
+        if (action === 'pay') {
+          toast.show(`Mở cổng thanh toán cho ${rowData.residentName} (${rowData.plateNumber})`, 'info');
+        }
+      }
+    });
+
+    const searchInput = container.querySelector('#debt-table-search');
+    if (searchInput) {
+      searchInput.oninput = (e) => {
+        const q = e.target.value.toLowerCase().trim();
+        const filtered = dashboardDebtData.filter(d =>
+          d.residentName.toLowerCase().includes(q) ||
+          d.plateNumber.toLowerCase().includes(q) ||
+          d.apartmentNumber.toLowerCase().includes(q)
+        );
+        dashboardTable.setData(filtered);
+      };
+    }
 
     // Add interactivity to showcase buttons
     const payNowBtn = container.querySelector('#showcase-pay-now-btn');

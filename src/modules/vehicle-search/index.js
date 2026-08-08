@@ -6,6 +6,7 @@ import { searchVehicle } from '../../services/vehicle.service.js';
 import { debounce } from '../../utils/debounce.js';
 import { toast } from '../../components/toast.js';
 import { UISelect } from '../../components/ui-select.js';
+import { UITable } from '../../components/ui-table.js';
 
 export function initVehicleSearchModule(container) {
   if (!container) return;
@@ -64,7 +65,52 @@ export function initVehicleSearchModule(container) {
 
     try {
       const results = await searchVehicle(query, type);
-      renderVehicleResults(results, resultsContainer);
+      
+      new UITable({
+        container: resultsContainer,
+        pageSize: 5,
+        emptyText: 'Không tìm thấy phương tiện phù hợp. Vui lòng kiểm tra lại từ khóa.',
+        columns: [
+          { key: 'vehicleName', title: 'Loại xe', sortable: true, render: (val, row) => `
+              <div class="flex items-center gap-2">
+                ${row.vehicleType === 'CAR' ? `
+                  <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                  </span>
+                ` : `
+                  <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                  </span>
+                `}
+                <span class="font-bold text-slate-900">${val}</span>
+              </div>
+            `
+          },
+          { key: 'plateNumber', title: 'Biển số', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100/90 text-[#0B2C4D] font-mono font-bold rounded-lg border border-slate-200/50">${val}</span>` },
+          { key: 'residentName', title: 'Cư dân', sortable: true, classNames: 'font-bold text-slate-900' },
+          { key: 'apartmentNumber', title: 'Căn hộ', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">${val}</span>` },
+          { key: 'cardNumber', title: 'Số thẻ', sortable: true, classNames: 'font-mono text-slate-500' },
+          { key: 'expireDate', title: 'Hạn giữ xe', sortable: true, classNames: 'text-slate-500 font-semibold' },
+          { key: 'status', title: 'Trạng thái', sortable: true, render: (val) => {
+              if (val === 'ACTIVE') return '<span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#027A48]"></span>Còn hiệu lực</span>';
+              if (val === 'EXPIRING_SOON') return '<span class="px-3 py-1 bg-[#FEF0C7] text-[#DC6803] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#DC6803]"></span>Sắp hết hạn</span>';
+              return '<span class="px-3 py-1 bg-[#FEE4E2] text-[#D92D20] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#D92D20]"></span>Quá hạn</span>';
+            }
+          },
+          { key: 'actions', title: 'Thao tác', render: (_, row) => `
+              <button data-action="renew" class="px-3 py-1 bg-[#0B2C4D] hover:bg-slate-800 text-white rounded-xl text-[11px] font-bold shadow-xs transition">
+                Gia hạn
+              </button>
+            `
+          }
+        ],
+        data: results,
+        onRowAction: (action, rowData) => {
+          if (action === 'renew') {
+            toast.show(`Mở cổng gia hạn cho ${rowData.residentName} (${rowData.plateNumber})`, 'info');
+          }
+        }
+      });
     } catch (err) {
       resultsContainer.innerHTML = `<div class="text-center py-8 text-rose-500 text-xs">Lỗi tìm kiếm dữ liệu. Vui lòng thử lại.</div>`;
       toast.show('Không thể tải dữ liệu xe', 'error');
@@ -77,64 +123,5 @@ export function initVehicleSearchModule(container) {
 
   // Initial load
   executeSearch();
-}
-
-function renderVehicleResults(vehicles, container) {
-  if (!vehicles || vehicles.length === 0) {
-    container.innerHTML = `
-      <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-        <svg class="w-8 h-8 text-slate-300 mx-auto mb-2 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-        <p class="text-xs font-bold text-slate-700">Không tìm thấy phương tiện phù hợp</p>
-        <p class="text-[11px] text-slate-400 mt-0.5">Vui lòng kiểm tra lại từ khóa tìm kiếm</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = `
-    <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs">
-        <thead class="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
-          <tr>
-            <th class="py-3 px-4 rounded-l-2xl">Loại xe</th>
-            <th class="py-3 px-4">Biển số</th>
-            <th class="py-3 px-4">Cư dân</th>
-            <th class="py-3 px-4">Căn hộ</th>
-            <th class="py-3 px-4">Số thẻ</th>
-            <th class="py-3 px-4">Hạn giữ xe</th>
-            <th class="py-3 px-4 rounded-r-2xl">Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 font-semibold text-slate-800">
-          ${vehicles.map(v => `
-            <tr class="hover:bg-slate-50/80 transition">
-              <td class="py-3.5 px-4 flex items-center gap-2">
-                ${v.vehicleType === 'CAR' ? `
-                  <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                  </span>
-                ` : `
-                  <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                  </span>
-                `}
-                <span class="font-bold text-slate-900">${v.vehicleName}</span>
-              </td>
-              <td class="py-3.5 px-4 font-bold text-[#0B2C4D] font-mono">${v.plateNumber}</td>
-              <td class="py-3.5 px-4 text-slate-900 font-bold">${v.residentName}</td>
-              <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">${v.apartmentNumber}</span></td>
-              <td class="py-3.5 px-4 font-mono text-slate-500">${v.cardNumber}</td>
-              <td class="py-3.5 px-4 text-slate-500">${v.expireDate}</td>
-              <td class="py-3.5 px-4">
-                ${v.status === 'ACTIVE' ? '<span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-block">Còn hiệu lực</span>' : ''}
-                ${v.status === 'EXPIRING_SOON' ? '<span class="px-3 py-1 bg-[#FEF0C7] text-[#DC6803] rounded-full font-extrabold text-[11px] inline-block">Sắp hết hạn</span>' : ''}
-                ${v.status === 'EXPIRED' ? '<span class="px-3 py-1 bg-[#FEE4E2] text-[#D92D20] rounded-full font-extrabold text-[11px] inline-block">Quá hạn</span>' : ''}
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
 }
 

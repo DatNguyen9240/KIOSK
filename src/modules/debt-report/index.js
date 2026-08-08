@@ -8,6 +8,7 @@ import { formatCurrency } from '../../utils/currency.js';
 import { debounce } from '../../utils/debounce.js';
 import { toast } from '../../components/toast.js';
 import { UISelect } from '../../components/ui-select.js';
+import { UITable } from '../../components/ui-table.js';
 
 export function initDebtReportModule(container) {
   if (!container) return;
@@ -104,12 +105,49 @@ export function initDebtReportModule(container) {
     }
   });
 
+  let debtTable = null;
+
   const loadData = async () => {
     tableContainer.innerHTML = `<div class="flex items-center justify-center py-12 text-[#0B2C4D] font-bold text-xs gap-2"><div class="animate-spin w-4 h-4 border-2 border-[#0B2C4D] border-t-transparent rounded-full"></div> Đang tải dữ liệu...</div>`;
 
     try {
       const res = await fetchDebtReport(currentFilters);
-      renderDebtTable(res.data, tableContainer);
+      
+      debtTable = new UITable({
+        container: tableContainer,
+        pageSize: 5,
+        columns: [
+          { key: 'residentName', title: 'Cư dân', sortable: true, classNames: 'font-bold text-slate-900' },
+          { key: 'plateNumber', title: 'Biển số', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100/90 text-[#0B2C4D] font-mono font-bold rounded-lg border border-slate-200/50">${val}</span>` },
+          { key: 'apartmentNumber', title: 'Căn hộ', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">${val}</span>` },
+          { key: 'packageType', title: 'Gói giữ xe', sortable: true, classNames: 'text-slate-600' },
+          { key: 'dueDate', title: 'Đến hạn', sortable: true, classNames: 'text-slate-500 font-semibold' },
+          { key: 'amount', title: 'Số tiền', sortable: true, render: (val) => `<span class="font-black text-slate-900">${formatCurrency(val)}</span>` },
+          { key: 'status', title: 'Trạng thái', sortable: true, render: (val) => {
+              if (val === 'PAID') return '<span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#027A48]"></span>Đã thanh toán</span>';
+              if (val === 'PENDING') return '<span class="px-3 py-1 bg-[#FEF0C7] text-[#DC6803] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#DC6803]"></span>Chờ thanh toán</span>';
+              return '<span class="px-3 py-1 bg-[#FEE4E2] text-[#D92D20] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#D92D20]"></span>Sắp hết hạn</span>';
+            }
+          },
+          { key: 'actions', title: 'Thao tác', render: (_, row) => `
+              <button data-action="remind" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-[11px] font-bold transition mr-1">
+                Nhắc nợ
+              </button>
+              <button data-action="pay" class="px-2.5 py-1 bg-[#0B2C4D] hover:bg-slate-800 text-white rounded-xl text-[11px] font-bold shadow-xs transition">
+                Thanh toán
+              </button>
+            `
+          }
+        ],
+        data: res.data,
+        onRowAction: (action, rowData) => {
+          if (action === 'remind') {
+            toast.show(`Đã gửi thông báo nhắc nợ đến ${rowData.residentName} (${rowData.apartmentNumber})`, 'success');
+          } else if (action === 'pay') {
+            toast.show(`Mở cổng thanh toán cho ${rowData.residentName} (${rowData.plateNumber})`, 'info');
+          }
+        }
+      });
 
       container.querySelector('#summary-total-items').textContent = res.summary.totalItems;
       container.querySelector('#summary-total-amount').textContent = formatCurrency(res.summary.totalAmount);
@@ -127,66 +165,10 @@ export function initDebtReportModule(container) {
     debouncedLoad();
   });
 
-  towerSelect.addEventListener('change', (e) => {
-    currentFilters.tower = e.target.value;
-    loadData();
-  });
-
-  statusSelect.addEventListener('change', (e) => {
-    currentFilters.status = e.target.value;
-    loadData();
-  });
-
   exportBtn.onclick = () => {
     toast.show('Đã xuất file báo cáo Excel thành công', 'success');
   };
 
   loadData();
-}
-
-function renderDebtTable(items, container) {
-  if (!items || items.length === 0) {
-    container.innerHTML = `
-      <div class="text-center py-12 bg-slate-50 rounded-2xl border border-dashed border-slate-200">
-        <p class="text-xs font-semibold text-slate-500">Không tìm thấy bản ghi công nợ phù hợp</p>
-      </div>
-    `;
-    return;
-  }
-
-  container.innerHTML = `
-    <div class="overflow-x-auto">
-      <table class="w-full text-left text-xs">
-        <thead class="bg-slate-50/80 text-slate-400 font-bold uppercase tracking-wider border-b border-slate-100">
-          <tr>
-            <th class="py-3 px-4 rounded-l-2xl">Cư dân</th>
-            <th class="py-3 px-4">Biển số</th>
-            <th class="py-3 px-4">Căn hộ</th>
-            <th class="py-3 px-4">Gói giữ xe</th>
-            <th class="py-3 px-4">Đến hạn</th>
-            <th class="py-3 px-4">Số tiền</th>
-            <th class="py-3 px-4 rounded-r-2xl">Trạng thái</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-slate-100 font-semibold text-slate-800">
-          ${items.map(item => `
-            <tr class="hover:bg-slate-50/80 transition">
-              <td class="py-3.5 px-4 font-bold text-slate-900">${item.residentName}</td>
-              <td class="py-3.5 px-4 font-mono font-bold text-[#0B2C4D]">${item.plateNumber}</td>
-              <td class="py-3.5 px-4"><span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">${item.apartmentNumber}</span></td>
-              <td class="py-3.5 px-4 text-slate-600">${item.packageType}</td>
-              <td class="py-3.5 px-4 text-slate-500">${item.dueDate}</td>
-              <td class="py-3.5 px-4 font-bold text-slate-900">${formatCurrency(item.amount)}</td>
-              <td class="py-3.5 px-4">
-                ${item.status === 'PENDING' ? '<span class="px-3 py-1 bg-[#FEF0C7] text-[#DC6803] rounded-full font-extrabold text-[11px] inline-block">Chờ thanh toán</span>' : ''}
-                ${item.status === 'EXPIRING_SOON' ? '<span class="px-3 py-1 bg-[#FEE4E2] text-[#D92D20] rounded-full font-extrabold text-[11px] inline-block">Sắp hết hạn</span>' : ''}
-                ${item.status === 'PAID' ? '<span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-block">Đã thanh toán</span>' : ''}
-              </td>
-            </tr>
-          `).join('')}
-        </tbody>
-      </table>
-    </div>
-  `;
 }
 
