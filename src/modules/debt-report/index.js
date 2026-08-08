@@ -7,6 +7,7 @@ import { DEFAULT_TOWERS } from '../../core/constants.js';
 import { formatCurrency } from '../../utils/currency.js';
 import { debounce } from '../../utils/debounce.js';
 import { toast } from '../../components/toast.js';
+import { UISelect } from '../../components/ui-select.js';
 
 export function initDebtReportModule(container) {
   if (!container) return;
@@ -42,22 +43,11 @@ export function initDebtReportModule(container) {
           <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         </div>
 
-        <!-- Tower Select -->
-        <div>
-          <select id="debt-tower-select" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none">
-            ${DEFAULT_TOWERS.map(t => `<option value="${t.id}">${t.name}</option>`).join('')}
-          </select>
-        </div>
+        <!-- Tower Select Slot -->
+        <div id="debt-tower-select-wrap"></div>
 
-        <!-- Status Select -->
-        <div>
-          <select id="debt-status-select" class="w-full px-3 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none">
-            <option value="ALL">Tất cả trạng thái</option>
-            <option value="PENDING">Chờ thanh toán</option>
-            <option value="EXPIRING_SOON">Sắp hết hạn</option>
-            <option value="PAID">Đã thanh toán</option>
-          </select>
-        </div>
+        <!-- Status Select Slot -->
+        <div id="debt-status-select-wrap"></div>
       </div>
 
       <!-- Report Summary Bar -->
@@ -84,10 +74,35 @@ export function initDebtReportModule(container) {
   `;
 
   const searchInput = container.querySelector('#debt-search-input');
-  const towerSelect = container.querySelector('#debt-tower-select');
-  const statusSelect = container.querySelector('#debt-status-select');
   const exportBtn = container.querySelector('#export-excel-btn');
   const tableContainer = container.querySelector('#debt-table-container');
+
+  // Initialize UISelect for Tower
+  const towerUISelect = new UISelect({
+    container: container.querySelector('#debt-tower-select-wrap'),
+    options: DEFAULT_TOWERS.map(t => ({ value: t.id, label: t.name })),
+    value: 'ALL',
+    onChange: (val) => {
+      currentFilters.tower = val;
+      loadData();
+    }
+  });
+
+  // Initialize UISelect for Status
+  new UISelect({
+    container: container.querySelector('#debt-status-select-wrap'),
+    options: [
+      { value: 'ALL', label: 'Tất cả trạng thái' },
+      { value: 'PENDING', label: 'Chờ thanh toán' },
+      { value: 'EXPIRING_SOON', label: 'Sắp hết hạn' },
+      { value: 'PAID', label: 'Đã thanh toán' }
+    ],
+    value: 'ALL',
+    onChange: (val) => {
+      currentFilters.status = val;
+      loadData();
+    }
+  });
 
   const loadData = async () => {
     tableContainer.innerHTML = `<div class="flex items-center justify-center py-12 text-[#0B2C4D] font-bold text-xs gap-2"><div class="animate-spin w-4 h-4 border-2 border-[#0B2C4D] border-t-transparent rounded-full"></div> Đang tải dữ liệu...</div>`;
@@ -98,7 +113,7 @@ export function initDebtReportModule(container) {
 
       container.querySelector('#summary-total-items').textContent = res.summary.totalItems;
       container.querySelector('#summary-total-amount').textContent = formatCurrency(res.summary.totalAmount);
-      container.querySelector('#summary-tower-display').textContent = towerSelect.options[towerSelect.selectedIndex].text;
+      container.querySelector('#summary-tower-display').textContent = towerUISelect.getLabel();
     } catch (err) {
       tableContainer.innerHTML = `<div class="text-center py-8 text-rose-500 text-xs">Lỗi tải dữ liệu báo cáo</div>`;
       toast.show('Lỗi tải báo cáo công nợ', 'error');

@@ -5,6 +5,7 @@
 import { searchVehicle } from '../../services/vehicle.service.js';
 import { debounce } from '../../utils/debounce.js';
 import { toast } from '../../components/toast.js';
+import { UISelect } from '../../components/ui-select.js';
 
 export function initVehicleSearchModule(container) {
   if (!container) return;
@@ -29,15 +30,7 @@ export function initVehicleSearchModule(container) {
           />
           <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
         </div>
-        <div>
-          <select id="vehicle-search-type" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none">
-            <option value="ALL">Tất cả loại tìm kiếm</option>
-            <option value="PLATE">Theo Biển số xe</option>
-            <option value="NAME">Theo Họ tên</option>
-            <option value="APARTMENT">Theo Số căn hộ</option>
-            <option value="CARD">Theo Số thẻ xe</option>
-          </select>
-        </div>
+        <div id="vehicle-search-type-wrap"></div>
       </div>
 
       <!-- Results Grid / Table -->
@@ -48,12 +41,24 @@ export function initVehicleSearchModule(container) {
   `;
 
   const searchInput = container.querySelector('#vehicle-search-input');
-  const searchTypeSelect = container.querySelector('#vehicle-search-type');
   const resultsContainer = container.querySelector('#vehicle-results-container');
+
+  const searchTypeUISelect = new UISelect({
+    container: container.querySelector('#vehicle-search-type-wrap'),
+    options: [
+      { value: 'ALL', label: 'Tất cả loại tìm kiếm' },
+      { value: 'PLATE', label: 'Theo Biển số xe' },
+      { value: 'NAME', label: 'Theo Họ tên' },
+      { value: 'APARTMENT', label: 'Theo Số căn hộ' },
+      { value: 'CARD', label: 'Theo Số thẻ xe' }
+    ],
+    value: 'ALL',
+    onChange: () => executeSearch()
+  });
 
   const executeSearch = async () => {
     const query = searchInput.value.trim();
-    const type = searchTypeSelect.value;
+    const type = searchTypeUISelect.getValue();
 
     resultsContainer.innerHTML = `<div class="flex items-center justify-center py-12 text-[#0B2C4D] font-bold text-xs gap-2"><div class="animate-spin w-4 h-4 border-2 border-[#0B2C4D] border-t-transparent rounded-full"></div> Đang tìm kiếm...</div>`;
 
@@ -69,7 +74,6 @@ export function initVehicleSearchModule(container) {
   const debouncedSearch = debounce(executeSearch, 300);
 
   searchInput.addEventListener('input', debouncedSearch);
-  searchTypeSelect.addEventListener('change', executeSearch);
 
   // Initial load
   executeSearch();

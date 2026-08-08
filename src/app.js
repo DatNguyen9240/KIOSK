@@ -9,9 +9,41 @@ import { initDebtReportModule } from './modules/debt-report/index.js';
 import { initKioskTouchModule } from './modules/kiosk/index.js';
 import { initMobileGateModule } from './modules/mobile-gate/index.js';
 import { toast } from './components/toast.js';
+import { UISelect } from './components/ui-select.js';
+import { UIDatepicker } from './components/ui-datepicker.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainContentContainer = document.getElementById('main-app-content');
+
+  // Header Datepicker & Tower Select initialization
+  const headerDateContainer = document.getElementById('header-date-picker');
+  if (headerDateContainer) {
+    new UIDatepicker({
+      container: headerDateContainer,
+      mode: 'range',
+      defaultDate: ['2024-05-01', '2024-05-08'],
+      onChange: (dates, str) => {
+        toast.show(`Lọc dữ liệu từ ${str}`, 'info');
+      }
+    });
+  }
+
+  const headerTowerContainer = document.getElementById('header-tower-select');
+  if (headerTowerContainer) {
+    new UISelect({
+      container: headerTowerContainer,
+      options: [
+        { value: 'ALL', label: 'Tất cả tháp' },
+        { value: 'A1', label: 'Tháp A1' },
+        { value: 'A2', label: 'Tháp A2' },
+        { value: 'A3', label: 'Tháp A3' }
+      ],
+      value: 'ALL',
+      onChange: (val, label) => {
+        toast.show(`Đã chọn: ${label}`, 'info');
+      }
+    });
+  }
 
   // Sidebar navigation active state handler
   function setActiveNav(hash) {
