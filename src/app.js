@@ -56,10 +56,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (notifBtn && notifDropdown) {
     const closeNotif = () => {
-      notifDropdown.classList.add('hidden');
+      notifDropdown.classList.remove('dropdown-pop-in');
+      notifDropdown.classList.add('dropdown-pop-out');
+      setTimeout(() => {
+        notifDropdown.classList.add('hidden');
+      }, 190);
       window.removeEventListener('scroll', closeNotif);
       document.removeEventListener('click', onClickOutside);
     };
+
+    const openNotif = () => {
+      window.dispatchEvent(new CustomEvent('app:close-all-popups', { detail: { source: 'notif' } }));
+      notifDropdown.classList.remove('hidden', 'dropdown-pop-out');
+      notifDropdown.classList.add('dropdown-pop-in');
+      window.addEventListener('scroll', closeNotif, { passive: true });
+      document.addEventListener('click', onClickOutside);
+    };
+
+    window.addEventListener('app:close-all-popups', (e) => {
+      if (e.detail?.source !== 'notif' && !notifDropdown.classList.contains('hidden')) {
+        closeNotif();
+      }
+    });
 
     const onClickOutside = (e) => {
       if (!notifDropdown.contains(e.target) && !notifBtn.contains(e.target)) {
@@ -70,11 +88,8 @@ document.addEventListener('DOMContentLoaded', () => {
     notifBtn.onclick = (e) => {
       e.stopPropagation();
       const isHidden = notifDropdown.classList.contains('hidden');
-
       if (isHidden) {
-        notifDropdown.classList.remove('hidden');
-        window.addEventListener('scroll', closeNotif, { passive: true });
-        document.addEventListener('click', onClickOutside);
+        openNotif();
       } else {
         closeNotif();
       }
@@ -92,8 +107,35 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Mobile Sidebar Drawer Handlers
+  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
+  const sidebar = document.getElementById('app-sidebar');
+  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+
+  const closeSidebar = () => {
+    if (sidebar) sidebar.classList.add('-translate-x-full');
+    if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
+  };
+
+  const openSidebar = () => {
+    if (sidebar) sidebar.classList.remove('-translate-x-full');
+    if (sidebarBackdrop) sidebarBackdrop.classList.remove('hidden');
+  };
+
+  if (mobileMenuBtn) {
+    mobileMenuBtn.onclick = (e) => {
+      e.stopPropagation();
+      openSidebar();
+    };
+  }
+
+  if (sidebarBackdrop) {
+    sidebarBackdrop.onclick = closeSidebar;
+  }
+
   // Sidebar navigation active state handler
   function setActiveNav(hash) {
+    closeSidebar();
     const navItems = document.querySelectorAll('#sidebar-nav .nav-item');
     navItems.forEach(item => {
       const href = item.getAttribute('href');

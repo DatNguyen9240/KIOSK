@@ -80,6 +80,8 @@ export class UIDatepicker {
       const trigger = this.container.querySelector(`#${uid}-trigger`);
       const label = this.container.querySelector(`#${uid}-label`);
 
+      let justClosedTime = 0;
+
       this._fp = flatpickr(input, {
         positionElement: trigger,
         position: 'auto right',
@@ -98,6 +100,13 @@ export class UIDatepicker {
           },
           rangeSeparator: ' – '
         },
+        closeOnSelect: true,
+        onOpen: () => {
+          window.dispatchEvent(new CustomEvent('app:close-all-popups', { detail: { source: this } }));
+        },
+        onClose: () => {
+          justClosedTime = Date.now();
+        },
         onReady: (_, __, fp) => {
           // Style the Flatpickr calendar
           fp.calendarContainer.classList.add('ui-datepicker-calendar');
@@ -108,11 +117,13 @@ export class UIDatepicker {
             label.textContent = str;
             this._dateStr = str;
             if (this.onChange) this.onChange(dates, dateStr);
+            setTimeout(() => this._fp && this._fp.close(), 100);
           } else if (this.mode === 'single' && dates.length === 1) {
             const str = this._fpFmt(dates[0]);
             label.textContent = str;
             this._dateStr = str;
             if (this.onChange) this.onChange(dates, dateStr);
+            setTimeout(() => this._fp && this._fp.close(), 100);
           }
         }
       });
@@ -120,8 +131,22 @@ export class UIDatepicker {
       // Toggle calendar on trigger click
       trigger.addEventListener('click', (e) => {
         e.stopPropagation();
-        this._fp.toggle();
+        if (!this._fp) return;
+        const now = Date.now();
+        if (this._fp.isOpen) {
+          this._fp.close();
+        } else if (now - justClosedTime > 250) {
+          this._fp.open();
+        }
       });
+
+      // Close when another dropdown opens
+      this._closeAllHandler = (e) => {
+        if (e.detail?.source !== this && this._fp && this._fp.isOpen) {
+          this._fp.close();
+        }
+      };
+      window.addEventListener('app:close-all-popups', this._closeAllHandler);
     };
 
     initFP();

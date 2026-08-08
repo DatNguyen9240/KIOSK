@@ -111,9 +111,22 @@ export class UISelect {
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && this._open) this._close();
     });
+
+    // Close when another dropdown opens
+    this._closeAllHandler = (e) => {
+      if (e.detail?.source !== this && this._open) {
+        this._close();
+      }
+    };
+    window.addEventListener('app:close-all-popups', this._closeAllHandler);
+  }
+
+  close() {
+    this._close();
   }
 
   _openPanel() {
+    window.dispatchEvent(new CustomEvent('app:close-all-popups', { detail: { source: this } }));
     const panel = this.container.querySelector(`#${this._uid}-panel`);
     const chevron = this.container.querySelector(`#${this._uid}-chevron`);
     this._open = true;

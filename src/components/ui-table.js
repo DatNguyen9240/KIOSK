@@ -92,7 +92,7 @@ export class UITable {
       <div class="space-y-4">
         <!-- Table Scroll Container -->
         <div class="overflow-x-auto custom-scrollbar rounded-2xl border border-slate-100">
-          <table class="w-full text-left text-xs border-collapse">
+          <table class="w-full text-left text-[11px] sm:text-xs border-collapse">
             <thead class="bg-slate-50/90 text-slate-400 font-extrabold uppercase tracking-wider border-b border-slate-100 select-none">
               <tr>
                 ${this.columns.map(col => {
@@ -102,7 +102,7 @@ export class UITable {
                     : '⇅';
                   return `
                     <th
-                      class="py-3.5 px-4 ${col.sortable ? 'cursor-pointer hover:bg-slate-100/70 transition' : ''} ${col.headerClass || ''}"
+                      class="py-2.5 px-3 sm:py-3.5 sm:px-4 ${col.sortable ? 'cursor-pointer hover:bg-slate-100/70 transition' : ''} ${col.headerClass || ''}"
                       ${col.sortable ? `data-sort-key="${col.key}"` : ''}
                     >
                       <div class="flex items-center gap-1.5">
@@ -120,7 +120,7 @@ export class UITable {
                   ${this.columns.map(col => {
                     let cellVal = row[col.key];
                     let rendered = col.render ? col.render(cellVal, row, startIndex + rIdx) : (cellVal ?? '');
-                    return `<td class="py-3.5 px-4 ${col.classNames || ''}">${rendered}</td>`;
+                    return `<td class="py-2.5 px-3 sm:py-3.5 sm:px-4 ${col.classNames || ''}">${rendered}</td>`;
                   }).join('')}
                 </tr>
               `).join('')}
