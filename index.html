@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PARKING.GO - Hệ thống thu phí giữ xe online & kiểm soát xe</title>
+  <title>PARKING.GO - Hệ thống thu phí giữ online</title>
 
   <!-- Google Fonts: Plus Jakarta Sans -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -21,9 +21,11 @@
           },
           colors: {
             brand: {
-              navy: '#0B3C5D',
+              navy: '#0B2C4D',
+              navyDark: '#0A2540',
               teal: '#00A8CC',
               lime: '#7CB342',
+              bgLight: '#FAFBFF',
             }
           }
         }
@@ -36,110 +38,184 @@
 
   <style>
     body {
-      background-color: #F3F5F9;
+      background: linear-gradient(145deg, #f5f7ff 0%, #ffffff 45%, #fdf5ff 100%);
+      background-attachment: fixed;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #CBD5E1;
+      border-radius: 9999px;
+    }
+    .shadow-card {
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.05);
     }
   </style>
 </head>
-<body class="font-sans text-slate-800 antialiased min-h-screen flex flex-col">
+<body class="text-slate-800 antialiased min-h-screen p-3 md:p-6">
 
-  <!-- Main Application Wrapper -->
-  <div class="flex-1 flex flex-col md:flex-row max-w-[1600px] w-full mx-auto p-4 md:p-6 gap-6">
+  <!-- Main Container Wrapper -->
+  <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row gap-5 items-start">
 
-    <!-- Sidebar Navigation -->
-    <aside class="w-full md:w-64 bg-white rounded-3xl p-5 border border-slate-100 shadow-xl flex flex-col justify-between shrink-0">
-      <div class="space-y-6">
-        <!-- Logo Header -->
-        <div class="flex items-center gap-3 px-2">
-          <img src="assets/images/logo.png" alt="PARKING.GO Logo" class="w-10 h-10 object-contain" />
+    <!-- LEFT SIDEBAR COLUMN -->
+    <div class="w-full md:w-64 shrink-0 space-y-5">
+      <!-- Main Navigation Sidebar Card -->
+      <aside class="bg-white rounded-3xl p-5 border border-slate-200/70 shadow-card flex flex-col justify-between">
+        <div class="space-y-6">
+          <!-- Logo & Brand Header -->
+          <div class="flex items-center gap-3 px-1">
+            <img src="assets/images/logo.png" alt="PARKING.GO Logo" class="h-10 w-auto object-contain" />
+            <div>
+              <h1 class="font-extrabold text-[#0B2C4D] text-lg leading-tight tracking-tight">PARKING.GO</h1>
+              <p class="text-[11px] text-slate-400 font-semibold tracking-tight">Thu phí & Kiểm soát xe</p>
+            </div>
+          </div>
+
+          <!-- Navigation Links (Exact 9 items matching demo-ui.png) -->
+          <nav class="space-y-1" id="sidebar-nav">
+            <a href="#/dashboard" data-[#0B2C4D] class="nav-item active flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#0B2C4D] text-white font-bold text-xs shadow-md shadow-[#0B2C4D]/20 transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-90" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+              <span>Tổng quan</span>
+            </a>
+
+            <a href="#/revenue" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+              <span>Doanh thu</span>
+            </a>
+
+            <a href="#/transactions" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+              <span>Giao dịch</span>
+            </a>
+
+            <a href="#/debt" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+              <span>Công nợ</span>
+            </a>
+
+            <a href="#/cards" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+              <span>Thẻ xe</span>
+            </a>
+
+            <a href="#/residents" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+              <span>Cư dân</span>
+            </a>
+
+            <a href="#/vehicle-access" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+              <span>Xe ra vào</span>
+            </a>
+
+            <a href="#/reports" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+              <span>Báo cáo</span>
+            </a>
+
+            <a href="#/settings" class="nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150">
+              <svg class="w-4 h-4 fill-current opacity-70" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+              <span>Cài đặt</span>
+            </a>
+          </nav>
+        </div>
+
+        <!-- User Profile Card at Sidebar Bottom -->
+        <div class="pt-6 border-t border-slate-100 mt-6 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-full bg-slate-200 border border-slate-300 overflow-hidden flex items-center justify-center text-slate-700 font-bold text-sm shadow-sm">
+              <span class="bg-gradient-to-tr from-blue-600 to-teal-400 text-white w-full h-full flex items-center justify-center font-bold">NV</span>
+            </div>
+            <div>
+              <h4 class="font-extrabold text-slate-900 text-xs leading-tight">Nguyễn Văn A</h4>
+              <p class="text-[10px] text-slate-400 font-medium">Quản trị hệ thống</p>
+            </div>
+          </div>
+          <button class="text-slate-400 hover:text-slate-700 transition">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+          </button>
+        </div>
+      </aside>
+
+      <!-- RESIDENT CARD WIDGET -->
+      <div class="bg-white rounded-3xl p-4 border border-slate-200/70 shadow-card space-y-3">
+        <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider">RESIDENT CARD</h3>
+        <div class="flex items-center gap-3 bg-slate-50 p-2.5 rounded-2xl border border-slate-100">
+          <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-black text-xs flex items-center justify-center">
+            30F
+          </div>
           <div>
-            <h1 class="font-black text-slate-900 text-base leading-tight">PARKING.GO</h1>
-            <p class="text-[10px] text-slate-400 font-semibold">Thu phí & Kiểm soát xe</p>
+            <div class="font-extrabold text-slate-900 text-xs">30F-122.45 <span class="text-[10px] text-slate-400 font-semibold">(Ô tô)</span></div>
+            <div class="text-[10px] text-slate-500 font-medium">08/05/2024 13:45 • A1-1005</div>
           </div>
         </div>
-
-        <!-- Navigation Links -->
-        <nav class="space-y-1.5" id="sidebar-nav">
-          <a href="#/dashboard" class="nav-link flex items-center gap-3 px-4 py-3 rounded-2xl bg-slate-900 text-white font-bold text-xs shadow-md shadow-slate-900/10 transition">
-            <span>💳</span>
-            <span>Gia hạn thẻ tháng</span>
-          </a>
-          <a href="#/search" class="nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition">
-            <span>🔍</span>
-            <span>Tra cứu phương tiện</span>
-          </a>
-          <a href="#/debt" class="nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition">
-            <span>📊</span>
-            <span>Báo cáo công nợ</span>
-          </a>
-          <a href="#/kiosk" class="nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition">
-            <span>🖥️</span>
-            <span>Giao diện Kiosk Touch</span>
-          </a>
-          <a href="#/mobile" class="nav-link flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition">
-            <span>📱</span>
-            <span>App Mobile Bảo vệ</span>
-          </a>
-        </nav>
-      </div>
-
-      <!-- System Health Card -->
-      <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 text-xs space-y-2 mt-6">
-        <div class="flex items-center justify-between font-bold text-slate-700">
-          <span>Hệ thống online</span>
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+        <div class="space-y-2.5 text-xs text-slate-600">
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center shrink-0 border border-teal-100/60 shadow-sm">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+            </span>
+            <span class="font-semibold text-slate-700">Tháp A1</span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-xl bg-indigo-50 text-indigo-600 flex items-center justify-center shrink-0 border border-indigo-100/60 shadow-sm">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M4 10h3v7H4zm6.5 0h3v7h-3zM2 19h20v3H2zm15-9h3v7h-3zM12 1L2 6v2h20V6z"/></svg>
+            </span>
+            <span class="font-semibold text-slate-700">Ngân hàng liên kết</span>
+          </div>
+          <div class="flex items-center gap-2.5">
+            <span class="w-7 h-7 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 border border-amber-100/60 shadow-sm">
+              <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+            </span>
+            <span class="font-semibold text-slate-700">Thẻ nội địa</span>
+          </div>
         </div>
-        <p class="text-[11px] text-slate-400">Kết nối máy trạm: Bình thường</p>
+        <button id="sidebar-pay-btn" class="w-full bg-[#7CB342] hover:bg-[#689F38] text-white font-extrabold py-2.5 rounded-xl shadow-md text-xs transition">
+          Thanh toán
+        </button>
       </div>
-    </aside>
+    </div>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 space-y-6 overflow-hidden">
-      <!-- Top Header Row -->
-      <header class="bg-white p-5 rounded-3xl border border-slate-100 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+    <!-- MAIN RIGHT CONTENT COLUMN -->
+    <main class="flex-1 w-full space-y-5">
+
+      <!-- TOP HEADER BAR -->
+      <header class="bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h2 class="text-xl font-black text-slate-900">Hệ thống thu phí giữ xe online</h2>
-          <p class="text-xs text-slate-400">Quản lý thông minh • Thu phí tự động • Minh bạch</p>
+          <h2 class="text-xl md:text-2xl font-black text-[#0B2C4D] tracking-tight">Hệ thống thu phí giữ xe online</h2>
+          <p class="text-xs text-slate-400 font-medium mt-0.5">Quản lý thông minh • Thu phí tự động • Minh bạch</p>
         </div>
 
-        <div class="flex items-center gap-3">
-          <span class="px-3.5 py-1.5 bg-slate-100 rounded-full text-xs font-semibold text-slate-600">
-            📅 08/05/2026
-          </span>
-          <div class="w-9 h-9 rounded-full bg-blue-600 text-white font-bold flex items-center justify-center text-xs shadow-md">
-            NV
+        <div class="flex items-center gap-3 self-end sm:self-center">
+          <!-- Date Filter Pill -->
+          <div class="flex items-center gap-2 px-3.5 py-2 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700">
+            <span>01/05/2024 - 08/05/2024</span>
+            <svg class="w-4 h-4 text-slate-400 fill-current" viewBox="0 0 24 24"><path d="M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V10h14v10zm0-12H5V6h14v2z"/></svg>
           </div>
+
+          <!-- Tower Dropdown -->
+          <select class="px-4 py-2 bg-slate-50 border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 focus:outline-none">
+            <option>Tất cả tháp</option>
+            <option>Tháp A1</option>
+            <option>Tháp A2</option>
+            <option>Tháp A3</option>
+          </select>
+
+          <!-- Notification Bell -->
+          <button class="relative w-9 h-9 rounded-2xl bg-[#0B2C4D] text-white flex items-center justify-center shadow-md hover:bg-slate-800 transition">
+            <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.89 2 2 2zm6-6v-5c0-3.07-1.64-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.63 5.36 6 7.92 6 11v5l-2 2v1h16v-1l-2-2z"/></svg>
+            <span class="absolute -top-1 -right-1 w-4 h-4 rounded-full bg-rose-500 text-white font-bold text-[9px] flex items-center justify-center border-2 border-white">2</span>
+          </button>
         </div>
       </header>
 
-      <!-- Stat Cards -->
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-lg space-y-1">
-          <span class="text-[11px] font-semibold text-slate-400">Doanh thu hôm nay</span>
-          <div class="text-lg font-black text-slate-900">52.850.000 đ</div>
-          <span class="text-[10px] font-bold text-emerald-600">▲ +7.8% so với hôm qua</span>
-        </div>
-
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-lg space-y-1">
-          <span class="text-[11px] font-semibold text-slate-400">Công nợ cần thu</span>
-          <div class="text-lg font-black text-blue-600">128.450.000 đ</div>
-          <span class="text-[10px] font-bold text-slate-500">248 khoản nợ</span>
-        </div>
-
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-lg space-y-1">
-          <span class="text-[11px] font-semibold text-slate-400">Thẻ sắp hết hạn</span>
-          <div class="text-lg font-black text-amber-600">86 thẻ</div>
-          <span class="text-[10px] font-bold text-slate-500">Trong 7 ngày tới</span>
-        </div>
-
-        <div class="bg-white p-4 rounded-3xl border border-slate-100 shadow-lg space-y-1">
-          <span class="text-[11px] font-semibold text-slate-400">Giao dịch online</span>
-          <div class="text-lg font-black text-emerald-600">68 giao dịch</div>
-          <span class="text-[10px] font-bold text-slate-500">Tổng 24.650.000 đ</span>
-        </div>
+      <!-- MAIN APP DYNAMIC VIEW CONTAINER -->
+      <div id="main-app-content" class="space-y-5">
+        <!-- Dashboard overview or sub-module views will render dynamically here -->
       </div>
 
-      <!-- Main Dynamic App View Container -->
-      <div id="main-app-content"></div>
     </main>
   </div>
 
@@ -147,3 +223,4 @@
   <script type="module" src="src/app.js"></script>
 </body>
 </html>
+

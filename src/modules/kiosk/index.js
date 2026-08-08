@@ -50,9 +50,9 @@ export function initKioskTouchModule(container) {
             />
           </div>
 
-          <button type="button" id="kiosk-search-btn" class="w-full bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-black text-lg py-5 rounded-3xl shadow-xl shadow-blue-600/30 transition duration-150 flex items-center justify-center gap-3">
+          <button type="button" id="kiosk-search-btn" class="w-full bg-[#0B2C4D] hover:bg-slate-800 active:scale-[0.98] text-white font-black text-lg py-4 rounded-2xl shadow-xl transition duration-150 flex items-center justify-center gap-3">
             <span>TÌM XE VÀ TÍNH PHÍ</span>
-            <span>➔</span>
+            <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z"/></svg>
           </button>
         </div>
 

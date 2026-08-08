@@ -1,0 +1,27 @@
+<svg
+  width="96"
+  height="96"
+  viewBox="0 0 96 96"
+  xmlns="http://www.w3.org/2000/svg"
+>
+  <!-- Vòng ripple tỏa ra ngoài, bắt đầu nhỏ (đậm) → nở to (mờ) → reset lặp lại -->
+  <circle cx="48" cy="48" r="28" fill="none" stroke="#f59e0b" stroke-width="2.5">
+    <animate attributeName="r"       values="28;46"   dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.2 0 0.8 1" />
+    <animate attributeName="opacity" values="0.7;0"   dur="1.6s" repeatCount="indefinite" calcMode="spline" keySplines="0.2 0 0.8 1" />
+  </circle>
+
+  <!-- Vòng tròn chính màu vàng amber (thở nhẹ) -->
+  <circle cx="48" cy="48" r="28" fill="#f59e0b">
+    <animate attributeName="fill" values="#f59e0b;#fbbf24;#f59e0b" dur="2s" repeatCount="indefinite" />
+  </circle>
+
+  <!-- Dấu ! — thân thanh -->
+  <rect x="45.5" y="30" width="5" height="21" rx="2.5" fill="#fff">
+    <animate attributeName="opacity" values="1;0.55;1" dur="2s" repeatCount="indefinite" />
+  </rect>
+
+  <!-- Dấu ! — chấm dưới -->
+  <circle cx="48" cy="59" r="2.8" fill="#fff">
+    <animate attributeName="opacity" values="1;0.55;1" dur="2s" repeatCount="indefinite" />
+  </circle>
+</svg>

@@ -21,15 +21,15 @@ export class QrPaymentComponent {
 
     this.container.innerHTML = `
       <div class="bg-white p-6 rounded-3xl border border-slate-100 shadow-xl flex flex-col items-center text-center">
-        <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-50 text-amber-700 text-xs font-semibold rounded-full mb-3">
-          <span class="w-2 h-2 rounded-full bg-amber-500 animate-ping"></span>
-          Đang chờ thanh toán
-        </div>
+
+        <!-- Pending icon: "!" vàng pulsing vô hạn trong khi chờ thanh toán -->
+        <img src="assets/images/animated-icon-pending.svg" alt="Đang chờ thanh toán" class="w-16 h-16 mb-3" id="qr-status-icon" />
 
         <div class="text-2xl font-black text-slate-900 mb-1" id="qr-amount-display">
           ${formatCurrency(this.paymentData.finalAmount || 50000)}
         </div>
-        <p class="text-xs text-slate-500 mb-4">Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử</p>
+        <p class="text-xs text-amber-600 font-semibold mb-0.5">Đang chờ thanh toán</p>
+        <p class="text-xs text-slate-400 mb-4">Quét mã QR bằng ứng dụng ngân hàng hoặc ví điện tử</p>
 
         <!-- QR Box -->
         <div class="relative w-52 h-52 bg-slate-50 border-2 border-slate-200/80 rounded-2xl flex items-center justify-center p-2 mb-4 overflow-hidden" id="qr-box">
@@ -100,6 +100,27 @@ export class QrPaymentComponent {
       qrBox.innerHTML = `<div class="text-xs text-rose-500 px-3">Tạo QR thất bại. Vui lòng thử lại.</div>`;
       toast.show('Lỗi tạo mã QR thanh toán', 'error');
     }
+  }
+
+  showSuccess(message = 'Thanh toán chuyển khoản thành công!') {
+    stopQrCountdownTimer();
+    const txId = `VQR-${Date.now().toString().slice(-6)}`;
+    // Load animated-icon.svg as a FRESH <img> element so the browser plays animation from t=0
+    this.container.innerHTML = `
+      <div class="bg-white p-8 rounded-3xl border border-slate-200/70 shadow-card flex flex-col items-center text-center space-y-4">
+        <!-- Fresh img element = browser plays SVG animation from beginning: ! → amber→green → ✓ + ripple -->
+        <img src="assets/images/animated-icon.svg" alt="Thanh toán thành công" class="w-24 h-24 mx-auto" />
+        <div>
+          <h3 class="text-lg font-black text-[#0B2C4D]">${message}</h3>
+          <p class="text-xs text-slate-400 font-medium mt-1">Hệ thống đã nhận tiền thành công từ ứng dụng ngân hàng / VietQR</p>
+        </div>
+        <div class="p-3 bg-slate-50 border border-slate-100 rounded-2xl text-xs space-y-1 font-semibold text-slate-700 w-full text-left">
+          <div class="flex justify-between"><span class="text-slate-400">Mã GD:</span><span class="font-mono font-bold text-emerald-600">${txId}</span></div>
+          <div class="flex justify-between"><span class="text-slate-400">Trạng thái:</span><span class="text-emerald-600">✓ Đã thanh toán</span></div>
+        </div>
+      </div>
+    `;
+    if (this.onSuccess) this.onSuccess(this.currentTransaction);
   }
 
   destroy() {
