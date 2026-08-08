@@ -13,9 +13,17 @@ import { UISelect } from './components/ui-select.js';
 import { UIDatepicker } from './components/ui-datepicker.js';
 import { UITable } from './components/ui-table.js';
 import { initRevenueChart, initTowerDonutChart } from './components/ui-chart.js';
+import { TenantSelectorComponent } from './components/tenant-selector.js';
+import { tenantContext } from './core/tenant-context.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainContentContainer = document.getElementById('main-app-content');
+
+  // Multi-Tenant Context Header Initialization
+  const tenantSelectorContainer = document.getElementById('header-tenant-selector');
+  if (tenantSelectorContainer) {
+    new TenantSelectorComponent(tenantSelectorContainer);
+  }
 
   // Header Datepicker & Tower Select initialization
   const headerDateContainer = document.getElementById('header-date-picker');

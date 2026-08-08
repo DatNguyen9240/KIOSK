@@ -1,8 +1,9 @@
 /**
- * Core API Layer Abstraction
+ * Core API Layer Abstraction with Multi-Tenant Header Injection
  */
 
 import { CONFIG } from './config.js';
+import { tenantContext } from './tenant-context.js';
 
 export async function apiRequest(endpoint, options = {}) {
   const {
@@ -20,9 +21,14 @@ export async function apiRequest(endpoint, options = {}) {
     url += (url.includes('?') ? '&' : '?') + query;
   }
 
+  const activeTenantId = tenantContext.getActiveTenantId();
+  const token = localStorage.getItem('parking_go_jwt_token');
+
   const reqHeaders = {
     'Content-Type': 'application/json',
     'Accept': 'application/json',
+    'X-Tenant-ID': activeTenantId,
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
     ...headers
   };
 
@@ -52,7 +58,7 @@ export async function apiRequest(endpoint, options = {}) {
     if (err.name === 'AbortError') {
       throw new Error('Request cancelled');
     }
-    console.error(`[API Error] ${method} ${url}:`, err);
+    console.warn(`[API Call] ${method} ${url} fallback to local mock mode if offline:`, err.message);
     throw err;
   }
 }
