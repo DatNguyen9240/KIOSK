@@ -104,6 +104,16 @@
       pointer-events: auto !important;
     }
 
+    /* Mobile Flatpickr Centering (Prevents Left/Right Clipping) */
+    @media (max-width: 640px) {
+      .flatpickr-calendar {
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        transform-origin: top center !important;
+        max-width: calc(100vw - 16px) !important;
+      }
+    }
+
     /* Notification Dropdown Animation Classes */
     .dropdown-pop-in {
       animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) forwards !important;
@@ -178,7 +188,7 @@
     .flatpickr-prev-month svg, .flatpickr-next-month svg { fill: #fff !important; }
   </style>
 </head>
-<body class="text-slate-800 antialiased min-h-screen p-2 sm:p-4 md:p-6">
+<body class="text-slate-800 antialiased min-h-screen p-2 sm:p-4 md:p-6 pb-20 lg:pb-6">
 
   <!-- Mobile Backdrop Overlay for Sidebar Drawer -->
   <div id="sidebar-backdrop" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-30 lg:hidden"></div>
@@ -186,8 +196,8 @@
   <!-- Main Container Wrapper -->
   <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-5 items-start">
 
-    <!-- LEFT SIDEBAR COLUMN -->
-    <div class="w-full lg:w-64 shrink-0 space-y-5">
+    <!-- LEFT SIDEBAR COLUMN (Hidden on mobile < 1024px, static on desktop) -->
+    <div id="app-sidebar" class="hidden lg:block lg:w-64 shrink-0 space-y-5">
       <!-- Main Navigation Sidebar Card -->
       <aside class="bg-white rounded-3xl p-5 border border-slate-200/70 shadow-card flex flex-col justify-between">
         <div class="space-y-6">
@@ -305,28 +315,28 @@
     </div>
 
     <!-- MAIN RIGHT CONTENT COLUMN -->
-    <main class="flex-1 w-full space-y-4 sm:space-y-5">
+    <main class="flex-1 w-full space-y-4 sm:space-y-5 min-w-0">
 
       <!-- TOP HEADER BAR -->
-      <header class="bg-white p-3.5 sm:p-5 rounded-3xl border border-slate-200/70 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+      <header class="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 relative z-20">
         <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
-          <!-- Mobile Hamburger Toggle Button (< 1024px) -->
-          <button type="button" id="mobile-menu-btn" class="lg:hidden w-9 h-9 rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center transition shrink-0 cursor-pointer">
+          <!-- Mobile Hamburger Toggle Button (Hidden as BottomTab navigation is active) -->
+          <button type="button" id="mobile-menu-btn" class="hidden w-9 h-9 rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center transition shrink-0 cursor-pointer">
             <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
           </button>
 
-          <div>
-            <h2 class="text-base sm:text-xl md:text-2xl font-black text-[#0B2C4D] tracking-tight">Hệ thống thu phí giữ xe online</h2>
-            <p class="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5">Quản lý thông minh • Thu phí tự động • Minh bạch</p>
+          <div class="min-w-0">
+            <h2 class="text-base sm:text-xl md:text-2xl font-black text-[#0B2C4D] tracking-tight truncate">Hệ thống thu phí giữ xe online</h2>
+            <p class="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5 truncate">Quản lý thông minh • Thu phí tự động • Minh bạch</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-3 self-end sm:self-center w-full sm:w-auto justify-end">
+        <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap min-w-0">
           <!-- Date Range Picker (UIDatepicker) -->
-          <div id="header-date-picker" class="w-44 sm:w-52"></div>
+          <div id="header-date-picker" class="flex-1 min-w-[130px] sm:w-52"></div>
 
           <!-- Tower Dropdown (UISelect) -->
-          <div id="header-tower-select" class="w-28 sm:w-36"></div>
+          <div id="header-tower-select" class="shrink-0 min-w-[110px] sm:w-36"></div>
 
           <!-- Notification Bell & Dropdown Wrapper -->
           <div class="relative">
@@ -336,7 +346,7 @@
             </button>
 
             <!-- Notification Dropdown Panel -->
-            <div id="header-notif-dropdown" class="hidden absolute right-0 top-full mt-2.5 w-80 sm:w-96 bg-white border border-slate-200/90 rounded-3xl shadow-2xl z-50 p-4 space-y-3 origin-top-right">
+            <div id="header-notif-dropdown" class="hidden absolute right-0 top-full mt-2.5 w-[calc(100vw-32px)] max-w-[340px] sm:w-96 bg-white border border-slate-200/90 rounded-3xl shadow-2xl z-50 p-3.5 sm:p-4 space-y-3 origin-top-right">
               <!-- Header -->
               <div class="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div class="flex items-center gap-2">
@@ -389,6 +399,77 @@
       </div>
 
     </main>
+  </div>
+
+  <!-- MOBILE BOTTOM TAB NAVIGATION BAR (< 1024px) -->
+  <div id="mobile-bottom-tab-wrap" class="lg:hidden">
+    <!-- Backdrop overlay for More Menu sheet -->
+    <div id="more-sheet-backdrop" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40"></div>
+
+    <!-- More Menu Sheet Popup -->
+    <div id="mobile-more-sheet" class="hidden fixed bottom-16 left-3 right-3 bg-white/95 backdrop-blur-xl border border-slate-200/90 rounded-3xl shadow-2xl z-50 p-4 space-y-2 origin-bottom transition-all duration-200 ease-out transform scale-95 opacity-0">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5 px-1">
+        <h4 class="font-extrabold text-slate-900 text-xs uppercase tracking-wider">Danh mục tính năng khác</h4>
+        <button type="button" id="close-more-sheet-btn" class="text-slate-400 hover:text-slate-600 p-1 cursor-pointer">
+          <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
+
+      <div class="grid grid-cols-3 gap-2.5 pt-1">
+        <a href="#/cards" class="more-nav-item flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-700 font-bold text-[11px] transition text-center">
+          <svg class="w-5 h-5 text-blue-600 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+          <span>Thẻ xe</span>
+        </a>
+
+        <a href="#/residents" class="more-nav-item flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-700 font-bold text-[11px] transition text-center">
+          <svg class="w-5 h-5 text-emerald-600 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+          <span>Cư dân</span>
+        </a>
+
+        <a href="#/vehicle-access" class="more-nav-item flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-700 font-bold text-[11px] transition text-center">
+          <svg class="w-5 h-5 text-amber-600 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+          <span>Xe ra vào</span>
+        </a>
+
+        <a href="#/reports" class="more-nav-item flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-700 font-bold text-[11px] transition text-center">
+          <svg class="w-5 h-5 text-indigo-600 fill-current" viewBox="0 0 24 24"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zM9 17H7v-7h2v7zm4 0h-2V7h2v10zm4 0h-2v-4h2v4z"/></svg>
+          <span>Báo cáo</span>
+        </a>
+
+        <a href="#/settings" class="more-nav-item flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-slate-50 hover:bg-blue-50 text-slate-700 font-bold text-[11px] transition text-center">
+          <svg class="w-5 h-5 text-slate-600 fill-current" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+          <span>Cài đặt</span>
+        </a>
+      </div>
+    </div>
+
+    <!-- Bottom Tab Navigation Bar -->
+    <nav id="mobile-bottom-tab" class="fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-xl border-t border-slate-200/90 py-1.5 px-3 shadow-2xl flex items-center justify-around transition-transform duration-300 ease-out">
+      <a href="#/dashboard" class="btab-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-slate-700 font-semibold text-[10px] transition cursor-pointer">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z"/></svg>
+        <span>Tổng quan</span>
+      </a>
+
+      <a href="#/revenue" class="btab-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-slate-700 font-semibold text-[10px] transition cursor-pointer">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19 3h-1V1h-2v2H8V1H6v2H5c-1.11 0-1.99.9-1.99 2L3 19c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V8h14v11z"/></svg>
+        <span>Doanh thu</span>
+      </a>
+
+      <a href="#/transactions" class="btab-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-slate-700 font-semibold text-[10px] transition cursor-pointer">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/></svg>
+        <span>Giao dịch</span>
+      </a>
+
+      <a href="#/debt" class="btab-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-slate-700 font-semibold text-[10px] transition cursor-pointer">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M11.99 2C6.47 2 2 6.48 2 12s4.47 10 9.99 10C17.52 22 22 17.52 22 12S17.52 2 11.99 2zM12 20c-4.42 0-8-3.58-8-8s3.58-8 8-8 8 3.58 8 8-3.58 8-8 8zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67z"/></svg>
+        <span>Công nợ</span>
+      </a>
+
+      <button type="button" id="more-menu-btn" class="btab-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-slate-700 font-semibold text-[10px] transition cursor-pointer">
+        <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/></svg>
+        <span>Thêm</span>
+      </button>
+    </nav>
   </div>
 
   <!-- ES Modules Entry Point -->

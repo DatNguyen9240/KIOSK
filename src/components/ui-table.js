@@ -102,10 +102,10 @@ export class UITable {
                     : '⇅';
                   return `
                     <th
-                      class="py-2.5 px-3 sm:py-3.5 sm:px-4 ${col.sortable ? 'cursor-pointer hover:bg-slate-100/70 transition' : ''} ${col.headerClass || ''}"
+                      class="py-2.5 px-3 sm:py-3.5 sm:px-4 whitespace-nowrap ${col.sortable ? 'cursor-pointer hover:bg-slate-100/70 transition' : ''} ${col.headerClass || ''}"
                       ${col.sortable ? `data-sort-key="${col.key}"` : ''}
                     >
-                      <div class="flex items-center gap-1.5">
+                      <div class="flex items-center gap-1.5 whitespace-nowrap">
                         <span>${col.title}</span>
                         ${col.sortable ? `<span class="text-[10px] ${isSorted ? 'text-[#0B2C4D] font-bold' : 'text-slate-300'}">${sortIcon}</span>` : ''}
                       </div>
@@ -120,7 +120,7 @@ export class UITable {
                   ${this.columns.map(col => {
                     let cellVal = row[col.key];
                     let rendered = col.render ? col.render(cellVal, row, startIndex + rIdx) : (cellVal ?? '');
-                    return `<td class="py-2.5 px-3 sm:py-3.5 sm:px-4 ${col.classNames || ''}">${rendered}</td>`;
+                    return `<td class="py-2.5 px-3 sm:py-3.5 sm:px-4 whitespace-nowrap ${col.classNames || ''}">${rendered}</td>`;
                   }).join('')}
                 </tr>
               `).join('')}

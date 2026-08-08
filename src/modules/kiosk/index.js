@@ -20,21 +20,21 @@ export function initKioskTouchModule(container) {
   container.innerHTML = `
     <div class="max-w-4xl mx-auto space-y-6 select-none">
       <!-- Top Kiosk Header -->
-      <div class="flex items-center justify-between bg-slate-900 text-white p-6 rounded-3xl shadow-xl">
-        <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-2xl bg-blue-600 flex items-center justify-center font-black text-lg">P</div>
-          <div>
-            <h1 class="text-xl font-black tracking-wide">PARKING.GO KIOSK</h1>
-            <p class="text-xs text-slate-400">Trạm thanh toán tự động giữ xe vãng lai & gia hạn</p>
+      <div class="flex items-center justify-between gap-2 bg-slate-900 text-white p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl shadow-xl">
+        <div class="flex items-center gap-2.5 sm:gap-3 min-w-0">
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-blue-600 flex items-center justify-center font-black text-base sm:text-lg shrink-0">P</div>
+          <div class="min-w-0">
+            <h1 class="text-xs sm:text-xl font-black tracking-wide truncate">PARKING.GO KIOSK</h1>
+            <p class="text-[9px] sm:text-xs text-slate-400 truncate">Trạm thanh toán tự động giữ xe vãng lai & gia hạn</p>
           </div>
         </div>
-        <div class="text-right">
-          <span class="px-3 py-1 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-xs font-bold">● Sẵn sàng</span>
+        <div class="text-right shrink-0">
+          <span class="px-2.5 py-1 sm:px-3 bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 rounded-full text-[10px] sm:text-xs font-bold whitespace-nowrap">● Sẵn sàng</span>
         </div>
       </div>
 
       <!-- Main Kiosk Body -->
-      <div id="kiosk-body-step" class="bg-white p-8 rounded-3xl border border-slate-100 shadow-2xl min-h-[420px] flex flex-col justify-center">
+      <div id="kiosk-body-step" class="bg-white p-4 sm:p-8 rounded-2xl sm:rounded-3xl border border-slate-100 shadow-2xl min-h-[380px] flex flex-col justify-center">
         <!-- Step 1: Big Plate Input -->
         <div id="kiosk-step-1" class="space-y-6 text-center max-w-lg mx-auto w-full">
           <h2 class="text-2xl font-black text-slate-900">VUI LÒNG NHẬP BIỂN SỐ XE</h2>

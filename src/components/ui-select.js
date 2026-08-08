@@ -48,9 +48,9 @@ export class UISelect {
         <button
           type="button"
           id="${this._uid}-trigger"
-          class="w-full flex items-center justify-between gap-2 px-3 py-2.5 bg-slate-50 hover:bg-white border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+          class="w-full flex items-center justify-between gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 hover:bg-white border border-slate-200/80 rounded-2xl text-[11px] sm:text-xs font-bold text-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20 min-w-0"
         >
-          <span id="${this._uid}-label" class="truncate">${this.getLabel()}</span>
+          <span id="${this._uid}-label" class="truncate min-w-0">${this.getLabel()}</span>
           <svg id="${this._uid}-chevron" class="w-3.5 h-3.5 text-slate-400 shrink-0 transition-transform duration-200" viewBox="0 0 24 24" fill="currentColor">
             <path d="M7 10l5 5 5-5z"/>
           </svg>
@@ -59,21 +59,21 @@ export class UISelect {
         <!-- Dropdown panel -->
         <div
           id="${this._uid}-panel"
-          class="absolute top-full mt-1.5 left-0 right-0 bg-white border border-slate-200/80 rounded-2xl shadow-xl z-50 overflow-hidden py-1 opacity-0 scale-95 pointer-events-none"
-          style="transition: opacity 150ms ease, transform 150ms ease; transform-origin: top center;"
+          class="absolute top-full mt-1.5 right-0 min-w-full w-max max-w-[calc(100vw-24px)] bg-white border border-slate-200/90 rounded-2xl shadow-2xl z-50 overflow-hidden py-1 opacity-0 scale-95 pointer-events-none"
+          style="transition: opacity 150ms ease, transform 150ms ease; transform-origin: top right;"
         >
           ${this.options.map(opt => `
             <button
               type="button"
               data-value="${opt.value}"
-              class="uisel-option w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors text-left"
+              class="uisel-option w-full flex items-center gap-2.5 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors text-left whitespace-nowrap"
             >
               <span class="uisel-check w-3.5 h-3.5 shrink-0 ${this.selected === opt.value ? 'opacity-100' : 'opacity-0'}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="#0B2C4D" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                   <polyline points="20 6 9 17 4 12"/>
                 </svg>
               </span>
-              <span>${opt.label}</span>
+              <span class="whitespace-nowrap">${opt.label}</span>
             </button>
           `).join('')}
         </div>

@@ -107,158 +107,213 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // Mobile Sidebar Drawer Handlers
-  const mobileMenuBtn = document.getElementById('mobile-menu-btn');
-  const sidebar = document.getElementById('app-sidebar');
-  const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+  // Mobile BottomTab & More Menu Sheet Handlers
+  const mobileBottomTab = document.getElementById('mobile-bottom-tab');
+  const moreMenuBtn = document.getElementById('more-menu-btn');
+  const mobileMoreSheet = document.getElementById('mobile-more-sheet');
+  const moreSheetBackdrop = document.getElementById('more-sheet-backdrop');
+  const closeMoreSheetBtn = document.getElementById('close-more-sheet-btn');
 
-  const closeSidebar = () => {
-    if (sidebar) sidebar.classList.add('-translate-x-full');
-    if (sidebarBackdrop) sidebarBackdrop.classList.add('hidden');
+  const closeMoreSheet = () => {
+    if (mobileMoreSheet) {
+      mobileMoreSheet.classList.remove('scale-100', 'opacity-100');
+      mobileMoreSheet.classList.add('scale-95', 'opacity-0');
+      setTimeout(() => mobileMoreSheet.classList.add('hidden'), 200);
+    }
+    if (moreSheetBackdrop) moreSheetBackdrop.classList.add('hidden');
   };
 
-  const openSidebar = () => {
-    if (sidebar) sidebar.classList.remove('-translate-x-full');
-    if (sidebarBackdrop) sidebarBackdrop.classList.remove('hidden');
+  const openMoreSheet = () => {
+    window.dispatchEvent(new CustomEvent('app:close-all-popups', { detail: { source: 'more-sheet' } }));
+    if (mobileMoreSheet) {
+      mobileMoreSheet.classList.remove('hidden');
+      requestAnimationFrame(() => {
+        mobileMoreSheet.classList.remove('scale-95', 'opacity-0');
+        mobileMoreSheet.classList.add('scale-100', 'opacity-100');
+      });
+    }
+    if (moreSheetBackdrop) moreSheetBackdrop.classList.remove('hidden');
   };
 
-  if (mobileMenuBtn) {
-    mobileMenuBtn.onclick = (e) => {
+  if (moreMenuBtn) {
+    moreMenuBtn.onclick = (e) => {
       e.stopPropagation();
-      openSidebar();
+      const isHidden = mobileMoreSheet?.classList.contains('hidden');
+      if (isHidden) openMoreSheet(); else closeMoreSheet();
     };
   }
 
-  if (sidebarBackdrop) {
-    sidebarBackdrop.onclick = closeSidebar;
-  }
+  if (closeMoreSheetBtn) closeMoreSheetBtn.onclick = closeMoreSheet;
+  if (moreSheetBackdrop) moreSheetBackdrop.onclick = closeMoreSheet;
 
-  // Sidebar navigation active state handler
+  // Auto-hide Mobile BottomTab on input/select focus
+  document.addEventListener('focusin', (e) => {
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+      if (mobileBottomTab) mobileBottomTab.classList.add('translate-y-full');
+      closeMoreSheet();
+    }
+  });
+
+  document.addEventListener('focusout', (e) => {
+    if (['INPUT', 'SELECT', 'TEXTAREA'].includes(e.target.tagName)) {
+      if (mobileBottomTab) mobileBottomTab.classList.remove('translate-y-full');
+    }
+  });
+
+  // Listen for popup opens to close More Sheet
+  window.addEventListener('app:close-all-popups', (e) => {
+    if (e.detail?.source !== 'more-sheet') {
+      closeMoreSheet();
+    }
+  });
+
+  // Navigation active state handler for both Desktop Sidebar & Mobile BottomTab
   function setActiveNav(hash) {
-    closeSidebar();
-    const navItems = document.querySelectorAll('#sidebar-nav .nav-item');
-    navItems.forEach(item => {
+    closeMoreSheet();
+    const currentHash = hash || '#/dashboard';
+    
+    // Desktop Nav Items
+    document.querySelectorAll('#sidebar-nav .nav-item').forEach(item => {
       const href = item.getAttribute('href');
-      if (href === hash || (hash === '' && href === '#/dashboard')) {
+      if (href === currentHash) {
         item.className = 'nav-item active flex items-center gap-3 px-4 py-3 rounded-2xl bg-[#0B2C4D] text-white font-bold text-xs shadow-md shadow-[#0B2C4D]/20 transition duration-150';
       } else {
         item.className = 'nav-item flex items-center gap-3 px-4 py-3 rounded-2xl text-slate-600 hover:bg-slate-100 font-semibold text-xs transition duration-150';
       }
+    });
+
+    // Mobile BottomTab Items
+    document.querySelectorAll('#mobile-bottom-tab .btab-item').forEach(item => {
+      const href = item.getAttribute('href');
+      if (href === currentHash) {
+        item.className = 'btab-item flex flex-col items-center gap-0.5 text-[#0B2C4D] font-black text-[10px] transition cursor-pointer';
+      } else if (href) {
+        item.className = 'btab-item flex flex-col items-center gap-0.5 text-slate-400 hover:text-slate-700 font-semibold text-[10px] transition cursor-pointer';
+      }
+    });
+
+    // More Sheet Items
+    document.querySelectorAll('#mobile-more-sheet .more-nav-item').forEach(item => {
+      item.onclick = closeMoreSheet;
     });
   }
 
   // Render Full Integrated Dashboard (Overview route #/dashboard)
   function renderDashboardShowcase(container) {
     container.innerHTML = `
-      <!-- 4 STAT CARDS ROW (Unified Single Card Panel with Trimmed Inset Dividers) -->
-      <div class="bg-white rounded-3xl border border-slate-200/70 shadow-card grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 overflow-hidden">
+      <!-- 4 STAT CARDS ROW (Compact 2x2 Grid on Mobile, 4-Cols on Desktop) -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card grid grid-cols-2 lg:grid-cols-4 overflow-hidden divide-x divide-y divide-slate-100">
         
         <!-- Stat Item 1 -->
-        <div class="p-5 flex items-center justify-between relative">
-          <div class="space-y-1">
-            <span class="text-xs font-semibold text-slate-400 block">Doanh thu hôm nay</span>
-            <div class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">52.850.000 đ</div>
-            <span class="text-[11px] font-bold text-emerald-600 inline-flex items-center gap-1">
-              <span>▲ 7.8%</span> <span class="text-slate-400 font-normal">so với hôm qua</span>
+        <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
+          <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
+            <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Doanh thu hôm nay</span>
+            <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">52.850.000 đ</div>
+            <span class="text-[9px] sm:text-[11px] font-bold text-emerald-600 inline-flex items-center gap-0.5">
+              <span>▲ 7.8%</span> <span class="text-slate-400 font-normal hidden sm:inline">so với hôm qua</span>
             </span>
           </div>
-          <img src="assets/images/money.png" alt="Money Wallet 3D Icon" class="w-14 h-14 object-contain shrink-0" />
-          <div class="hidden sm:block absolute right-0 top-4 bottom-4 w-[1px] bg-slate-200/80"></div>
+          <img src="assets/images/money.png" alt="Money Wallet 3D Icon" class="w-9 h-9 sm:w-14 sm:h-14 object-contain shrink-0" />
         </div>
 
         <!-- Stat Item 2 -->
-        <div class="p-5 flex items-center justify-between relative">
-          <div class="space-y-1">
-            <span class="text-xs font-semibold text-slate-400 block">Công nợ cần thu</span>
-            <div class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">128.450.000 đ</div>
-            <span class="text-[11px] font-medium text-slate-400 block">248 khoản nợ</span>
+        <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
+          <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
+            <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Công nợ cần thu</span>
+            <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">128.450.000 đ</div>
+            <span class="text-[9px] sm:text-[11px] font-medium text-slate-400 block">248 khoản nợ</span>
           </div>
-          <img src="assets/images/report (1).png" alt="Debt 3D Icon" class="w-14 h-14 object-contain shrink-0" />
-          <div class="hidden sm:block absolute right-0 top-4 bottom-4 w-[1px] bg-slate-200/80"></div>
+          <img src="assets/images/report (1).png" alt="Debt 3D Icon" class="w-9 h-9 sm:w-14 sm:h-14 object-contain shrink-0" />
         </div>
 
         <!-- Stat Item 3 -->
-        <div class="p-5 flex items-center justify-between relative">
-          <div class="space-y-1">
-            <span class="text-xs font-semibold text-slate-400 block">Thẻ sắp hết hạn</span>
-            <div class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">86 thẻ</div>
-            <span class="text-[11px] font-medium text-slate-400 block">Trong 7 ngày tới</span>
+        <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
+          <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
+            <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Thẻ sắp hết hạn</span>
+            <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">86 thẻ</div>
+            <span class="text-[9px] sm:text-[11px] font-medium text-slate-400 block">Trong 7 ngày tới</span>
           </div>
-          <img src="assets/images/report (2).png" alt="Cards Expiring 3D Icon" class="w-14 h-14 object-contain shrink-0" />
-          <div class="hidden sm:block absolute right-0 top-4 bottom-4 w-[1px] bg-slate-200/80"></div>
+          <img src="assets/images/report (2).png" alt="Cards Expiring 3D Icon" class="w-9 h-9 sm:w-14 sm:h-14 object-contain shrink-0" />
         </div>
 
         <!-- Stat Item 4 -->
-        <div class="p-5 flex items-center justify-between relative">
-          <div class="space-y-1">
-            <span class="text-xs font-semibold text-slate-400 block">Giao dịch online</span>
-            <div class="text-xl md:text-2xl font-black text-slate-900 tracking-tight">68 giao dịch</div>
-            <span class="text-[11px] font-medium text-slate-400 block">Tổng 24.550.000 đ</span>
+        <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
+          <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
+            <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Giao dịch online</span>
+            <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">68 giao dịch</div>
+            <span class="text-[9px] sm:text-[11px] font-medium text-slate-400 block truncate">Tổng 24.550.000 đ</span>
           </div>
-          <img src="assets/images/report (3).png" alt="Online Transactions 3D Icon" class="w-14 h-14 object-contain shrink-0" />
+          <img src="assets/images/report (3).png" alt="Online Transactions 3D Icon" class="w-9 h-9 sm:w-14 sm:h-14 object-contain shrink-0" />
         </div>
 
       </div>
 
-      <!-- MIDDLE ROW: CHARTS SECTION -->
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
-        
-        <!-- LINE CHART CARD (Col 8) -->
-        <div class="lg:col-span-8 bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card space-y-4">
-          <div class="flex items-center justify-between">
-            <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Doanh thu theo ngày</h3>
-            <div id="chart-timeframe-select-wrap" class="w-32"></div>
+      <!-- MIDDLE ROW: CHARTS SECTION (Unified Single Card Panel) -->
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4">
+        <!-- Unified Header with Mobile Tab Switcher -->
+        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2 w-full sm:w-auto justify-between sm:justify-start">
+            <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Báo cáo & Phân tích</h3>
+            <!-- Mobile Chart Switcher (< lg) -->
+            <div class="flex lg:hidden bg-slate-100 p-0.5 rounded-xl text-[10px] font-bold">
+              <button type="button" id="m-chart-tab-line" class="px-2.5 py-1 rounded-lg bg-[#0B2C4D] text-white shadow-xs transition">Doanh thu</button>
+              <button type="button" id="m-chart-tab-donut" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition">Tỷ lệ Tháp</button>
+            </div>
           </div>
-
-          <!-- Chart.js Revenue Canvas -->
-          <div class="relative h-[220px] w-full pt-2">
-            <canvas id="revenue-chart-canvas"></canvas>
-          </div>
+          <div id="chart-timeframe-select-wrap" class="w-32 self-end sm:self-center"></div>
         </div>
 
-        <!-- DONUT CHART CARD (Col 4 - Tower Breakdown) -->
-        <div class="lg:col-span-4 bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card flex flex-col justify-between space-y-4">
-          <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Tower Breakdown</h3>
-
-          <!-- Chart.js Donut Canvas with Center Text Overlay -->
-          <div class="relative flex items-center justify-center h-44 my-1">
-            <canvas id="tower-donut-canvas"></canvas>
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full">
-              <div id="donut-center-label" class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5 leading-none">TỔNG DOANH THU</div>
-              <div id="donut-center-val" class="text-lg font-black text-[#0B2C4D] leading-none">258.04 Tỷ</div>
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-center">
+          <!-- LINE CHART CONTAINER (Col 7/8) -->
+          <div id="line-chart-panel" class="lg:col-span-7 space-y-2">
+            <h4 class="text-xs font-bold text-slate-500 hidden lg:block">Doanh thu theo ngày</h4>
+            <div class="relative h-[200px] sm:h-[220px] w-full pt-1">
+              <canvas id="revenue-chart-canvas"></canvas>
             </div>
           </div>
 
-          <!-- Legends Breakdown List -->
-          <div class="space-y-2 pt-2 border-t border-slate-100">
-            <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#0B2C4D]"></span>
-                <span class="text-slate-700">Tháp A1</span>
+          <!-- DONUT CHART CONTAINER (Col 5/4) -->
+          <div id="donut-chart-panel" class="hidden lg:flex lg:col-span-5 flex-col justify-between space-y-3 pt-4 lg:pt-0 lg:border-l lg:border-slate-100 lg:pl-5">
+            <h4 class="text-xs font-bold text-slate-500 hidden lg:block">Tỷ lệ theo Tháp</h4>
+            <!-- Chart.js Donut Canvas with Center Text Overlay -->
+            <div class="relative flex items-center justify-center h-40 my-1">
+              <canvas id="tower-donut-canvas"></canvas>
+              <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full">
+                <div id="donut-center-label" class="text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-0.5 leading-none">TỔNG DOANH THU</div>
+                <div id="donut-center-val" class="text-base font-black text-[#0B2C4D] leading-none">258.04 Tỷ</div>
               </div>
-              <span class="font-bold text-slate-900">45% (120.96 Tỷ)</span>
             </div>
-            <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#00A8CC]"></span>
-                <span class="text-slate-700">Tháp A2</span>
+
+            <!-- Legends Breakdown List -->
+            <div class="space-y-1.5 pt-2 border-t border-slate-100">
+              <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#0B2C4D]"></span>
+                  <span class="text-slate-700">Tháp A1</span>
+                </div>
+                <span class="font-bold text-slate-900">45% (120.96 Tỷ)</span>
               </div>
-              <span class="font-bold text-slate-900">36% (96.76 Tỷ)</span>
-            </div>
-            <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
-              <div class="flex items-center gap-2">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#7CB342]"></span>
-                <span class="text-slate-700">Tháp A3</span>
+              <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#00A8CC]"></span>
+                  <span class="text-slate-700">Tháp A2</span>
+                </div>
+                <span class="font-bold text-slate-900">36% (96.76 Tỷ)</span>
               </div>
-              <span class="font-bold text-slate-900">15% (40.32 Tỷ)</span>
+              <div class="flex items-center justify-between text-xs font-semibold hover:bg-slate-50 p-1 rounded-xl transition cursor-pointer">
+                <div class="flex items-center gap-2">
+                  <span class="w-2.5 h-2.5 rounded-full bg-[#7CB342]"></span>
+                  <span class="text-slate-700">Tháp A3</span>
+                </div>
+                <span class="font-bold text-slate-900">15% (40.32 Tỷ)</span>
+              </div>
             </div>
           </div>
         </div>
-
       </div>
 
       <!-- DEBT REPORT TABLE CARD (Báo cáo công nợ - Exact matching demo-ui.png) -->
-      <div class="bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card space-y-4">
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4">
         
         <!-- Header & Action Row -->
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
@@ -284,7 +339,7 @@ document.addEventListener('DOMContentLoaded', () => {
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
         
         <!-- CARD 1: Check-in / Check-out QR Payment (Col 4) -->
-        <div class="lg:col-span-4 bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card space-y-4">
+        <div class="lg:col-span-4 bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4">
           <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
             <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">1</span>
             <h4 class="font-extrabold text-slate-900 text-xs">Thanh toán giữ xe online (Check-in/out)</h4>
@@ -321,7 +376,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <p class="text-[10px] text-slate-400 font-medium leading-tight">Quét mã QR để thanh toán khẩn cấp qua các ngân hàng & ví điện tử</p>
             
             <!-- Bank Logos Badges -->
-            <div class="flex items-center justify-center gap-1.5 pt-1">
+            <div class="flex items-center justify-center gap-1.5 pt-1 flex-wrap">
               <span class="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-black rounded text-[9px]">Vietcombank</span>
               <span class="px-2 py-0.5 bg-blue-100 text-blue-800 font-black rounded text-[9px]">BIDV</span>
               <span class="px-2 py-0.5 bg-pink-100 text-pink-800 font-black rounded text-[9px]">MoMo</span>
@@ -337,7 +392,7 @@ document.addEventListener('DOMContentLoaded', () => {
         </div>
 
         <!-- CARD 2: Tra cứu phương tiện (Nhân viên quản lý) (Col 4) -->
-        <div class="lg:col-span-4 bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card space-y-4">
+        <div class="lg:col-span-4 bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4">
           <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
             <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">2</span>
             <h4 class="font-extrabold text-slate-900 text-xs">Tra cứu phương tiện (Nhân viên quản lý)</h4>
@@ -368,45 +423,45 @@ document.addEventListener('DOMContentLoaded', () => {
             <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Danh sách xe đã đăng ký</span>
             
             <div class="space-y-1.5 text-xs">
-              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-2">
+              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between flex-wrap sm:flex-nowrap gap-1">
+                <div class="flex items-center gap-2 min-w-0">
                   <span>🛵</span>
-                  <span class="font-mono font-bold text-slate-900">30F-121.46</span>
+                  <span class="font-mono font-bold text-slate-900 truncate">30F-121.46</span>
                 </div>
-                <span class="text-[10px] text-slate-500">Xe máy - 1 tầng</span>
-                <span class="px-2 py-0.5 bg-[#D1FADF] text-[#027A48] font-bold text-[10px] rounded-md">Còn hiệu lực</span>
+                <span class="text-[10px] text-slate-500 whitespace-nowrap">Xe máy - 1 tầng</span>
+                <span class="px-2 py-0.5 bg-[#D1FADF] text-[#027A48] font-bold text-[10px] rounded-md whitespace-nowrap">Còn hiệu lực</span>
               </div>
 
-              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-blue-600 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                  <span class="font-mono font-bold text-slate-900">20G-476.49</span>
+              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between flex-wrap sm:flex-nowrap gap-1">
+                <div class="flex items-center gap-2 min-w-0">
+                  <svg class="w-4 h-4 text-blue-600 fill-current shrink-0" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                  <span class="font-mono font-bold text-slate-900 truncate">20G-476.49</span>
                 </div>
-                <span class="text-[10px] text-slate-500">Ô tô - 13 tháng</span>
-                <span class="px-2 py-0.5 bg-[#D1FADF] text-[#027A48] font-bold text-[10px] rounded-md">Còn hiệu lực</span>
+                <span class="text-[10px] text-slate-500 whitespace-nowrap">Ô tô - 13 tháng</span>
+                <span class="px-2 py-0.5 bg-[#D1FADF] text-[#027A48] font-bold text-[10px] rounded-md whitespace-nowrap">Còn hiệu lực</span>
               </div>
 
-              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                  <svg class="w-4 h-4 text-slate-500 fill-current" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                  <span class="font-mono font-bold text-slate-900">29A.478.78</span>
+              <div class="p-2.5 bg-slate-50 rounded-xl border border-slate-100 flex items-center justify-between flex-wrap sm:flex-nowrap gap-1">
+                <div class="flex items-center gap-2 min-w-0">
+                  <svg class="w-4 h-4 text-slate-500 fill-current shrink-0" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                  <span class="font-mono font-bold text-slate-900 truncate">29A.478.78</span>
                 </div>
-                <span class="text-[10px] text-slate-500">Xe máy - 1 tháng</span>
-                <span class="px-2 py-0.5 bg-[#FEE4E2] text-[#D92D20] font-bold text-[10px] rounded-md">Quá hạn</span>
+                <span class="text-[10px] text-slate-500 whitespace-nowrap">Xe máy - 1 tháng</span>
+                <span class="px-2 py-0.5 bg-[#FEE4E2] text-[#D92D20] font-bold text-[10px] rounded-md whitespace-nowrap">Quá hạn</span>
               </div>
             </div>
           </div>
         </div>
 
         <!-- CARD 3: Ứng dụng bảo vệ (Nhân viên kiểm soát) (Col 4) -->
-        <div class="lg:col-span-4 bg-white p-5 rounded-3xl border border-slate-200/70 shadow-card space-y-4">
+        <div class="lg:col-span-4 bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4">
           <div class="flex items-center gap-2 border-b border-slate-100 pb-3">
-            <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center">3</span>
+            <span class="w-6 h-6 rounded-full bg-blue-600 text-white font-bold text-xs flex items-center justify-center shrink-0">3</span>
             <h4 class="font-extrabold text-slate-900 text-xs">Ứng dụng bảo vệ (Nhân viên kiểm soát)</h4>
           </div>
 
           <!-- Two Smartphone App Screens Side-by-Side (Exact visual matching demo-ui.png) -->
-          <div class="grid grid-cols-2 gap-3 pt-1">
+          <div class="grid grid-cols-2 gap-2 sm:gap-3 pt-1">
             
             <!-- Mobile Phone 1 -->
             <div class="bg-slate-900 rounded-[24px] p-2.5 border-4 border-slate-800 shadow-lg text-white space-y-2 select-none">
@@ -448,6 +503,29 @@ document.addEventListener('DOMContentLoaded', () => {
 
       </div>
     `;
+
+    // Mobile Chart Tab Switcher (< lg)
+    const mTabLine = container.querySelector('#m-chart-tab-line');
+    const mTabDonut = container.querySelector('#m-chart-tab-donut');
+    const linePanel = container.querySelector('#line-chart-panel');
+    const donutPanel = container.querySelector('#donut-chart-panel');
+
+    if (mTabLine && mTabDonut && linePanel && donutPanel) {
+      mTabLine.onclick = () => {
+        mTabLine.className = 'px-2.5 py-1 rounded-lg bg-[#0B2C4D] text-white shadow-xs transition';
+        mTabDonut.className = 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+        linePanel.classList.remove('hidden');
+        donutPanel.classList.add('hidden');
+      };
+
+      mTabDonut.onclick = () => {
+        mTabDonut.className = 'px-2.5 py-1 rounded-lg bg-[#0B2C4D] text-white shadow-xs transition';
+        mTabLine.className = 'px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 transition';
+        linePanel.classList.add('hidden');
+        donutPanel.classList.remove('hidden');
+        donutPanel.classList.add('flex');
+      };
+    }
 
     // Initialize Revenue Line Chart
     let revChartInstance = initRevenueChart(container.querySelector('#revenue-chart-canvas'), '7d');

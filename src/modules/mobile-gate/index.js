@@ -8,7 +8,7 @@ export function initMobileGateModule(container) {
   if (!container) return;
 
   container.innerHTML = `
-    <div class="max-w-md mx-auto bg-slate-900 min-h-[600px] rounded-[40px] border-8 border-slate-800 p-4 text-white shadow-2xl flex flex-col justify-between select-none">
+    <div class="max-w-md mx-auto bg-slate-900 min-h-[550px] sm:min-h-[600px] rounded-[28px] sm:rounded-[40px] border-4 sm:border-8 border-slate-800 p-3 sm:p-4 text-white shadow-2xl flex flex-col justify-between select-none">
       <!-- Status Header Bar -->
       <div class="flex items-center justify-between px-3 py-2 border-b border-slate-800">
         <div class="flex items-center gap-2">

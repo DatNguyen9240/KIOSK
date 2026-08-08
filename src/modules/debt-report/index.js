@@ -21,11 +21,11 @@ export function initDebtReportModule(container) {
   };
 
   container.innerHTML = `
-    <div class="bg-white p-6 rounded-3xl border border-slate-200/70 shadow-card space-y-6">
+    <div class="bg-white p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4 sm:space-y-6">
       <!-- Header -->
       <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between border-b border-slate-100 pb-4">
         <div>
-          <h2 class="text-xl font-black text-[#0B2C4D] tracking-tight">Báo cáo công nợ & Gia hạn theo Tháp</h2>
+          <h2 class="text-base sm:text-xl font-black text-[#0B2C4D] tracking-tight leading-snug">Báo cáo công nợ & Gia hạn theo Tháp</h2>
           <p class="text-xs text-slate-400 font-medium mt-0.5">Quản lý các khoản phí giữ xe cần thu, công nợ ngày/tháng phân chia theo từng Tháp</p>
         </div>
         <div class="flex items-center gap-2">

@@ -26,29 +26,29 @@ export function initMonthlyRenewalModule(container) {
   container.innerHTML = `
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <!-- Form Column -->
-      <div class="lg:col-span-7 bg-white p-6 rounded-3xl border border-slate-200/70 shadow-card space-y-6">
-        <div class="border-b border-slate-100 pb-4">
-          <h2 class="text-xl font-black text-[#0B2C4D] tracking-tight">Gia hạn thẻ tháng Online (Cư dân)</h2>
+      <div class="lg:col-span-7 bg-white p-3.5 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4 sm:space-y-6">
+        <div class="border-b border-slate-100 pb-3 sm:pb-4">
+          <h2 class="text-base sm:text-xl font-black text-[#0B2C4D] tracking-tight leading-snug">Gia hạn thẻ tháng Online (Cư dân)</h2>
           <p class="text-xs text-slate-400 font-medium mt-0.5">Gia hạn thẻ giữ xe nhanh chóng, nhận mã QR thanh toán 120s</p>
         </div>
 
         <!-- Vehicle Type Selection -->
         <div class="space-y-2">
           <label class="text-xs font-bold text-slate-700 uppercase tracking-wider">1. Chọn loại xe</label>
-          <div class="grid grid-cols-2 gap-3" id="vehicle-type-options">
-            <button type="button" data-type="CAR" class="type-btn p-3.5 rounded-2xl border-2 border-[#0B2C4D] bg-blue-50/50 text-[#0B2C4D] font-bold text-left flex items-center justify-between transition">
-              <span class="flex items-center gap-2">
-                <svg class="w-4 h-4 fill-current text-[#0B2C4D]" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                <span>Ô tô</span>
+          <div class="grid grid-cols-2 gap-2.5 sm:gap-3" id="vehicle-type-options">
+            <button type="button" data-type="CAR" class="type-btn p-3 sm:p-3.5 rounded-2xl border-2 border-[#0B2C4D] bg-blue-50/50 text-[#0B2C4D] font-bold text-left flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 transition min-w-0 cursor-pointer">
+              <span class="flex items-center gap-2 min-w-0">
+                <svg class="w-4 h-4 fill-current text-[#0B2C4D] shrink-0" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                <span class="text-xs sm:text-sm font-extrabold truncate">Ô tô</span>
               </span>
-              <span class="text-xs text-[#0B2C4D] font-extrabold">1.200.000đ/tháng</span>
+              <span class="text-[10px] sm:text-xs text-[#0B2C4D] font-black whitespace-nowrap">1.200.000đ/tháng</span>
             </button>
-            <button type="button" data-type="MOTORBIKE" class="type-btn p-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-700 font-semibold text-left flex items-center justify-between hover:bg-slate-100 transition">
-              <span class="flex items-center gap-2">
-                <svg class="w-4 h-4 fill-current text-slate-500" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                <span>Xe máy</span>
+            <button type="button" data-type="MOTORBIKE" class="type-btn p-3 sm:p-3.5 rounded-2xl border border-slate-200 bg-slate-50/50 text-slate-700 font-semibold text-left flex flex-col sm:flex-row sm:items-center justify-between gap-1 sm:gap-2 hover:bg-slate-100 transition min-w-0 cursor-pointer">
+              <span class="flex items-center gap-2 min-w-0">
+                <svg class="w-4 h-4 fill-current text-slate-500 shrink-0" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                <span class="text-xs sm:text-sm font-extrabold truncate">Xe máy</span>
               </span>
-              <span class="text-xs text-slate-500 font-bold">100.000đ/tháng</span>
+              <span class="text-[10px] sm:text-xs text-slate-500 font-bold whitespace-nowrap">100.000đ/tháng</span>
             </button>
           </div>
         </div>

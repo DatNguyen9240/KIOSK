@@ -44,7 +44,7 @@ export class UIDatepicker {
     let initLabel = this.placeholder;
     if (this.defaultDate) {
       if (Array.isArray(this.defaultDate) && this.defaultDate.length === 2) {
-        initLabel = `${this._fmt(this.defaultDate[0])} – ${this._fmt(this.defaultDate[1])}`;
+        initLabel = this._fmtRange(new Date(this.defaultDate[0]), new Date(this.defaultDate[1]));
       } else if (typeof this.defaultDate === 'string') {
         initLabel = this._fmt(this.defaultDate);
       }
@@ -60,10 +60,10 @@ export class UIDatepicker {
         <button
           type="button"
           id="${uid}-trigger"
-          class="flex items-center gap-2 px-3.5 py-2.5 bg-slate-50 hover:bg-white border border-slate-200/80 rounded-2xl text-xs font-bold text-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-full"
+          class="flex items-center justify-between gap-1.5 px-3 py-2 sm:px-3.5 sm:py-2.5 bg-slate-50 hover:bg-white border border-slate-200/80 rounded-2xl text-[11px] sm:text-xs font-bold text-slate-700 transition-all duration-150 focus:outline-none focus:ring-2 focus:ring-blue-500/20 w-full min-w-0"
         >
           ${calSvg}
-          <span id="${uid}-label" class="flex-1 text-left truncate">${initLabel}</span>
+          <span id="${uid}-label" class="flex-1 text-left truncate min-w-0">${initLabel}</span>
           ${chevronSvg}
         </button>
       </div>
@@ -113,7 +113,7 @@ export class UIDatepicker {
         },
         onChange: (dates, dateStr) => {
           if (this.mode === 'range' && dates.length === 2) {
-            const str = `${this._fpFmt(dates[0])} – ${this._fpFmt(dates[1])}`;
+            const str = this._fmtRange(dates[0], dates[1]);
             label.textContent = str;
             this._dateStr = str;
             if (this.onChange) this.onChange(dates, dateStr);
@@ -164,6 +164,21 @@ export class UIDatepicker {
   _fpFmt(date) {
     if (!date) return '';
     return `${String(date.getDate()).padStart(2,'0')}/${String(date.getMonth()+1).padStart(2,'0')}/${date.getFullYear()}`;
+  }
+
+  // Format date range compactly: DD/MM – DD/MM/YYYY
+  _fmtRange(d1, d2) {
+    if (!d1 || !d2) return '';
+    const day1 = String(d1.getDate()).padStart(2,'0');
+    const m1 = String(d1.getMonth()+1).padStart(2,'0');
+    const y1 = d1.getFullYear();
+    const day2 = String(d2.getDate()).padStart(2,'0');
+    const m2 = String(d2.getMonth()+1).padStart(2,'0');
+    const y2 = d2.getFullYear();
+    if (y1 === y2) {
+      return `${day1}/${m1} – ${day2}/${m2}/${y1}`;
+    }
+    return `${day1}/${m1}/${y1} – ${day2}/${m2}/${y2}`;
   }
 
   getDateStr() {
