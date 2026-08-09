@@ -18,21 +18,38 @@ import { initKioskTouchModule } from '#modules/kiosk/index.js';
 import { initMobileGateModule } from '#modules/mobile-gate/index.js';
 import { initSettingsModule } from '#modules/settings/index.js';
 import { initLoginModule } from '#modules/login/index.js';
-import { ensureAuthenticated } from '#services/auth.service.js';
+import { isAuthenticated, logout } from '#services/auth.service.js';
 import { toast } from '#components/toast.js';
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   const mainContentContainer = document.getElementById('main-app-content');
-
-  // Automatically initialize JWT auth session
-  await ensureAuthenticated();
 
   // Initialize Layout Controls (Header & Mobile Navigation)
   initHeaderControls();
   initMobileNavigation();
 
-  // Setup Client-Side Router
-  new Router({
+  function toggleAppShellLayout(isStandalone = false) {
+    const sidebar = document.getElementById('main-sidebar');
+    const header = document.getElementById('main-header');
+    const mainContent = document.getElementById('main-app-content');
+
+    if (isStandalone) {
+      if (sidebar) sidebar.style.display = 'none';
+      if (header) header.style.display = 'none';
+      if (mainContent) {
+        mainContent.className = 'w-full min-h-screen p-0 m-0 bg-[#071729]';
+      }
+    } else {
+      if (sidebar) sidebar.style.display = '';
+      if (header) header.style.display = '';
+      if (mainContent) {
+        mainContent.className = 'flex-1 p-3 sm:p-6 space-y-6';
+      }
+    }
+  }
+
+  // Setup Client-Side Router with Strict Auth Navigation Guard
+  const router = new Router({
     '#/login': () => {
       setActiveNav('#/login');
       initLoginModule(mainContentContainer);
@@ -85,10 +102,27 @@ document.addEventListener('DOMContentLoaded', async () => {
       setActiveNav('#/settings');
       initSettingsModule(mainContentContainer);
     }
+  }, {
+    beforeEach: (targetHash) => {
+      const publicRoutes = ['#/login', '#/kiosk', '#/mobile'];
+      const isStandalone = targetHash === '#/login';
+      toggleAppShellLayout(isStandalone);
+
+      if (!publicRoutes.includes(targetHash) && !isAuthenticated()) {
+        toast.show('Vui lòng đăng nhập để truy cập hệ thống', 'warning');
+        window.location.hash = '#/login';
+        return false;
+      }
+      return true;
+    }
   });
 
-  // Render initial dashboard view
-  initDashboardModule(mainContentContainer);
+  // Initial Auth Check on App Boot
+  const currentHash = window.location.hash || '#/dashboard';
+  const publicRoutes = ['#/login', '#/kiosk', '#/mobile'];
+  if (!publicRoutes.includes(currentHash) && !isAuthenticated()) {
+    window.location.hash = '#/login';
+  }
 
   // Shell action listeners
   const sidebarPayBtn = document.getElementById('sidebar-pay-btn');

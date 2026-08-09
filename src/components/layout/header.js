@@ -1,13 +1,21 @@
-/**
- * Header Controls Component (Tenant Selector, Datepicker, Tower Selector, Notification Dropdown)
- */
-
 import { TenantSelectorComponent } from '#components/tenant-selector.js';
 import { UIDatepicker } from '#components/ui-datepicker.js';
 import { UISelect } from '#components/ui-select.js';
 import { toast } from '#components/toast.js';
+import { logout } from '#services/auth.service.js';
 
 export function initHeaderControls() {
+  // Wire user profile logout click handler
+  if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
+    const userProfileCard = document.querySelector('#main-sidebar .bg-slate-50.p-3');
+    if (userProfileCard) {
+      userProfileCard.title = 'Click để Đăng xuất khỏi hệ thống';
+      userProfileCard.onclick = () => {
+        logout();
+        toast.show('Đã đăng xuất khỏi hệ thống', 'info');
+      };
+    }
+  }
   // Multi-Tenant Context Header Initialization
   const tenantSelectorContainer = document.getElementById('header-tenant-selector');
   if (tenantSelectorContainer) {

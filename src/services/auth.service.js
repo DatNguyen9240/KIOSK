@@ -19,16 +19,30 @@ export async function login(email = 'admin@vinhomes.vn', password = 'admin') {
       return res.data;
     }
   } catch (err) {
-    console.warn('[AuthService] Login failed, continuing:', err.message);
+    console.warn('[AuthService] Login failed:', err.message);
   }
   return null;
 }
 
-export async function ensureAuthenticated() {
-  if (typeof localStorage === 'undefined') return;
-  const existingToken = localStorage.getItem('parking_go_jwt_token');
-  if (!existingToken) {
-    console.log('[Auth] Initializing auto-session for tenant admin...');
-    await login('admin@vinhomes.vn', 'admin');
+export function isAuthenticated() {
+  if (typeof localStorage === 'undefined') return false;
+  return !!localStorage.getItem('parking_go_jwt_token');
+}
+
+export function getCurrentUser() {
+  if (typeof localStorage === 'undefined') return null;
+  const userStr = localStorage.getItem('parking_go_user');
+  try {
+    return userStr ? JSON.parse(userStr) : null;
+  } catch {
+    return null;
   }
+}
+
+export function logout() {
+  if (typeof localStorage !== 'undefined') {
+    localStorage.removeItem('parking_go_jwt_token');
+    localStorage.removeItem('parking_go_user');
+  }
+  window.location.hash = '#/login';
 }
