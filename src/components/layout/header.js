@@ -10,11 +10,17 @@ export function initHeaderControls() {
     const userSession = getCurrentUser();
     const user = userSession?.user || userSession || {};
     
-    const fullName = user.fullName || user.full_name || 'Nguyễn Văn A';
     const email = user.email || 'admin@vinhomes.vn';
     const isSuper = !!user.isSuperAdmin || !!user.is_super_admin;
-    const roleText = isSuper ? '👑 Super Admin' : (user.role || 'Quản trị hệ thống');
-    const initials = fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'NV';
+    const roleMap = {
+      'SUPER_ADMIN': '👑 Super Admin',
+      'TENANT_ADMIN': 'Quản lý Khu đô thị',
+      'OPERATOR': 'Nhân viên Vận hành',
+      'VIEWER': 'Người xem'
+    };
+    const rawRole = user.role || 'TENANT_ADMIN';
+    const roleText = isSuper ? '👑 Super Admin' : (roleMap[rawRole] || rawRole);
+    const initials = fullName.split(' ').filter(Boolean).map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'NV';
 
     const avatarInitials = document.getElementById('user-avatar-initials');
     const displayName = document.getElementById('user-display-name');

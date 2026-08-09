@@ -135,49 +135,51 @@
         </div>
 
         <!-- User Profile Card at Sidebar Bottom with Interactive Popover -->
-        <div id="user-profile-menu-container" class="pt-6 border-t border-slate-100 mt-6 relative">
-          <button id="user-profile-btn" type="button" class="w-full flex items-center justify-between p-2 rounded-2xl hover:bg-slate-50 border border-transparent hover:border-slate-200/80 transition text-left group">
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-full bg-gradient-to-tr from-blue-600 via-teal-500 to-emerald-400 text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/20 group-hover:scale-105 transition transform shrink-0">
+        <div id="user-profile-menu-container" class="pt-5 border-t border-slate-100 mt-5 relative">
+          <button id="user-profile-btn" type="button" class="w-full flex items-center justify-between p-2 rounded-2xl bg-slate-50/60 hover:bg-slate-100/80 border border-slate-200/60 transition text-left group gap-2 overflow-hidden shadow-2xs">
+            <div class="flex items-center gap-2.5 min-w-0 flex-1">
+              <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-teal-500 to-emerald-400 text-white font-black text-xs flex items-center justify-center shadow-sm shadow-blue-500/20 group-hover:scale-105 transition transform shrink-0">
                 <span id="user-avatar-initials">NV</span>
               </div>
               <div class="min-w-0 flex-1">
-                <h4 id="user-display-name" class="font-extrabold text-slate-900 text-xs leading-tight truncate">Nguyễn Văn A</h4>
-                <p id="user-display-role" class="text-[10px] text-slate-400 font-medium mt-0.5 truncate">Quản trị hệ thống</p>
+                <h4 id="user-display-name" class="font-extrabold text-slate-900 text-[11px] leading-tight truncate">Nguyễn Văn A</h4>
+                <p id="user-display-role" class="text-[10px] text-slate-400 font-semibold mt-0.5 truncate">Quản trị hệ thống</p>
               </div>
             </div>
-            <svg class="w-4 h-4 text-slate-400 group-hover:text-slate-700 transition transform group-hover:translate-y-0.5 shrink-0" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            <span class="w-6 h-6 rounded-xl bg-white border border-slate-200/80 group-hover:border-slate-300 flex items-center justify-center shrink-0 transition shadow-2xs">
+              <svg class="w-3.5 h-3.5 text-slate-400 group-hover:text-slate-700 transition transform group-hover:translate-y-0.5" viewBox="0 0 24 24"><path fill="currentColor" d="M7.41 8.59L12 13.17l4.59-4.58L18 10l-6 6-6-6z"/></svg>
+            </span>
           </button>
 
           <!-- User Profile Popover Dropdown Menu -->
-          <div id="user-profile-dropdown" class="hidden absolute bottom-full left-0 w-64 mb-3 bg-white/95 backdrop-blur-xl rounded-3xl border border-slate-200/80 shadow-2xl p-3 space-y-2 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
+          <div id="user-profile-dropdown" class="hidden absolute bottom-full left-0 right-0 w-full mb-2 bg-white/98 backdrop-blur-xl rounded-3xl border border-slate-200 shadow-2xl p-3 space-y-2.5 z-50 animate-in fade-in slide-in-from-bottom-2 duration-150">
             <!-- Header User Summary -->
-            <div class="p-3 bg-gradient-to-r from-slate-900 to-[#0B2C4D] text-white rounded-2xl space-y-1">
+            <div class="p-3 bg-gradient-to-br from-slate-900 to-[#0B2C4D] text-white rounded-2xl space-y-1 shadow-inner">
               <div class="flex items-center justify-between">
                 <span class="text-[9px] font-black tracking-widest text-emerald-400 uppercase">ONLINE</span>
                 <span id="user-tenant-badge" class="px-2 py-0.5 bg-white/10 rounded-full text-[9px] font-bold">Vinhomes</span>
               </div>
               <div id="popover-user-name" class="font-black text-xs truncate">Nguyễn Văn A</div>
-              <div id="popover-user-email" class="text-[10px] text-slate-300 font-medium truncate">admin@vinhomes.vn</div>
+              <div id="popover-user-email" class="text-[10px] text-slate-300 font-medium truncate opacity-90">admin@vinhomes.vn</div>
             </div>
 
             <!-- Menu Actions -->
             <div class="space-y-1 text-xs font-bold text-slate-700">
-              <button type="button" id="profile-menu-profile" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition">
-                <svg class="w-4 h-4 text-blue-600 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
-                <span>Hồ sơ & Tài khoản</span>
+              <button type="button" id="profile-menu-profile" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 transition">
+                <svg class="w-4 h-4 text-blue-600 fill-current shrink-0" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+                <span class="truncate">Hồ sơ & Tài khoản</span>
               </button>
 
-              <button type="button" id="profile-menu-settings" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-slate-100 text-slate-700 transition">
-                <svg class="w-4 h-4 text-purple-600 fill-current" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
-                <span>Cài đặt hệ thống</span>
+              <button type="button" id="profile-menu-settings" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-slate-100 text-slate-700 transition">
+                <svg class="w-4 h-4 text-purple-600 fill-current shrink-0" viewBox="0 0 24 24"><path d="M19.43 12.98c.04-.32.07-.64.07-.98s-.03-.66-.07-.98l2.11-1.65c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.3-.61-.22l-2.49 1c-.52-.4-1.08-.73-1.69-.98l-.38-2.65C14.46 2.18 14.25 2 14 2h-4c-.25 0-.46.18-.49.42l-.38 2.65c-.61.25-1.17.59-1.69.98l-2.49-1c-.23-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64l2.11 1.65c-.04.32-.07.65-.07.98s.03.66.07.98l-2.11 1.65c-.19.15-.24.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1c.52.4 1.08.73 1.69.98l.38 2.65c.03.24.24.42.49.42h4c.25 0 .46-.18.49-.42l.38-2.65c.61-.25 1.17-.59 1.69-.98l2.49 1c.23.09.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.65zM12 15.5c-1.93 0-3.5-1.57-3.5-3.5s1.57-3.5 3.5-3.5 3.5 1.57 3.5 3.5-1.57 3.5-3.5 3.5z"/></svg>
+                <span class="truncate">Cài đặt hệ thống</span>
               </button>
 
               <div class="my-1 border-t border-slate-100"></div>
 
-              <button type="button" id="profile-menu-logout" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-rose-50 text-rose-600 transition">
-                <svg class="w-4 h-4 fill-current" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-5.58 5.59L14 20l6-6zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
-                <span>Đăng xuất hệ thống</span>
+              <button type="button" id="profile-menu-logout" class="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl hover:bg-rose-50 text-rose-600 transition">
+                <svg class="w-4 h-4 fill-current shrink-0" viewBox="0 0 24 24"><path d="M17 7l-1.41 1.41L18.17 11H8v2h10.17l-5.58 5.59L14 20l6-6zM4 5h8V3H4c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h8v-2H4V5z"/></svg>
+                <span class="truncate">Đăng xuất hệ thống</span>
               </button>
             </div>
           </div>
