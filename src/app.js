@@ -34,14 +34,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainContent = document.getElementById('main-app-content');
 
     if (isStandalone) {
-      if (sidebar) sidebar.style.display = 'none';
-      if (header) header.style.display = 'none';
+      if (sidebar) sidebar.setAttribute('style', 'display: none !important');
+      if (header) header.setAttribute('style', 'display: none !important');
       if (mainContent) {
         mainContent.className = 'w-full min-h-screen p-0 m-0 bg-[#071729]';
       }
     } else {
-      if (sidebar) sidebar.style.display = '';
-      if (header) header.style.display = '';
+      if (sidebar) sidebar.removeAttribute('style');
+      if (header) header.removeAttribute('style');
       if (mainContent) {
         mainContent.className = 'flex-1 p-3 sm:p-6 space-y-6';
       }

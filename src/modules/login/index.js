@@ -8,6 +8,13 @@ import { toast } from '#components/toast.js';
 export function initLoginModule(container) {
   if (!container) return;
 
+  // Force hide sidebar and header for full-screen login view
+  const sidebar = document.getElementById('main-sidebar');
+  const header = document.getElementById('main-header');
+  if (sidebar) sidebar.setAttribute('style', 'display: none !important');
+  if (header) header.setAttribute('style', 'display: none !important');
+  container.className = 'w-full min-h-screen p-0 m-0 bg-[#071729]';
+
   container.innerHTML = `
     <div class="min-h-screen w-full bg-[#071729] flex items-center justify-center p-4 sm:p-8 relative overflow-hidden select-none">
       
@@ -136,6 +143,9 @@ export function initLoginModule(container) {
     const user = await login(email, password);
 
     if (user) {
+      if (sidebar) sidebar.removeAttribute('style');
+      if (header) header.removeAttribute('style');
+      container.className = 'flex-1 p-3 sm:p-6 space-y-6';
       toast.show(`Xin chào ${user.user?.fullName || 'Admin'}! Đăng nhập thành công.`, 'success');
       window.location.hash = '#/dashboard';
     } else {
