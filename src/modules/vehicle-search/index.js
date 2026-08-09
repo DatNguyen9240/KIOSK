@@ -58,8 +58,8 @@ export function initVehicleSearchModule(container) {
   });
 
   const executeSearch = async () => {
-    const query = searchInput.value.trim();
-    const type = searchTypeUISelect.getValue();
+    const query = (searchInput?.value || '').trim();
+    const type = searchTypeUISelect ? searchTypeUISelect.getValue() : 'ALL';
 
     resultsContainer.innerHTML = `<div class="flex items-center justify-center py-12 text-[#0B2C4D] font-bold text-xs gap-2"><div class="animate-spin w-4 h-4 border-2 border-[#0B2C4D] border-t-transparent rounded-full"></div> Đang tìm kiếm...</div>`;
 

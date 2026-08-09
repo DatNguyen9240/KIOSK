@@ -28,6 +28,8 @@ const testFiles = [
   'tests/frontend/mobile-gate-station-ui.test.js',
   'tests/frontend/audit-logs-ui.test.js',
   'tests/frontend/button-interactions.test.js',
+  'tests/frontend/modular-structure.test.js',
+  'tests/frontend/layout-components.test.js',
 
   // E2E Lifecycle & All 9 Pages Suites
   'tests/full-flow-e2e.test.js',
