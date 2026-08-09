@@ -71,26 +71,30 @@ export function initVehicleSearchModule(container) {
         pageSize: 5,
         emptyText: 'Không tìm thấy phương tiện phù hợp. Vui lòng kiểm tra lại từ khóa.',
         columns: [
-          { key: 'vehicleName', title: 'Loại xe', sortable: true, render: (val, row) => `
-              <div class="flex items-center gap-2">
-                ${row.vehicleType === 'CAR' ? `
-                  <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
-                  </span>
-                ` : `
-                  <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
-                    <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
-                  </span>
-                `}
-                <span class="font-bold text-slate-900">${val}</span>
-              </div>
-            `
+          { key: 'vehicleName', title: 'Loại xe', sortable: true, render: (val, row) => {
+              const type = row.vehicleType || row.vehicle_type || 'CAR';
+              const name = val || row.vehicleName || row.vehicle_name || (type === 'CAR' ? 'Ô tô' : 'Xe máy');
+              return `
+                <div class="flex items-center gap-2">
+                  ${type === 'CAR' ? `
+                    <span class="w-6 h-6 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                    </span>
+                  ` : `
+                    <span class="w-6 h-6 rounded-lg bg-teal-50 text-teal-600 flex items-center justify-center shrink-0">
+                      <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M19 7h-8v2h8v10H5V9h3V7H5c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm-7 4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/></svg>
+                    </span>
+                  `}
+                  <span class="font-bold text-slate-900">${name}</span>
+                </div>
+              `;
+            }
           },
-          { key: 'plateNumber', title: 'Biển số', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100/90 text-[#0B2C4D] font-mono font-bold rounded-lg border border-slate-200/50">${val}</span>` },
-          { key: 'residentName', title: 'Cư dân', sortable: true, classNames: 'font-bold text-slate-900' },
-          { key: 'apartmentNumber', title: 'Căn hộ', sortable: true, render: (val) => `<span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">${val}</span>` },
-          { key: 'cardNumber', title: 'Số thẻ', sortable: true, classNames: 'font-mono text-slate-500' },
-          { key: 'expireDate', title: 'Hạn giữ xe', sortable: true, classNames: 'text-slate-500 font-semibold' },
+          { key: 'plateNumber', title: 'Biển số', sortable: true, render: (val, row) => `<span class="px-2.5 py-1 bg-slate-100/90 text-[#0B2C4D] font-mono font-bold rounded-lg border border-slate-200/50">${val || row.plate_number || 'N/A'}</span>` },
+          { key: 'residentName', title: 'Cư dân', sortable: true, render: (val, row) => `<span class="font-bold text-slate-900">${val || row.resident_name || 'Cư dân'}</span>` },
+          { key: 'apartmentNumber', title: 'Căn hộ', sortable: true, render: (val, row) => `<span class="px-2.5 py-1 bg-slate-100 rounded-lg text-slate-700 font-bold">${val || row.apartment_number || 'N/A'}</span>` },
+          { key: 'cardNumber', title: 'Số thẻ', sortable: true, render: (val, row) => `<span class="font-mono text-slate-500">${val || row.card_number || '—'}</span>` },
+          { key: 'expireDate', title: 'Hạn giữ xe', sortable: true, render: (val, row) => `<span class="text-slate-500 font-semibold">${val || row.expire_date || row.expiry_date || 'N/A'}</span>` },
           { key: 'status', title: 'Trạng thái', sortable: true, render: (val) => {
               if (val === 'ACTIVE') return '<span class="px-3 py-1 bg-[#D1FADF] text-[#027A48] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#027A48]"></span>Còn hiệu lực</span>';
               if (val === 'EXPIRING_SOON') return '<span class="px-3 py-1 bg-[#FEF0C7] text-[#DC6803] rounded-full font-extrabold text-[11px] inline-flex items-center gap-1.5"><span class="w-1.5 h-1.5 rounded-full bg-[#DC6803]"></span>Sắp hết hạn</span>';

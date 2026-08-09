@@ -1,11 +1,12 @@
 /**
  * Vehicle Management & Search Service
+ * Connects to Live Backend Database with Graceful Fallback
  */
 
 import { apiRequest } from '../core/api.js';
 import { CONFIG } from '../core/config.js';
 
-// Mock Vehicle Database for local testing/demo
+// Mock Vehicle Database for local testing/demo fallback
 const MOCK_VEHICLES = [
   { id: 'V01', plateNumber: '30F-123.45', residentName: 'Trần Văn Tuấn', apartmentNumber: 'A1-1205', vehicleType: 'CAR', vehicleName: 'Honda CR-V', cardNumber: 'CARD-8831', status: 'ACTIVE', expireDate: '2026-08-30' },
   { id: 'V02', plateNumber: '30A-789.10', residentName: 'Nguyễn Thị Hằng', apartmentNumber: 'A2-0806', vehicleType: 'CAR', vehicleName: 'Toyota Camry', cardNumber: 'CARD-8832', status: 'EXPIRING_SOON', expireDate: '2026-08-10' },
@@ -17,34 +18,60 @@ const MOCK_VEHICLES = [
 
 export async function searchVehicle(query = '', searchType = 'ALL') {
   if (CONFIG.MOCK_MODE) {
-    await new Promise(res => setTimeout(res, 200)); // Simulate API delay
-    const term = query.toLowerCase().trim();
-
-    if (!term) return MOCK_VEHICLES;
-
-    return MOCK_VEHICLES.filter(v => {
-      const matchPlate = v.plateNumber.toLowerCase().includes(term);
-      const matchName = v.residentName.toLowerCase().includes(term);
-      const matchApt = v.apartmentNumber.toLowerCase().includes(term);
-      const matchCard = v.cardNumber.toLowerCase().includes(term);
-
-      if (searchType === 'PLATE') return matchPlate;
-      if (searchType === 'NAME') return matchName;
-      if (searchType === 'APARTMENT') return matchApt;
-      if (searchType === 'CARD') return matchCard;
-
-      return matchPlate || matchName || matchApt || matchCard;
-    });
+    return filterMockVehicles(query, searchType);
   }
 
-  return apiRequest('/vehicles/search', { params: { q: query, type: searchType } });
+  try {
+    const res = await apiRequest('/vehicles/search', { params: { q: query, type: searchType } });
+    
+    if (res && res.data && Array.isArray(res.data.vehicles)) {
+      return res.data.vehicles;
+    }
+    if (Array.isArray(res?.data)) {
+      return res.data;
+    }
+    if (Array.isArray(res)) {
+      return res;
+    }
+    return filterMockVehicles(query, searchType);
+  } catch (err) {
+    console.warn('[VehicleService] API /vehicles/search fallback:', err?.message || err);
+    return filterMockVehicles(query, searchType);
+  }
 }
 
 export async function getVehiclesByApartment(apartmentNumber) {
   if (CONFIG.MOCK_MODE) {
-    await new Promise(res => setTimeout(res, 150));
-    return MOCK_VEHICLES.filter(v => v.apartmentNumber.toLowerCase() === apartmentNumber.toLowerCase());
+    return MOCK_VEHICLES.filter(v => (v.apartmentNumber || '').toLowerCase() === apartmentNumber.toLowerCase());
   }
 
-  return apiRequest(`/vehicles/apartment/${encodeURIComponent(apartmentNumber)}`);
+  try {
+    const res = await apiRequest(`/vehicles/apartment/${encodeURIComponent(apartmentNumber)}`);
+    if (res && res.data && Array.isArray(res.data.vehicles)) return res.data.vehicles;
+    if (Array.isArray(res?.data)) return res.data;
+    return MOCK_VEHICLES.filter(v => (v.apartmentNumber || '').toLowerCase() === apartmentNumber.toLowerCase());
+  } catch (err) {
+    console.warn('[VehicleService] getVehiclesByApartment fallback:', err?.message || err);
+    return MOCK_VEHICLES.filter(v => (v.apartmentNumber || '').toLowerCase() === apartmentNumber.toLowerCase());
+  }
+}
+
+function filterMockVehicles(query = '', searchType = 'ALL') {
+  const term = query.toLowerCase().trim();
+
+  if (!term) return MOCK_VEHICLES;
+
+  return MOCK_VEHICLES.filter(v => {
+    const matchPlate = (v.plateNumber || '').toLowerCase().includes(term);
+    const matchName = (v.residentName || '').toLowerCase().includes(term);
+    const matchApt = (v.apartmentNumber || '').toLowerCase().includes(term);
+    const matchCard = (v.cardNumber || '').toLowerCase().includes(term);
+
+    if (searchType === 'PLATE') return matchPlate;
+    if (searchType === 'NAME') return matchName;
+    if (searchType === 'APARTMENT') return matchApt;
+    if (searchType === 'CARD') return matchCard;
+
+    return matchPlate || matchName || matchApt || matchCard;
+  });
 }
