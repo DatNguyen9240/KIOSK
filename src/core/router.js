@@ -1,6 +1,4 @@
-/**
- * Lightweight Hash & View Router
- */
+import { smoothScrollTo } from '../utils/smooth-scroll.js';
 
 export class Router {
   constructor(routes = {}) {
@@ -34,6 +32,7 @@ export class Router {
       }
 
       this.currentView = handler();
+      smoothScrollTo(0, 750);
     }
   }
 }

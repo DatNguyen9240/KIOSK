@@ -15,6 +15,7 @@ import { UITable } from './components/ui-table.js';
 import { initRevenueChart, initTowerDonutChart } from './components/ui-chart.js';
 import { TenantSelectorComponent } from './components/tenant-selector.js';
 import { tenantContext } from './core/tenant-context.js';
+import { smoothScrollTo } from './utils/smooth-scroll.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainContentContainer = document.getElementById('main-app-content');
@@ -379,7 +380,7 @@ document.addEventListener('DOMContentLoaded', () => {
           </div>
 
           <!-- QR Code Preview -->
-          <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-center space-y-3">
+          <div id="showcase-qr-box" class="bg-slate-50 p-4 rounded-2xl border border-slate-200/80 text-center space-y-3">
             <img src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=PARKING_GO_30000" alt="QR Code Payment" class="w-28 h-28 mx-auto rounded-xl border border-slate-200 p-1 bg-white" />
             <p class="text-[10px] text-slate-400 font-medium leading-tight">Quét mã QR để thanh toán khẩn cấp qua các ngân hàng & ví điện tử</p>
             
@@ -632,6 +633,17 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // Add interactivity to showcase buttons
+    const showcaseSearch1 = container.querySelector('#showcase-search-1');
+    const showcaseQrBox = container.querySelector('#showcase-qr-box');
+    if (showcaseSearch1) {
+      showcaseSearch1.onclick = () => {
+        toast.show('Đã khởi tạo mã QR thanh toán giữ xe!', 'info');
+        if (showcaseQrBox) {
+          smoothScrollTo(showcaseQrBox, 850);
+        }
+      };
+    }
+
     const payNowBtn = container.querySelector('#showcase-pay-now-btn');
     if (payNowBtn) {
       payNowBtn.onclick = () => {

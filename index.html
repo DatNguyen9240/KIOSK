@@ -44,10 +44,18 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
   <style>
-    body {
+    html, body {
+      scroll-behavior: smooth !important;
       background: linear-gradient(145deg, #f5f7ff 0%, #ffffff 45%, #fdf5ff 100%);
       background-attachment: fixed;
       font-family: 'Plus Jakarta Sans', sans-serif;
+    }
+    * {
+      scroll-behavior: smooth;
+    }
+    .custom-scrollbar {
+      scroll-behavior: smooth;
+      -webkit-overflow-scrolling: touch;
     }
     .custom-scrollbar::-webkit-scrollbar {
       width: 6px;
@@ -318,28 +326,28 @@
     <main class="flex-1 w-full space-y-4 sm:space-y-5 min-w-0">
 
       <!-- TOP HEADER BAR -->
-      <header class="bg-white p-3 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 relative z-20">
-        <div class="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-start">
+      <header class="bg-white p-2.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 sm:gap-4 relative z-20">
+        <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-between sm:justify-start min-w-0">
           <!-- Mobile Hamburger Toggle Button (Hidden as BottomTab navigation is active) -->
           <button type="button" id="mobile-menu-btn" class="hidden w-9 h-9 rounded-2xl bg-slate-100 text-slate-700 hover:bg-slate-200 flex items-center justify-center transition shrink-0 cursor-pointer">
             <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
           </button>
 
           <div class="min-w-0">
-            <h2 class="text-base sm:text-xl md:text-2xl font-black text-[#0B2C4D] tracking-tight truncate">Hệ thống thu phí giữ xe online</h2>
-            <p class="text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5 truncate">Quản lý thông minh • Thu phí tự động • Minh bạch</p>
+            <h2 class="text-sm min-[360px]:text-base sm:text-xl md:text-2xl font-black text-[#0B2C4D] tracking-tight truncate">Hệ thống thu phí giữ xe online</h2>
+            <p class="text-[9px] min-[360px]:text-[10px] sm:text-xs text-slate-400 font-medium mt-0.5 truncate">Quản lý thông minh • Thu phí tự động • Minh bạch</p>
           </div>
         </div>
 
-        <div class="flex items-center gap-2 sm:gap-3 w-full sm:w-auto justify-end flex-wrap sm:flex-nowrap min-w-0">
+        <div class="flex items-center gap-1.5 sm:gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap sm:flex-nowrap min-w-0">
           <!-- Multi-Tenant Context Selector -->
-          <div id="header-tenant-selector" class="shrink-0"></div>
+          <div id="header-tenant-selector" class="shrink-0 max-w-full min-w-0"></div>
 
           <!-- Date Range Picker (UIDatepicker) -->
-          <div id="header-date-picker" class="flex-1 min-w-[130px] sm:w-52"></div>
+          <div id="header-date-picker" class="flex-1 min-w-[100px] sm:w-52"></div>
 
           <!-- Tower Dropdown (UISelect) -->
-          <div id="header-tower-select" class="shrink-0 min-w-[110px] sm:w-36"></div>
+          <div id="header-tower-select" class="shrink-0 min-w-[90px] sm:w-36"></div>
 
           <!-- Notification Bell & Dropdown Wrapper -->
           <div class="relative">

@@ -6,6 +6,7 @@ import { searchVehicle } from '../../services/vehicle.service.js';
 import { QrPaymentComponent } from '../../components/qr-payment.js';
 import { formatCurrency } from '../../utils/currency.js';
 import { toast } from '../../components/toast.js';
+import { smoothScrollTo } from '../../utils/smooth-scroll.js';
 
 export function initKioskTouchModule(container) {
   if (!container) return;
@@ -126,6 +127,9 @@ export function initKioskTouchModule(container) {
       });
 
       await kioskState.qrInstance.render();
+
+      // Gentle smooth scroll to QR box in Kiosk view
+      smoothScrollTo(qrRenderBox, 850);
     } catch (err) {
       toast.show('Lỗi tìm thông tin xe', 'error');
     } finally {

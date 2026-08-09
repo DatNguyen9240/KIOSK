@@ -8,6 +8,7 @@ import { QrPaymentComponent } from '../../components/qr-payment.js';
 import { renderReceiptHtml } from '../../components/receipt.js';
 import { formatCurrency } from '../../utils/currency.js';
 import { toast } from '../../components/toast.js';
+import { smoothScrollTo } from '../../utils/smooth-scroll.js';
 
 export function initMonthlyRenewalModule(container) {
   if (!container) return;
@@ -181,6 +182,10 @@ export function initMonthlyRenewalModule(container) {
       });
 
       await qrComponentInstance.render();
+
+      // Gentle smooth scroll down to QR code section for optimal UX
+      smoothScrollTo(qrContainer, 850);
+
       toast.show('Mã QR 120s đã tạo thành công', 'info');
     } catch (err) {
       toast.show('Lỗi tạo thanh toán QR', 'error');

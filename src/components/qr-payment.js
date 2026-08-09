@@ -6,6 +6,7 @@ import { startQrCountdownTimer, stopQrCountdownTimer, createQrPaymentTransaction
 import { formatCurrency } from '../utils/currency.js';
 import { formatCountdown } from '../utils/date.js';
 import { toast } from './toast.js';
+import { smoothScrollTo } from '../utils/smooth-scroll.js';
 
 export class QrPaymentComponent {
   constructor(options = {}) {
@@ -71,6 +72,11 @@ export class QrPaymentComponent {
       this.currentTransaction = await createQrPaymentTransaction(this.paymentData);
 
       qrBox.innerHTML = `<img src="${this.currentTransaction.qrUrl}" alt="VietQR Payment Code" class="w-full h-full object-contain rounded-xl" />`;
+
+      // Auto smooth scroll QR card into view for optimal UX
+      if (this.element) {
+        smoothScrollTo(this.element, 850);
+      }
 
       startQrCountdownTimer(
         this.currentTransaction.expiresAt,
