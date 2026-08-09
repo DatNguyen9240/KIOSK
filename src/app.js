@@ -2,22 +2,22 @@
  * PARKING.GO Main Application Entry (Modular Architecture)
  */
 
-import { Router } from './core/router.js';
-import { initHeaderControls } from './components/layout/header.js';
-import { initMobileNavigation, setActiveNav } from './components/layout/mobile-nav.js';
-import { initDashboardModule } from './modules/dashboard/index.js';
-import { initVehicleSearchModule } from './modules/vehicle-search/index.js';
-import { initRevenueModule } from './modules/revenue/index.js';
-import { initTransactionsModule } from './modules/transactions/index.js';
-import { initDebtReportModule } from './modules/debt-report/index.js';
-import { initCardsModule } from './modules/cards/index.js';
-import { initResidentsModule } from './modules/residents/index.js';
-import { initVehicleAccessModule } from './modules/vehicle-access/index.js';
-import { initReportsModule } from './modules/reports/index.js';
-import { initKioskTouchModule } from './modules/kiosk/index.js';
-import { initMobileGateModule } from './modules/mobile-gate/index.js';
-import { initSettingsModule } from './modules/settings/index.js';
-import { toast } from './components/toast.js';
+import { Router } from '#core/router.js';
+import { initHeaderControls } from '#components/layout/header.js';
+import { initMobileNavigation, setActiveNav } from '#components/layout/mobile-nav.js';
+import { initDashboardModule } from '#modules/dashboard/index.js';
+import { initVehicleSearchModule } from '#modules/vehicle-search/index.js';
+import { initRevenueModule } from '#modules/revenue/index.js';
+import { initTransactionsModule } from '#modules/transactions/index.js';
+import { initDebtReportModule } from '#modules/debt-report/index.js';
+import { initCardsModule } from '#modules/cards/index.js';
+import { initResidentsModule } from '#modules/residents/index.js';
+import { initVehicleAccessModule } from '#modules/vehicle-access/index.js';
+import { initReportsModule } from '#modules/reports/index.js';
+import { initKioskTouchModule } from '#modules/kiosk/index.js';
+import { initMobileGateModule } from '#modules/mobile-gate/index.js';
+import { initSettingsModule } from '#modules/settings/index.js';
+import { toast } from '#components/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   const mainContentContainer = document.getElementById('main-app-content');

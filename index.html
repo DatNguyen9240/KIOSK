@@ -43,6 +43,17 @@
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- ES Module Import Map for Path Aliases (@/ and #) -->
+  <script type="importmap">
+    {
+      "imports": {
+        "@/": "./src/",
+        "#": "./src/",
+        "#*": "./src/*"
+      }
+    }
+  </script>
+
   <!-- Custom Application Stylesheet -->
   <link rel="stylesheet" href="assets/css/styles.css">
 </head>

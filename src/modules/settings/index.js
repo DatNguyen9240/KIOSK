@@ -2,7 +2,7 @@
  * PARKING.GO Settings Module
  */
 
-import { initKioskTouchModule } from '../kiosk/index.js';
+import { initKioskTouchModule } from '#modules/kiosk/index.js';
 
 export function initSettingsModule(container) {
   if (!container) return;

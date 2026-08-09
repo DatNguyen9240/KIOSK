@@ -2,11 +2,11 @@
  * PARKING.GO Dashboard Overview Module
  */
 
-import { initRevenueChart, initTowerDonutChart } from '../../components/ui-chart.js';
-import { UISelect } from '../../components/ui-select.js';
-import { UITable } from '../../components/ui-table.js';
-import { toast } from '../../components/toast.js';
-import { smoothScrollTo } from '../../utils/smooth-scroll.js';
+import { initRevenueChart, initTowerDonutChart } from '#components/ui-chart.js';
+import { UISelect } from '#components/ui-select.js';
+import { UITable } from '#components/ui-table.js';
+import { toast } from '#components/toast.js';
+import { smoothScrollTo } from '#utils/smooth-scroll.js';
 
 export function initDashboardModule(container) {
   if (!container) return;

@@ -50,18 +50,18 @@ console.log(`  [MODULAR STRUCTURE AUDIT] VERIFYING ALL PAGE MODULE INITIALIZERS`
 console.log(`=============================================================================`);
 
 const modulePaths = [
-  { name: 'Dashboard Overview', path: '../../src/modules/dashboard/index.js', exportName: 'initDashboardModule' },
-  { name: 'Vehicle Search', path: '../../src/modules/vehicle-search/index.js', exportName: 'initVehicleSearchModule' },
-  { name: 'Revenue Management', path: '../../src/modules/revenue/index.js', exportName: 'initRevenueModule' },
-  { name: 'Transactions Log', path: '../../src/modules/transactions/index.js', exportName: 'initTransactionsModule' },
-  { name: 'Debt Report', path: '../../src/modules/debt-report/index.js', exportName: 'initDebtReportModule' },
-  { name: 'Parking Cards', path: '../../src/modules/cards/index.js', exportName: 'initCardsModule' },
-  { name: 'Residents Directory', path: '../../src/modules/residents/index.js', exportName: 'initResidentsModule' },
-  { name: 'Vehicle Access Log', path: '../../src/modules/vehicle-access/index.js', exportName: 'initVehicleAccessModule' },
-  { name: 'Reports Summary', path: '../../src/modules/reports/index.js', exportName: 'initReportsModule' },
-  { name: 'Kiosk Touch Station', path: '../../src/modules/kiosk/index.js', exportName: 'initKioskTouchModule' },
-  { name: 'Mobile Gate Station', path: '../../src/modules/mobile-gate/index.js', exportName: 'initMobileGateModule' },
-  { name: 'Settings Module', path: '../../src/modules/settings/index.js', exportName: 'initSettingsModule' }
+  { name: 'Dashboard Overview', path: '#modules/dashboard/index.js', exportName: 'initDashboardModule' },
+  { name: 'Vehicle Search', path: '#modules/vehicle-search/index.js', exportName: 'initVehicleSearchModule' },
+  { name: 'Revenue Management', path: '#modules/revenue/index.js', exportName: 'initRevenueModule' },
+  { name: 'Transactions Log', path: '#modules/transactions/index.js', exportName: 'initTransactionsModule' },
+  { name: 'Debt Report', path: '#modules/debt-report/index.js', exportName: 'initDebtReportModule' },
+  { name: 'Parking Cards', path: '#modules/cards/index.js', exportName: 'initCardsModule' },
+  { name: 'Residents Directory', path: '#modules/residents/index.js', exportName: 'initResidentsModule' },
+  { name: 'Vehicle Access Log', path: '#modules/vehicle-access/index.js', exportName: 'initVehicleAccessModule' },
+  { name: 'Reports Summary', path: '#modules/reports/index.js', exportName: 'initReportsModule' },
+  { name: 'Kiosk Touch Station', path: '#modules/kiosk/index.js', exportName: 'initKioskTouchModule' },
+  { name: 'Mobile Gate Station', path: '#modules/mobile-gate/index.js', exportName: 'initMobileGateModule' },
+  { name: 'Settings Module', path: '#modules/settings/index.js', exportName: 'initSettingsModule' }
 ];
 
 let passed = 0;

@@ -1,5 +1,8 @@
 {
   "type": "module",
+  "imports": {
+    "#*": "./src/*"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.4.2",

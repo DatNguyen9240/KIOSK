@@ -54,8 +54,8 @@ console.log(`===================================================================
 console.log(`  [LAYOUT COMPONENTS AUDIT] VERIFYING HEADER & MOBILE NAV INITIALIZATION`);
 console.log(`=============================================================================`);
 
-const { initHeaderControls } = await import('../../src/components/layout/header.js');
-const { initMobileNavigation, setActiveNav } = await import('../../src/components/layout/mobile-nav.js');
+const { initHeaderControls } = await import('#components/layout/header.js');
+const { initMobileNavigation, setActiveNav } = await import('#components/layout/mobile-nav.js');
 
 assert.strictEqual(typeof initHeaderControls, 'function');
 assert.strictEqual(typeof initMobileNavigation, 'function');

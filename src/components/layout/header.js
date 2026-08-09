@@ -2,10 +2,10 @@
  * Header Controls Component (Tenant Selector, Datepicker, Tower Selector, Notification Dropdown)
  */
 
-import { TenantSelectorComponent } from '../tenant-selector.js';
-import { UIDatepicker } from '../ui-datepicker.js';
-import { UISelect } from '../ui-select.js';
-import { toast } from '../toast.js';
+import { TenantSelectorComponent } from '#components/tenant-selector.js';
+import { UIDatepicker } from '#components/ui-datepicker.js';
+import { UISelect } from '#components/ui-select.js';
+import { toast } from '#components/toast.js';
 
 export function initHeaderControls() {
   // Multi-Tenant Context Header Initialization

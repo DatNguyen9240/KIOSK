@@ -2,7 +2,7 @@
  * PARKING.GO Reports Module
  */
 
-import { initDebtReportModule } from '../debt-report/index.js';
+import { initDebtReportModule } from '#modules/debt-report/index.js';
 
 export function initReportsModule(container) {
   if (!container) return;
