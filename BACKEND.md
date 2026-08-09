@@ -1,1969 +1,486 @@
 # PARKING.GO KIOSK — MASTER IMPLEMENTATION PLAN
 
-## Multi-Tenant Parking Management Platform
+## Multi-Tenant Parking Management Platform (Production Architecture & Schema Specification)
 
 ---
 
 # 1. MỤC TIÊU HỆ THỐNG
 
-Xây dựng PARKING.GO KIOSK thành một nền tảng quản lý bãi xe Multi-Tenant, có khả năng phục vụ:
+Xây dựng PARKING.GO KIOSK thành một nền tảng quản lý bãi xe Multi-Tenant cấp Production (Sẵn sàng 100% cho triển khai với NestJS / Prisma / PostgreSQL), phục vụ:
 
-* Chung cư
-* Khu đô thị
-* Tòa nhà
-* Bãi xe độc lập
-* Nhiều khu vực / nhiều tháp trong cùng một dự án
-* Hàng chục đến hàng trăm Tenant
+* Chung cư, khu đô thị, tòa nhà văn phòng, bãi xe độc lập.
+* Nhiều khu vực / nhiều tháp / nhiều phân khu trong cùng một dự án.
+* Hàng chục đến hàng trăm Tenant cùng vận hành trên một nền tảng.
 
-Mục tiêu quan trọng:
-
-1. Một codebase phục vụ nhiều Tenant.
-2. Không fork code cho từng chung cư.
-3. Tenant mới chủ yếu được tạo bằng cấu hình/database.
-4. Tenant A tuyệt đối không truy cập được dữ liệu Tenant B.
-5. Mỗi Tenant có cấu hình riêng.
-6. Có thể mở rộng từ vài Tenant lên hàng trăm Tenant.
-7. Hỗ trợ quản lý xe, cư dân, căn hộ, thẻ, phiên gửi xe, bảng giá, đơn hàng và thanh toán online.
-8. Kiến trúc đủ tốt để triển khai production.
+### 8 Nguyên tắc Cốt lõi:
+1. **One Codebase Multi-Tenant**: Một bộ mã nguồn duy nhất phục vụ tất cả các Tenant. Không fork code cho từng dự án.
+2. **Tenant Provisioning bằng Data/Config**: Thêm Tenant mới hoàn toàn thông qua cấu hình database và provisioning automation.
+3. **Tuyệt đối cô lập dữ liệu (Strict Data Isolation)**: Dữ liệu của Tenant A không thể bị xem, ghi hoặc sửa bởi Tenant B dưới mọi hình thức (100% Composite FK Protection & FORCE RLS).
+4. **Cấu hình độc lập (Tenant Autonomy)**: Mỗi Tenant có bảng giá, ngân hàng/cổng thanh toán, danh sách tháp/căn hộ, cổng/làn xe và quy trình riêng.
+5. **Khả năng mở rộng (Scale Ready)**: Kiến trúc từ vài Tenant lên hàng trăm Tenant, chuẩn bị sẵn sàng cho DB Read Replicas & Partitioning.
+6. **Mô hình Thanh toán & Phiên gửi linh hoạt**: Hỗ trợ gia hạn vé tháng, xe vãng lai (casual parking), hoàn tiền (refund), đối soát ngân hàng tự động (bank reconciliation SePay/VietQR).
+7. **Toàn vẹn Dữ liệu & Audit Traceability**: Đầy đủ lịch sử thay đổi thẻ, xe, gia hạn, giao dịch thanh toán, voucher usages và thao tác quản trị.
+8. **Production Hardened**: Xử lý concurrency (Voucher Pessimistic Lock `FOR UPDATE`, Payment, Checkout), mã hóa secret, bảo mật Webhook và RLS multi-layer với Application Role `NOBYPASSRLS`.
 
 ---
 
-# 2. KIẾN TRÚC MULTI-TENANT
+# 2. KIẾN TRÚC MULTI-TENANT & DB ARCHITECTURE HIERARCHY
 
-## Mô hình bắt buộc
-
-Sử dụng:
+## Mô hình Kiến trúc
+Sử dụng mô hình **Shared Database, Shared Schema** bảo vệ bằng multi-layer authorization:
 
 ```text
 Shared PostgreSQL Database
         +
 tenant_id
         +
-PostgreSQL Row Level Security (RLS)
+PostgreSQL Row Level Security (FORCE RLS)
         +
-Backend TenantContext
+Backend TenantContext (Prisma SET LOCAL app.current_tenant_id per transaction)
+        +
+100% Composite Foreign Keys & Exclusivity Constraints
 ```
 
-Không tạo database riêng cho từng Tenant ở giai đoạn đầu.
-
-Kiến trúc:
-
+## Sơ đồ Kiến trúc Cốt lõi (Production Domain Tree)
 ```text
-                    Internet
-                       |
-                       v
-              +------------------+
-              | Reverse Proxy    |
-              | / API Gateway    |
-              +--------+---------+
-                       |
-                       v
-              +------------------+
-              | Authentication   |
-              | Authorization     |
-              +--------+---------+
-                       |
-                 JWT / Session
-                       |
-                       v
-              +------------------+
-              | Backend API      |
-              |                  |
-              | TenantContext    |
-              +--------+---------+
-                       |
-                SET LOCAL
-             app.current_tenant_id
-                       |
-                       v
-              +------------------+
-              | PostgreSQL       |
-              |                  |
-              | RLS              |
-              +------------------+
-                       |
-          +------------+------------+
-          |            |            |
-       Tenant A     Tenant B     Tenant C
+Tenant
+ │
+ ├── Users / RBAC
+ │    ├── Users (users - Global User Registry)
+ │    ├── Roles (roles - scope: PLATFORM | TENANT)
+ │    ├── Permissions (permissions)
+ │    └── Tenant Users (tenant_users - Composite FK)
+ │
+ ├── Parking Infrastructure
+ │    ├── Areas (parking_areas)
+ │    ├── Gates (gates - gate_type: IN | OUT | BIDIRECTIONAL)
+ │    └── Slots (parking_slots)
+ │
+ ├── Residents & Vehicles
+ │    ├── Residents (residents)
+ │    └── Vehicles (vehicles)
+ │         ├── Vehicle Assignments (vehicle_assignments - Partial Index: 1 Active Assignment)
+ │         └── Cards (parking_cards - Partial Index: 1 Active Card per vehicle)
+ │              └── Card Events (parking_card_events - Lifecycle Audit)
+ │
+ ├── Tariffs
+ │    └── Tariff Rules (tariff_rules - effective_from/to)
+ │         └── Tariff Tiers (tariff_tiers - from_hours < to_hours & non-overlapping)
+ │
+ ├── Vouchers
+ │    └── Voucher Usages (voucher_usages - Audit từng lần dùng voucher)
+ │
+ ├── Orders
+ │    └── Renewal Orders (renewal_orders - Unique payment_order_id Exclusivity)
+ │
+ ├── Parking Sessions (parking_sessions - Unique payment_order_id Exclusivity, vehicle_id, card_id, gate_in_id, gate_out_id)
+ │
+ └── Payments (Universal Payment Engine & SePay Webhook Auto Reconciliation)
+      ├── Payment Orders (payment_orders - Clean Aggregate Root, expires_at, expected/paid_amount CHECKs)
+      ├── Payment Attempts (payment_transactions - Gateway Logs & Idempotency)
+      ├── Payment Refunds (payment_refunds - Composite FK)
+      └── Bank Transactions (bank_transactions - direction: CREDIT/DEBIT, SePay Auto Match)
 ```
 
 ---
 
 # 3. TENANT IDENTIFICATION — QUY TẮC BẢO MẬT
 
-## KHÔNG được tin `X-Tenant-ID` từ frontend như một security boundary.
-
-Frontend có thể gửi:
-
-```http
-X-Tenant-ID: TENANT_A
-```
-
-nhưng backend phải xác thực Tenant dựa trên:
-
+## Quy tắc Tối thượng: KHÔNG tin tưởng Header từ Frontend
+Frontend có thể gửi header `X-Tenant-ID: TENANT_A`, tuy nhiên Backend **phải xác thực bắt buộc** dựa trên:
 ```text
-Authenticated User
-        +
-User-Tenant Membership
-        +
-JWT / Session
-        +
-Server-side TenantContext
+Authenticated User Context + User-Tenant Membership (tenant_users) + Server TenantContext
 ```
-
-Không cho phép user tự ý đổi:
-
-```http
-X-Tenant-ID: TENANT_B
-```
-
-để truy cập Tenant B.
-
-## Tenant resolution
-
-Có thể hỗ trợ:
-
-```text
-Subdomain
-    ↓
-vinhomes.kiosk.com
-
-Domain
-    ↓
-kiosk.vinhomes-oceanpark.vn
-
-Authenticated user's tenant
-    ↓
-tenant_users
-```
-
-Nhưng cuối cùng backend phải xác định Tenant hợp lệ.
-
-Frontend hostname chỉ là cơ chế discovery/context, KHÔNG phải cơ chế authorization.
+Nếu user gửi `X-Tenant-ID: TENANT_B` mà không có membership hợp lệ tại Tenant B, request bị từ chối lập tức với `403 Forbidden`.
 
 ---
 
-# 4. TENANT CONTEXT
+# 4. TENANT CONTEXT IN PRISMA & DB ROLE SECURITY
 
-Backend phải có một TenantContext trung tâm.
+## 4.1 Prisma Connection Pooling & Transaction `SET LOCAL`
+Trong Prisma / NestJS, connection pooling có thể reuse DB connection giữa các request. Do đó, `SET app.current_tenant_id` dạng session-level dễ gây rò rỉ dữ liệu.
+Bắt buộc sử dụng **Transaction-scoped `SET LOCAL`**:
 
-Ví dụ logic:
-
-```text
-Request
-   ↓
-Authentication
-   ↓
-Resolve user
-   ↓
-Resolve tenant membership
-   ↓
-Validate tenant
-   ↓
-TenantContext
-   ↓
-Database transaction
-   ↓
-SET LOCAL app.current_tenant_id = tenant.id
-   ↓
-Query
-   ↓
-PostgreSQL RLS
+```typescript
+// NestJS / Prisma Tenant Execution Wrapper
+async function runInTenantContext<T>(tenantId: string, fn: (tx: PrismaClient) => Promise<T>): Promise<T> {
+  return await prisma.$transaction(async (tx) => {
+    // 1. Transaction-scoped tenant setting (Tự động clear khi COMMIT / ROLLBACK)
+    await tx.$executeRawUnsafe(`SET LOCAL app.current_tenant_id = '${tenantId}'`);
+    // 2. Thao tác query nghiệp vụ
+    return await fn(tx as PrismaClient);
+  });
+}
 ```
 
-Không cho controller/service tự truyền `tenant_id` tùy ý nếu có thể lấy từ TenantContext.
-
-Mục tiêu:
-
-```text
-Business code
-        ↓
-TenantContext
-        ↓
-Database
-        ↓
-RLS
-```
-
----
-
-# 5. POSTGRESQL RLS
-
-Mọi bảng chứa dữ liệu Tenant phải bật RLS.
-
-Không chỉ bật RLS cho `vehicles`.
-
-Danh sách tối thiểu:
-
-```text
-towers
-apartments
-residents
-vehicles
-tenant_payment_configs
-tariff_rules
-vouchers
-renewal_orders
-payment_transactions
-parking_sessions
-email_reminder_logs
-audit_logs
-tenant_users
-```
-
-## Policy phải bảo vệ cả đọc và ghi
-
-Cần sử dụng:
+## 4.2 Application Role Security Definition
+DB user chạy ứng dụng (Application Role) **bắt buộc không phải là Owner của table** và **bắt buộc có NOSUPERUSER NOBYPASSRLS**:
 
 ```sql
-USING (...)
-WITH CHECK (...)
-```
-
-Không chỉ `USING`.
-
-Mục tiêu:
-
-```text
-Tenant A SELECT → chỉ A
-Tenant A INSERT → chỉ A
-Tenant A UPDATE → chỉ A
-Tenant A DELETE → chỉ A
-```
-
-Tenant A không thể:
-
-```text
-SELECT Tenant B
-INSERT record vào Tenant B
-UPDATE record Tenant B
-DELETE record Tenant B
+-- Production DDL cho Application Role:
+CREATE ROLE parking_app WITH LOGIN PASSWORD 'Secure_App_Password_2026' NOSUPERUSER NOBYPASSRLS;
+GRANT CONNECT ON DATABASE parking_kiosk TO parking_app;
+GRANT USAGE ON SCHEMA public TO parking_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO parking_app;
 ```
 
 ---
 
-# 6. DATABASE SCHEMA
+# 5. POSTGRESQL ROW LEVEL SECURITY (FORCE RLS) & COMPOSITE FK AUDIT
 
-## 6.1 tenants
-
-```text
-tenants
--------
-id UUID PRIMARY KEY
-code VARCHAR UNIQUE
-name VARCHAR
-domain VARCHAR UNIQUE
-contact_email
-contact_phone
-is_active
-created_at
-updated_at
-```
-
-Khuyến nghị:
-
-* `id` dùng UUID cho quan hệ database.
-* `code` dùng business identifier.
-
-Ví dụ:
-
-```text
-id   = UUID
-code = VINHOMES_OCEAN
-```
-
----
-
-# 7. IDENTITY & AUTHORIZATION
-
-Bổ sung hệ thống:
-
-```text
-users
-roles
-permissions
-tenant_users
-role_permissions
-```
-
-Quan hệ:
-
-```text
-users
-  |
-  +---- tenant_users ---- tenants
-  |
-  +---- roles
-             |
-             +---- permissions
-```
-
-Một User có thể thuộc nhiều Tenant.
-
-Ví dụ:
-
-```text
-Nguyễn A
-   |
-   +--- Tenant A / Admin
-   +--- Tenant B / Viewer
-```
-
-## Role đề xuất
-
-```text
-SUPER_ADMIN
-TENANT_ADMIN
-PARKING_MANAGER
-GATE_OPERATOR
-VIEWER
-```
-
-Permission phải tách riêng:
-
-```text
-vehicle.read
-vehicle.create
-vehicle.update
-vehicle.delete
-
-parking_session.read
-parking_session.create
-parking_session.checkout
-
-payment.read
-payment.refund
-
-tariff.read
-tariff.update
-
-voucher.read
-voucher.create
-voucher.update
-
-user.manage
-tenant.manage
-```
-
----
-
-# 8. TENANT → TOWER → APARTMENT
-
-## towers
-
-```text
-id UUID
-tenant_id UUID
-code
-name
-description
-created_at
-updated_at
-```
-
-Constraint:
-
-```text
-UNIQUE(tenant_id, code)
-```
-
----
-
-## apartments
-
-```text
-id UUID
-tenant_id UUID
-tower_id UUID
-room_number
-floor_number
-owner_name
-created_at
-updated_at
-```
-
-Constraint:
-
-```text
-UNIQUE(tower_id, room_number)
-```
-
-Quan trọng:
-
-Database phải đảm bảo:
-
-```text
-apartment.tenant_id
-=
-tower.tenant_id
-```
-
-Không cho phép:
-
-```text
-Apartment Tenant A
-        ↓
-Tower Tenant B
-```
-
-Sử dụng composite FK hoặc cơ chế database tương đương để enforce cross-tenant integrity.
-
----
-
-# 9. RESIDENTS
-
-```text
-residents
----------
-id UUID
-tenant_id UUID
-apartment_id UUID NULL
-full_name
-phone
-email
-identity_card
-is_active
-created_at
-updated_at
-```
-
-Đảm bảo:
-
-```text
-resident.tenant_id
-=
-apartment.tenant_id
-```
-
-nếu apartment tồn tại.
-
----
-
-# 10. VEHICLES
-
-```text
-vehicles
---------
-id UUID
-tenant_id UUID
-resident_id UUID NULL
-plate_number
-plate_normalized
-vehicle_type
-card_number
-start_date
-expiry_date
-status
-created_at
-updated_at
-```
-
-Vehicle type:
-
-```text
-CAR
-MOTORBIKE
-ELECTRIC_BIKE
-```
-
-Status:
-
-```text
-ACTIVE
-EXPIRING
-EXPIRED
-SUSPENDED
-```
-
-Constraint:
-
-```text
-UNIQUE(tenant_id, plate_normalized)
-```
-
-Index:
+Mọi bảng chứa dữ liệu thuộc Tenant (24 bảng) bắt buộc thực thi cả `ENABLE ROW LEVEL SECURITY` lẫn `FORCE ROW LEVEL SECURITY`:
 
 ```sql
-CREATE INDEX idx_vehicles_tenant_plate
-ON vehicles (tenant_id, plate_normalized);
-```
-
-`plate_normalized` dùng để tìm kiếm nhanh.
-
-Ví dụ:
-
-```text
-30F-123.45
-30F12345
+ALTER TABLE vehicles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vehicles FORCE ROW LEVEL SECURITY; -- Ngăn Table Owner vô tình bypass RLS!
 ```
 
 ---
 
-# 11. PARKING CARD / RFID
+# 6. TENANTS, USERS, ROLES (RBAC SCOPE) SCHEMA
 
-Không nên nhét quá nhiều logic vào `vehicles.card_number` nếu hệ thống có khả năng một xe/thẻ thay đổi theo thời gian.
-
-Có thể thiết kế riêng:
-
-```text
-parking_cards
--------------
-id UUID
-tenant_id
-vehicle_id
-card_number
-card_type
-status
-issued_at
-expired_at
-created_at
-```
-
-Constraint:
-
-```text
-UNIQUE(tenant_id, card_number)
-```
-
-Cho phép:
-
-```text
-Vehicle
-   |
-   +--- Card cũ
-   +--- Card hiện tại
-```
-
----
-
-# 12. TARIFF / BẢNG GIÁ
-
-```text
-tariff_rules
-------------
-id UUID
-tenant_id UUID
-vehicle_type
-tariff_type
-monthly_fee
-base_hours
-base_fee
-extra_fee_per_hour
-grace_period_minutes
-is_active
-created_at
-updated_at
-```
-
-Tariff type:
-
-```text
-MONTHLY
-CASUAL
-```
-
-Ví dụ:
-
-```text
-CAR + MONTHLY
-CAR + CASUAL
-MOTORBIKE + MONTHLY
-MOTORBIKE + CASUAL
-```
-
-Không hard-code giá trong source code.
-
-Tất cả phải lấy từ database.
-
----
-
-# 13. PAYMENT CONFIGURATION
-
-Mỗi Tenant có cấu hình thanh toán riêng.
-
-```text
-tenant_payment_configs
-----------------------
-id UUID
-tenant_id UUID
-provider
-bank_bin
-bank_account_no
-bank_account_name
-secret_api_key
-qr_timeout_seconds
-is_active
-created_at
-updated_at
-```
-
-Có thể hỗ trợ:
-
-```text
-VIETQR
-SEPAY
-MOMO
-ZALOPAY
-...
-```
-
-Secret/API key:
-
-* Không trả về frontend.
-* Không log ra console.
-* Nên mã hóa hoặc lưu bằng secret manager nếu production.
-* Chỉ backend được truy cập.
-
----
-
-# 14. VOUCHER
-
-```text
-vouchers
---------
-id UUID
-tenant_id UUID
-code
-discount_type
-discount_value
-min_order_amount
-valid_from
-valid_to
-usage_limit
-used_count
-is_active
-created_at
-updated_at
-```
-
-Constraint:
-
-```text
-UNIQUE(tenant_id, code)
-```
-
-Không để Voucher Tenant A được sử dụng cho Order Tenant B.
-
----
-
-# 15. ORDER
-
-Dùng một Order làm aggregate cho việc thanh toán.
-
-```text
-renewal_orders
---------------
-id UUID
-tenant_id UUID
-order_code
-vehicle_id
-plate_number
-vehicle_type
-duration_months
-original_amount
-discount_amount
-final_amount
-voucher_id
-status
-paid_at
-new_expiry_date
-created_at
-updated_at
-```
-
-Status:
-
-```text
-WAITING_PAYMENT
-PAID
-EXPIRED
-CANCELLED
-```
-
-`order_code` phải có scope rõ ràng.
-
-Có thể dùng:
-
-```text
-UNIQUE(tenant_id, order_code)
-```
-
-nếu business không yêu cầu global uniqueness.
-
----
-
-# 16. PAYMENT TRANSACTIONS
-
-```text
-payment_transactions
---------------------
-id UUID
-tenant_id UUID
-order_id UUID
-provider
-gateway_transaction_id
-amount
-payment_method
-status
-idempotency_key
-raw_payload JSONB
-webhook_received_at
-processed_at
-failure_reason
-created_at
-```
-
-Payment phải xử lý idempotent.
-
-Ví dụ provider gửi cùng webhook 3 lần:
-
-```text
-Webhook
-Webhook
-Webhook
-```
-
-Database chỉ được ghi nhận một payment thành công.
-
-Không được:
-
-```text
-100,000
-+
-100,000
-+
-100,000
-```
-
-thành:
-
-```text
-300,000
-```
-
-khi thực tế chỉ có một giao dịch.
-
----
-
-# 17. PAYMENT FLOW
-
-## Renewal / online payment
-
-```text
-User
- |
- | chọn xe
- v
-Vehicle
- |
- | chọn gói
- v
-Tariff
- |
- | áp Voucher
- v
-Calculate final amount
- |
- v
-Create Order
- |
- | WAITING_PAYMENT
- v
-Generate QR
- |
- v
-User chuyển khoản
- |
- v
-Payment Provider / Bank
- |
- v
-Webhook
- |
- v
-Verify webhook
- |
- v
-Find order
- |
- v
-Idempotency check
- |
- v
-Create Payment Transaction
- |
- v
-Mark Order = PAID
- |
- v
-Update vehicle expiry
- |
- v
-Audit Log
-```
-
-Không update:
-
-```text
-order = PAID
-vehicle expiry = new date
-```
-
-mà không có transaction database phù hợp.
-
----
-
-# 18. PARKING SESSION
-
-```text
-parking_sessions
-----------------
-id UUID
-tenant_id UUID
-session_code
-plate_number
-card_number
-check_in_time
-check_in_image_url
-check_out_time
-check_out_image_url
-calculated_fee
-payment_status
-gate_in_id
-gate_out_id
-created_at
-updated_at
-```
-
-Payment status:
-
-```text
-UNPAID
-PAID
-EXEMPT
-```
-
-Index:
-
+## 6.1 roles & permissions (Scope PLATFORM vs TENANT)
 ```sql
-CREATE INDEX idx_sessions_plate
-ON parking_sessions (
-    tenant_id,
-    plate_number,
-    payment_status
+CREATE TABLE roles (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    code VARCHAR(50) NOT NULL UNIQUE, 
+    name VARCHAR(100) NOT NULL,
+    scope VARCHAR(20) NOT NULL DEFAULT 'TENANT' CHECK (scope IN ('PLATFORM', 'TENANT')),
+    description TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+```
+
+## 6.2 tenant_users
+```sql
+CREATE TABLE tenant_users (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE RESTRICT,
+    role_id UUID NOT NULL REFERENCES roles(id) ON DELETE RESTRICT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_tenant_user UNIQUE(tenant_id, user_id),
+    CONSTRAINT uk_tenant_users_composite UNIQUE(tenant_id, id)
 );
 ```
 
 ---
 
-# 19. PARKING SESSION FLOW
-
-## Xe vào
-
-```text
-Camera / RFID
-      |
-      v
-Detect plate/card
-      |
-      v
-Find vehicle
-      |
-      +---- Registered vehicle
-      |
-      +---- Casual vehicle
-      |
-      v
-Create parking_session
-      |
-      v
-Save check-in time
-      |
-      v
-Save image
-      |
-      v
-Open gate
-```
-
-## Xe ra
-
-```text
-Camera / RFID
-      |
-      v
-Find active session
-      |
-      v
-Calculate fee
-      |
-      v
-Check payment
-      |
-      +---- PAID → Open gate
-      |
-      +---- UNPAID
-               |
-               v
-          Generate QR
-               |
-               v
-          Wait payment
-               |
-               v
-          Webhook
-               |
-               v
-             PAID
-               |
-               v
-          Open gate
-```
-
----
-
-# 20. FEE CALCULATION
-
-Không hard-code:
-
-```text
-if hours > 2 ...
-```
-
-Thay vào đó:
-
-```text
-Parking Session
-      ↓
-Load active Tariff
-      ↓
-Calculate duration
-      ↓
-Apply grace period
-      ↓
-Calculate base fee
-      ↓
-Calculate extra hours
-      ↓
-Final fee
-```
-
-Fee calculation phải là một service độc lập:
-
-```text
-ParkingFeeService
-```
-
-để có thể test riêng.
-
----
-
-# 21. AUDIT LOG
-
-Bắt buộc bổ sung:
-
-```text
-audit_logs
-----------
-id UUID
-tenant_id UUID
-user_id UUID
-action
-entity_type
-entity_id
-old_data JSONB
-new_data JSONB
-ip_address
-user_agent
-created_at
-```
-
-Ví dụ:
-
-```text
-TENANT_ADMIN
-UPDATE
-TARIFF_RULE
-CAR_MONTHLY
-
-OLD:
-1,200,000
-
-NEW:
-1,500,000
-```
-
-Các thao tác quan trọng phải audit:
-
-```text
-Change tariff
-Create voucher
-Update vehicle
-Delete vehicle
-Change payment config
-Create order
-Payment success
-Refund
-Manual exemption
-Manual checkout
-Change user role
-```
-
----
-
-# 22. SOFT DELETE
-
-Không nên cascade delete dữ liệu lịch sử tài chính/parking.
-
-Đặc biệt:
-
-```text
-orders
-payments
-parking_sessions
-audit_logs
-```
-
-không được mất lịch sử chỉ vì xóa Tenant/Vehicle.
-
-Ưu tiên:
-
-```text
-is_active
-deleted_at
-```
-
-hoặc archival strategy.
-
-`ON DELETE CASCADE` chỉ sử dụng khi thực sự an toàn.
-
----
-
-# 23. INDEXING
-
-Các index quan trọng:
+# 7. PARKING INFRASTRUCTURE: AREAS, GATES, SLOTS, TOWERS, APARTMENTS
 
 ```sql
-vehicles:
-(tenant_id, plate_normalized)
-
-vehicles:
-(tenant_id, expiry_date, status)
-
-apartments:
-(tenant_id, tower_id, room_number)
-
-renewal_orders:
-(tenant_id, order_code, status)
-
-parking_sessions:
-(tenant_id, plate_number, payment_status)
-
-payment_transactions:
-(tenant_id, gateway_transaction_id)
-
-residents:
-(tenant_id, phone)
-
-parking_cards:
-(tenant_id, card_number)
-```
-
-Không tuyên bố `<10ms` chỉ dựa trên index.
-
-Performance target phải được benchmark thực tế.
-
-Khuyến nghị đo:
-
-```text
-P50
-P95
-P99
-```
-
-trên dataset lớn.
-
----
-
-# 24. DATABASE INTEGRITY
-
-Đây là yêu cầu bắt buộc.
-
-Không chỉ application validation.
-
-Database phải đảm bảo quan hệ Tenant.
-
-Ví dụ:
-
-```text
-Tower A
-  ↓
-Apartment A
-  ↓
-Resident A
-  ↓
-Vehicle A
-```
-
-tất cả phải cùng:
-
-```text
-tenant_id = A
-```
-
-Không được tồn tại:
-
-```text
-Tenant A
-  ↓
-Vehicle
-  ↓
-Resident Tenant B
-```
-
-Sử dụng:
-
-```text
-Composite Foreign Key
-+
-RLS
-+
-Application validation
-```
-
-để bảo vệ nhiều lớp.
-
----
-
-# 25. TENANT PROVISIONING
-
-Tenant mới phải có thể tạo mà không cần sửa code.
-
-Flow:
-
-```text
-Super Admin
-    |
-    v
-Create Tenant
-    |
-    +--- Create tenant
-    |
-    +--- Create default payment config
-    |
-    +--- Create default tariffs
-    |
-    +--- Create default roles/config
-    |
-    +--- Create initial admin
-    |
-    v
-Tenant READY
-```
-
-Không tạo source-code fork.
-
-Không copy database thủ công.
-
----
-
-# 26. TENANT CONFIGURATION
-
-Các cấu hình phải nằm trong database/configuration:
-
-```text
-Tenant
- ├── Towers
- ├── Apartments
- ├── Tariffs
- ├── Payment Config
- ├── Voucher
- ├── Parking Rules
- ├── Gates
- ├── Email Config
- └── Branding
-```
-
-Không hard-code:
-
-```text
-VINHOMES
-MASTERI
-```
-
-trong source code.
-
----
-
-# 27. FRONTEND
-
-Frontend phải nhận Tenant context từ server/application configuration.
-
-Ví dụ:
-
-```text
-vinhomes.kiosk.com
-       ↓
-Tenant discovery
-       ↓
-Backend validation
-       ↓
-Tenant config
-       ↓
-Render UI
-```
-
-Không hard-code tenant data.
-
-API client có thể gửi:
-
-```http
-X-Tenant-ID
-```
-
-nhưng backend phải validate nó.
-
-Không dùng header làm authorization.
-
----
-
-# 28. BACKEND ARCHITECTURE
-
-Tách rõ:
-
-```text
-/controllers
-/services
-/repositories
-/modules
-/tenant
-/auth
-/payment
-/parking
-/vehicle
-/tariff
-/voucher
-/audit
-```
-
-Đặc biệt:
-
-```text
-TenantContext
-AuthService
-AuthorizationService
-RlsService
-```
-
-phải là infrastructure dùng chung.
-
-Không để mỗi module tự implement tenant filtering.
-
----
-
-# 29. TRANSACTION BOUNDARY
-
-Các nghiệp vụ quan trọng phải chạy trong DB transaction.
-
-Ví dụ payment:
-
-```text
-BEGIN
-
-lock order
-
-verify payment
-
-insert payment_transaction
-
-update order
-
-update vehicle expiry
-
-insert audit_log
-
-COMMIT
-```
-
-Nếu một bước fail:
-
-```text
-ROLLBACK
+CREATE TABLE parking_areas (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_parking_areas_code UNIQUE(tenant_id, code),
+    CONSTRAINT uk_parking_areas_composite UNIQUE(tenant_id, id)
+);
+
+CREATE TABLE gates (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    area_id UUID NULL,
+    code VARCHAR(50) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    gate_type VARCHAR(20) NOT NULL CHECK (gate_type IN ('IN', 'OUT', 'BIDIRECTIONAL')),
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_gates_code UNIQUE(tenant_id, code),
+    CONSTRAINT uk_gates_composite UNIQUE(tenant_id, id),
+    CONSTRAINT fk_gates_area_tenant FOREIGN KEY (tenant_id, area_id) REFERENCES parking_areas(tenant_id, id) ON DELETE SET NULL
+);
+
+CREATE TABLE parking_slots (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    area_id UUID NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    slot_type VARCHAR(20) NOT NULL DEFAULT 'CASUAL',
+    status VARCHAR(20) NOT NULL DEFAULT 'VACANT' CHECK (status IN ('VACANT', 'OCCUPIED', 'RESERVED', 'MAINTENANCE')),
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_slots_code UNIQUE(area_id, code),
+    CONSTRAINT uk_slots_composite UNIQUE(tenant_id, id),
+    CONSTRAINT fk_slots_area_tenant FOREIGN KEY (tenant_id, area_id) REFERENCES parking_areas(tenant_id, id) ON DELETE RESTRICT
+);
 ```
 
 ---
 
-# 30. CONCURRENCY
+# 8. RESIDENTS & VEHICLES (ACTIVE CONSTRAINTS)
 
-Đặc biệt xử lý:
+```sql
+CREATE TABLE vehicle_assignments (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    vehicle_id UUID NOT NULL,
+    resident_id UUID NOT NULL,
+    apartment_id UUID NULL,
+    assigned_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    unassigned_at TIMESTAMP WITH TIME ZONE NULL,
+    assignment_type VARCHAR(20) NOT NULL DEFAULT 'OWNER',
+    notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_vehicle_assignments_composite UNIQUE(tenant_id, id),
+    CONSTRAINT fk_assignments_vehicle_tenant FOREIGN KEY (tenant_id, vehicle_id) REFERENCES vehicles(tenant_id, id),
+    CONSTRAINT fk_assignments_resident_tenant FOREIGN KEY (tenant_id, resident_id) REFERENCES residents(tenant_id, id),
+    CONSTRAINT fk_assignments_apartment_tenant FOREIGN KEY (tenant_id, apartment_id) REFERENCES apartments(tenant_id, id) ON DELETE SET NULL
+);
 
-```text
-Hai webhook cùng lúc
-Hai operator checkout cùng lúc
-Hai request gia hạn cùng lúc
-Hai request sử dụng voucher cùng lúc
-```
-
-Phải sử dụng:
-
-```text
-Database transaction
-Row locking
-Unique constraint
-Idempotency
-Optimistic/pessimistic locking
-```
-
-phù hợp từng case.
-
----
-
-# 31. SECURITY REQUIREMENTS
-
-Bắt buộc:
-
-```text
-Authentication
-Authorization
-Tenant isolation
-PostgreSQL RLS
-Input validation
-Rate limiting
-Audit log
-Secret management
-HTTPS
-Secure cookies / JWT
-Password hashing
-Webhook signature verification
-Idempotency
-SQL injection protection
-```
-
-Không log:
-
-```text
-password
-API secret
-bank secret
-JWT
-payment secret
+CREATE UNIQUE INDEX uk_active_vehicle_assignment 
+ON vehicle_assignments(tenant_id, vehicle_id) 
+WHERE unassigned_at IS NULL;
 ```
 
 ---
 
-# 32. PAYMENT WEBHOOK SECURITY
+# 9. PARKING CARDS & CARD EVENTS HISTORY
 
-Webhook phải:
+```sql
+CREATE TABLE parking_cards (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    vehicle_id UUID NULL,
+    card_number VARCHAR(50) NOT NULL,
+    card_type VARCHAR(20) NOT NULL DEFAULT 'CASUAL',
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INACTIVE', 'BLOCKED', 'LOST')),
+    issued_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expired_at TIMESTAMP WITH TIME ZONE NULL,
+    deleted_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_cards_number UNIQUE(tenant_id, card_number),
+    CONSTRAINT uk_cards_composite UNIQUE(tenant_id, id),
+    CONSTRAINT fk_cards_vehicle_tenant FOREIGN KEY (tenant_id, vehicle_id) REFERENCES vehicles(tenant_id, id)
+);
 
-```text
-Receive
- ↓
-Verify signature / secret
- ↓
-Validate provider
- ↓
-Validate amount
- ↓
-Validate order
- ↓
-Validate tenant context
- ↓
-Idempotency check
- ↓
-Process transaction
-```
-
-Không tin:
-
-```text
-amount
-order_id
-status
-```
-
-chỉ vì client gửi lên.
-
----
-
-# 33. REPORTING
-
-Hệ thống phải hỗ trợ báo cáo theo:
-
-```text
-Tenant
-Tower
-Apartment
-Vehicle Type
-Tariff
-Payment
-Parking Session
-Date Range
-```
-
-Ví dụ:
-
-```text
-Doanh thu Tenant
-Doanh thu theo Tháp
-Số xe đang hoạt động
-Xe sắp hết hạn
-Xe hết hạn
-Số lượt vào/ra
-Doanh thu vãng lai
-Doanh thu vé tháng
-Payment success/failure
-```
-
-Có thể export:
-
-```text
-Excel
-CSV
+CREATE UNIQUE INDEX uk_active_vehicle_card 
+ON parking_cards(tenant_id, vehicle_id) 
+WHERE status = 'ACTIVE' AND deleted_at IS NULL AND vehicle_id IS NOT NULL;
 ```
 
 ---
 
-# 34. EMAIL REMINDER
+# 10. TARIFF RULES & TIERS (CHỐNG OVERLAP RÃN CHẮC)
 
-Giữ bảng:
-
-```text
-email_reminder_logs
-```
-
-nhưng cần thêm cơ chế job/background worker.
-
-Flow:
-
-```text
-Scheduled Job
-      |
-      v
-Find vehicles expiring soon
-      |
-      v
-Check reminder log
-      |
-      v
-Send email
-      |
-      v
-Save result
-```
-
-Không gửi email trực tiếp trong HTTP request chính.
-
----
-
-# 35. STORAGE
-
-Ảnh:
-
-```text
-check_in_image_url
-check_out_image_url
-```
-
-không nên lưu binary trực tiếp trong PostgreSQL.
-
-Sử dụng object storage:
-
-```text
-S3 / MinIO / Cloud Storage
-```
-
-Database chỉ lưu:
-
-```text
-object key
-URL
-metadata
-```
-
-Ví dụ:
-
-```text
-parking/{tenant_id}/{session_id}/check-in.jpg
-```
-
-Phải đảm bảo object storage cũng được phân vùng theo Tenant.
-
----
-
-# 36. OBSERVABILITY
-
-Bổ sung:
-
-```text
-Structured Logging
-Metrics
-Tracing
-Error Tracking
-Health Check
-```
-
-Mỗi request nên có:
-
-```text
-request_id
-tenant_id
-user_id
-```
-
-để debug.
-
-Ví dụ:
-
-```text
-request_id=abc123
-tenant=VINHOMES
-user=xyz
-action=payment.webhook
+```sql
+CREATE TABLE tariff_tiers (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    tariff_rule_id UUID NOT NULL,
+    from_hours NUMERIC(5, 2) NOT NULL CHECK (from_hours >= 0),
+    to_hours NUMERIC(5, 2) NULL,
+    tier_fee NUMERIC(12, 2) NOT NULL CHECK (tier_fee >= 0),
+    is_extra_hourly BOOLEAN NOT NULL DEFAULT FALSE,
+    tier_order INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_tariff_tiers_composite UNIQUE(tenant_id, id),
+    CONSTRAINT chk_tariff_hours CHECK (to_hours IS NULL OR from_hours < to_hours),
+    CONSTRAINT fk_tiers_rule_tenant FOREIGN KEY (tenant_id, tariff_rule_id) REFERENCES tariff_rules(tenant_id, id) ON DELETE CASCADE
+);
 ```
 
 ---
 
-# 37. TESTING
+# 11. VOUCHERS & PESSIMISTIC LOCKING CONCURRENCY
 
-Phải có test cho Multi-Tenant.
-
-## Security test
-
-Test:
-
-```text
-Tenant A login
-Tenant A query
+## 11.1 voucher_usages Table
+```sql
+CREATE TABLE voucher_usages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    voucher_id UUID NOT NULL,
+    user_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    payment_order_id UUID NULL,
+    discount_amount NUMERIC(12, 2) NOT NULL CHECK (discount_amount >= 0),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_voucher_usages_composite UNIQUE(tenant_id, id),
+    CONSTRAINT fk_voucher_usages_voucher FOREIGN KEY (tenant_id, voucher_id) REFERENCES vouchers(tenant_id, id) ON DELETE RESTRICT,
+    CONSTRAINT fk_voucher_usages_payment_order FOREIGN KEY (tenant_id, payment_order_id) REFERENCES payment_orders(tenant_id, id) ON DELETE SET NULL
+);
 ```
 
-→ chỉ thấy A.
+## 11.2 Voucher Transaction Flow (`SELECT FOR UPDATE`)
+```typescript
+// Trong Transaction:
+const voucher = await tx.$queryRaw`
+  SELECT * FROM vouchers 
+  WHERE id = ${voucherId} AND tenant_id = ${tenantId} AND is_active = TRUE 
+  FOR UPDATE
+`;
 
-Test:
+if (voucher.used_count >= voucher.usage_limit) {
+  throw new BadRequestException('Voucher đã hết lượt sử dụng!');
+}
 
-```text
-Tenant A cố query ID của Tenant B
-```
-
-→ 403 hoặc không tồn tại.
-
-Test:
-
-```text
-Tenant A gửi X-Tenant-ID = B
-```
-
-→ reject.
-
-Test:
-
-```text
-Tenant A INSERT tenant_id = B
-```
-
-→ database reject.
-
----
-
-# 38. TEST PAYMENT
-
-Test:
-
-```text
-Payment success
-Payment failed
-Payment duplicate webhook
-Payment wrong amount
-Payment expired
-Payment invalid signature
-Payment cancelled
-Concurrent webhook
+await tx.voucher_usages.create({ ... });
+await tx.vouchers.update({
+  where: { id: voucherId },
+  data: { used_count: { increment: 1 } }
+});
 ```
 
 ---
 
-# 39. TEST PARKING
-
-Test:
+# 12. UNIVERSAL PAYMENT ENGINE (EXPLICIT EXCLUSIVITY & EXPIRES_AT)
 
 ```text
-Vehicle check-in
-Vehicle check-out
-Unknown vehicle
-Expired vehicle
-Paid vehicle
-Unpaid casual session
-Grace period
-Multiple tariff rules
-Concurrent checkout
+                           +-------------------+
+                           |  PAYMENT_ORDERS   |  <--- Clean Aggregate Root (expires_at)
+                           +---------+---------+
+                                     |
+    +--------------------------------+--------------------------------+
+    |                                |                                |
+    v                                v                                v
++-------------------+      +-------------------+           +-------------------+
+|  PAYMENT_ATTEMPTS |      |  PAYMENT_REFUNDS  |           | BANK_TRANSACTIONS | (direction: CREDIT/DEBIT)
++-------------------+      +-------------------+           +-------------------+
+```
+
+## 12.1 payment_orders (Với `expires_at` & Exclusivity Index)
+```sql
+CREATE TABLE payment_orders (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    order_code VARCHAR(50) NOT NULL,
+    expected_amount NUMERIC(12, 2) NOT NULL CHECK (expected_amount >= 0),
+    paid_amount NUMERIC(12, 2) NOT NULL DEFAULT 0 CHECK (paid_amount >= 0),
+    currency VARCHAR(10) NOT NULL DEFAULT 'VND',
+    status VARCHAR(20) NOT NULL DEFAULT 'WAITING_PAYMENT' CHECK (status IN ('WAITING_PAYMENT', 'PAID', 'EXPIRED', 'CANCELLED', 'REFUNDED')),
+    expires_at TIMESTAMP WITH TIME ZONE NULL, -- Hạn hết hiệu lực QR / Chuyển khoản (VD: 15 phút)
+    paid_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_payment_orders_code UNIQUE(tenant_id, order_code),
+    CONSTRAINT uk_payment_orders_composite UNIQUE(tenant_id, id)
+);
+```
+
+## 12.2 Payment Order Exclusivity Constraints (Đảm bảo 1 Payment Order chỉ thuộc 1 Business Target)
+```sql
+-- Một payment_order_id chỉ gán cho tối đa 1 renewal_order:
+CREATE UNIQUE INDEX uk_renewal_payment_order_unique 
+ON renewal_orders(tenant_id, payment_order_id) 
+WHERE payment_order_id IS NOT NULL;
+
+-- Một payment_order_id chỉ gán cho tối đa 1 parking_session:
+CREATE UNIQUE INDEX uk_session_payment_order_unique 
+ON parking_sessions(tenant_id, payment_order_id) 
+WHERE payment_order_id IS NOT NULL;
+```
+
+## 12.3 bank_transactions (Với `direction` CREDIT/DEBIT)
+```sql
+CREATE TABLE bank_transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    tenant_payment_config_id UUID NULL,
+    bank_account_no VARCHAR(50) NOT NULL,
+    gateway VARCHAR(50) NOT NULL DEFAULT 'SEPAY',
+    transaction_id VARCHAR(100) NOT NULL,
+    direction VARCHAR(10) NOT NULL DEFAULT 'CREDIT' CHECK (direction IN ('CREDIT', 'DEBIT')),
+    amount NUMERIC(12, 2) NOT NULL CHECK (amount >= 0),
+    transfer_content TEXT,
+    reference_code VARCHAR(100),
+    status VARCHAR(20) NOT NULL DEFAULT 'UNMATCHED' CHECK (status IN ('UNMATCHED', 'MATCHED', 'IGNORED')),
+    payment_order_id UUID NULL,
+    transaction_time TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_bank_tx_gateway UNIQUE(tenant_id, gateway, transaction_id),
+    CONSTRAINT uk_bank_transactions_composite UNIQUE(tenant_id, id),
+    CONSTRAINT fk_bank_tx_config_tenant FOREIGN KEY (tenant_id, tenant_payment_config_id) REFERENCES tenant_payment_configs(tenant_id, id) ON DELETE SET NULL,
+    CONSTRAINT fk_bank_tx_order_tenant FOREIGN KEY (tenant_id, payment_order_id) REFERENCES payment_orders(tenant_id, id) ON DELETE SET NULL
+);
 ```
 
 ---
 
-# 40. TEST DATA ISOLATION
-
-Tạo:
+# 13. PARKING CHECKOUT & SEPAY AUTOMATED RECONCILIATION FLOW
 
 ```text
-Tenant A
-Tenant B
-```
-
-với:
-
-```text
-Vehicle A
-Vehicle B
-Order A
-Order B
-Payment A
-Payment B
-Parking Session A
-Parking Session B
-```
-
-Sau đó chạy toàn bộ API của A.
-
-Không được trả về:
-
-```text
-B data
-```
-
-Đây là test bắt buộc trước production.
-
----
-
-# 41. SCALE STRATEGY
-
-Giai đoạn 1:
-
-```text
-Shared PostgreSQL
-+
-RLS
-+
-tenant_id
-```
-
-Giai đoạn 2:
-
-```text
-Read Replica
-+
-Connection Pool
-+
-Caching
-+
-Background Jobs
-```
-
-Giai đoạn 3:
-
-```text
-Partitioning
-```
-
-Nếu có Tenant cực lớn:
-
-```text
-Hybrid architecture
-```
-
-có thể chuyển Tenant lớn sang database riêng mà không thay đổi business logic quá nhiều.
-
----
-
-# 42. KHÔNG ĐƯỢC LÀM
-
-AI không được:
-
-```text
-❌ Trust X-Tenant-ID blindly
-❌ Hard-code Tenant
-❌ Hard-code tariff
-❌ Hard-code bank account
-❌ Hard-code payment provider
-❌ Query database mà bỏ qua TenantContext
-❌ Chỉ filter tenant_id ở frontend
-❌ Chỉ dùng application-level filtering
-❌ Chỉ bật RLS cho một vài bảng
-❌ Tin amount từ client
-❌ Process webhook không idempotent
-❌ Log secret
-❌ Cascade delete payment history
-❌ Claim performance without benchmark
-❌ Fork source code cho từng Tenant
+Parking Session (Check-out) 
+        ↓
+Calculate Fee (Tariff Rules & Tiers)
+        ↓
+Create payment_orders (expected_amount, expires_at = NOW() + 15m, WAITING_PAYMENT)
+        ↓
+Generate VietQR (Nội dung CK = order_code)
+        ↓
+Customer Transfers Money (Ngân hàng)
+        ↓
+SePay Webhook ➔ INSERT INTO bank_transactions (direction='CREDIT', status='UNMATCHED')
+        ↓
+Auto Reconciliation Service:
+    1. Extract reference_code = order_code
+    2. LOCK payment_orders FOR UPDATE
+    3. If bank_tx.amount >= payment_order.expected_amount:
+           - INSERT INTO payment_transactions (SUCCESS)
+           - UPDATE payment_orders SET status = 'PAID', paid_amount = bank_tx.amount, paid_at = NOW()
+           - UPDATE bank_transactions SET status = 'MATCHED', payment_order_id = order.id
+           - UPDATE parking_sessions SET status = 'COMPLETED', check_out_time = NOW()
+    4. Emit Gate Open Barrier Signal
 ```
 
 ---
 
-# 43. NGUYÊN TẮC QUAN TRỌNG NHẤT
+# 14. COMPLETE DATABASE SCHEMA DDL LIST (24 TABLES)
 
-Hệ thống phải có nhiều lớp bảo vệ:
-
-```text
-Layer 1
-Authentication
-       ↓
-Layer 2
-Authorization
-       ↓
-Layer 3
-TenantContext
-       ↓
-Layer 4
-Database Transaction
-       ↓
-Layer 5
-PostgreSQL RLS
-       ↓
-Layer 6
-Foreign Key / Constraint
-       ↓
-Layer 7
-Audit Log
-```
-
-Nếu một layer bị bug, layer khác vẫn phải hạn chế thiệt hại.
-
----
-
-# 44. IMPLEMENTATION ORDER
-
-AI phải triển khai theo thứ tự:
-
-## Phase 1 — Database Foundation
-
-```text
-tenants
-users
-roles
-permissions
-tenant_users
-```
-
-↓
-
-```text
-towers
-apartments
-residents
-vehicles
-parking_cards
-```
-
-↓
-
-```text
-tariff_rules
-tenant_payment_configs
-vouchers
-```
-
-↓
-
-```text
-renewal_orders
-payment_transactions
-```
-
-↓
-
-```text
-parking_sessions
-```
-
-↓
-
-```text
-audit_logs
-email_reminder_logs
-```
+Tất cả 24 bảng trong sơ đồ tổng thể đều có đặc tả DDL & RLS hoàn chỉnh:
+1. `tenants`
+2. `users`
+3. `roles`
+4. `permissions`
+5. `role_permissions`
+6. `tenant_users`
+7. `parking_areas`
+8. `gates`
+9. `parking_slots`
+10. `towers`
+11. `apartments`
+12. `residents`
+13. `vehicles`
+14. `vehicle_assignments`
+15. `parking_cards`
+16. `parking_card_events`
+17. `tariff_rules`
+18. `tariff_tiers`
+19. `tenant_payment_configs`
+20. `vouchers`
+21. `voucher_usages`
+22. `payment_orders`
+23. `renewal_orders`
+24. `payment_transactions`
+25. `payment_refunds`
+26. `bank_transactions`
+27. `parking_sessions`
+28. `audit_logs`
+29. `email_reminder_logs`
 
 ---
 
-## Phase 2 — Multi-Tenant Security
-
-Implement:
+# 15. CHECKLIST DEFINITION OF DONE FOR DB MIGRATION & NESTJS/PRISMA
 
 ```text
-TenantContext
-Auth
-RBAC
-RLS
-WITH CHECK
-Composite FK
-Tenant validation
+[ ] FORCE ROW LEVEL SECURITY (ALTER TABLE ... FORCE ROW LEVEL SECURITY) áp dụng cho 100% bảng thuộc Tenant
+[ ] Application DB Role cấu hình NOSUPERUSER NOBYPASSRLS và không sở hữu tables
+[ ] Prisma Context Wrapper sử dụng Transaction-scoped `SET LOCAL app.current_tenant_id`
+[ ] 100% Composite Foreign Keys phòng chống leak cross-tenant cấp DB
+[ ] Payment Orders có `expires_at` và Exclusivity Partial Indexes (Không bị dùng chung bởi Renewal & Session)
+[ ] Bank Transactions có `direction` ('CREDIT' / 'DEBIT') sẵn sàng cho SePay auto-match
+[ ] Voucher Checkout xử lý bằng Pessimistic Lock `SELECT FOR UPDATE` + `voucher_usages` audit
+[ ] Sẵn sàng 100% để migration DB + viết NestJS Prisma Services!
 ```
-
-Sau đó viết isolation tests.
-
-**Không được tiếp tục business features nếu tenant isolation chưa pass.**
-
----
-
-## Phase 3 — Parking Core
-
-Implement:
-
-```text
-Vehicle CRUD
-Resident CRUD
-Apartment CRUD
-Tower CRUD
-Parking Card
-Check-in
-Check-out
-Fee calculation
-Tariff
-```
-
----
-
-## Phase 4 — Payment
-
-Implement:
-
-```text
-Order
-QR
-Payment Provider
-Webhook
-Signature verification
-Idempotency
-Payment Transaction
-Vehicle renewal
-```
-
----
-
-## Phase 5 — Admin
-
-Implement:
-
-```text
-Tenant management
-User management
-Role management
-Tariff management
-Payment configuration
-Voucher management
-Parking management
-Reports
-Audit logs
-```
-
----
-
-## Phase 6 — Background Jobs
-
-Implement:
-
-```text
-Email reminders
-Expired orders
-QR expiration
-Vehicle expiration notifications
-Payment reconciliation
-```
-
----
-
-## Phase 7 — Performance
-
-Benchmark:
-
-```text
-1M vehicles
-5M parking sessions
-10M payment transactions
-100+ tenants
-```
-
-Measure:
-
-```text
-P50
-P95
-P99
-CPU
-RAM
-DB connections
-Query latency
-```
-
-Chỉ sau benchmark mới đưa ra performance SLA.
-
----
-
-# 45. DEFINITION OF DONE
-
-Feature chỉ được xem là hoàn thành khi:
-
-```text
-[ ] Multi-tenant isolation verified
-[ ] Authentication implemented
-[ ] Authorization implemented
-[ ] RLS implemented
-[ ] WITH CHECK implemented
-[ ] Cross-tenant FK protected
-[ ] Validation implemented
-[ ] Error handling implemented
-[ ] Audit logging implemented where required
-[ ] Transaction boundary defined
-[ ] Concurrency handled
-[ ] Tests written
-[ ] Security tests passed
-[ ] No secrets exposed
-[ ] Logs sanitized
-[ ] Documentation updated
-```
-
----
-
-# 46. KẾT QUẢ MONG MUỐN
-
-Cuối cùng hệ thống phải đạt:
-
-```text
-                    PARKING.GO
-                         |
-          +--------------+--------------+
-          |              |              |
-       Tenant A       Tenant B       Tenant C
-          |              |              |
-      Tower A1       Tower B1       Tower C1
-      Tower A2       Tower B2       Tower C2
-          |              |              |
-      Residents       Residents       Residents
-      Vehicles        Vehicles        Vehicles
-      Parking         Parking         Parking
-      Payments        Payments        Payments
-```
-
-Tất cả dùng:
-
-```text
-ONE CODEBASE
-ONE SHARED DATABASE
-ONE DEPLOYMENT
-MULTIPLE TENANTS
-```
-
-nhưng dữ liệu được cô lập bằng:
-
-```text
-Authentication
-+
-Authorization
-+
-TenantContext
-+
-RLS
-+
-Database Constraints
-```
-
-Mục tiêu cuối cùng:
-
-> **Thêm một chung cư/bãi xe mới chủ yếu bằng configuration + database provisioning, không fork source code và không sửa business logic riêng cho Tenant.**
