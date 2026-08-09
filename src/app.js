@@ -17,10 +17,15 @@ import { initReportsModule } from '#modules/reports/index.js';
 import { initKioskTouchModule } from '#modules/kiosk/index.js';
 import { initMobileGateModule } from '#modules/mobile-gate/index.js';
 import { initSettingsModule } from '#modules/settings/index.js';
+import { initLoginModule } from '#modules/login/index.js';
+import { ensureAuthenticated } from '#services/auth.service.js';
 import { toast } from '#components/toast.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
   const mainContentContainer = document.getElementById('main-app-content');
+
+  // Automatically initialize JWT auth session
+  await ensureAuthenticated();
 
   // Initialize Layout Controls (Header & Mobile Navigation)
   initHeaderControls();
@@ -28,6 +33,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Setup Client-Side Router
   new Router({
+    '#/login': () => {
+      setActiveNav('#/login');
+      initLoginModule(mainContentContainer);
+    },
     '#/dashboard': () => {
       setActiveNav('#/dashboard');
       initDashboardModule(mainContentContainer);

@@ -50,6 +50,7 @@ console.log(`  [MODULAR STRUCTURE AUDIT] VERIFYING ALL PAGE MODULE INITIALIZERS`
 console.log(`=============================================================================`);
 
 const modulePaths = [
+  { name: 'Login Module', path: '#modules/login/index.js', exportName: 'initLoginModule' },
   { name: 'Dashboard Overview', path: '#modules/dashboard/index.js', exportName: 'initDashboardModule' },
   { name: 'Vehicle Search', path: '#modules/vehicle-search/index.js', exportName: 'initVehicleSearchModule' },
   { name: 'Revenue Management', path: '#modules/revenue/index.js', exportName: 'initRevenueModule' },
