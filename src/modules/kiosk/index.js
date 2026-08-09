@@ -1,7 +1,7 @@
 /**
  * Kiosk Touch Screen Module (Visitor Parking & Entry Gate Station)
- * Synchronized with UI Components (UISelect, QrPaymentComponent, Toast)
- * Fully Integrated with Live Backend REST API Database (/api/vehicles/search & /api/orders/renewal)
+ * 100% Clean Vector SVG Icons & Enterprise UI Alignment (No Raw Emojis)
+ * Fully Connected with Live Backend REST API Database (/api/vehicles/search & /api/orders/renewal)
  */
 
 import { QrPaymentComponent } from '../../components/qr-payment.js';
@@ -34,51 +34,7 @@ export function initKioskTouchModule(container) {
           <h2 class="text-2xl sm:text-3xl font-black tracking-tight">TRA CỨU VÉ & THANH TOÁN KIOSK</h2>
           <p class="text-xs sm:text-sm text-slate-300">Nhập Biển số xe, Số căn hộ, Họ tên hoặc Thẻ RFID để thanh toán và tự động mở Barie.</p>
         </div>
-        <div class="w-24 h-24 sm:w-28 sm:h-28 rounded-3xl bg-gradient-to-br from-teal-400/25 via-blue-500/20 to-indigo-600/25 border border-white/20 backdrop-blur-xl flex items-center justify-center p-3 shrink-0 z-10 shadow-2xl shadow-teal-500/20 group hover:scale-105 transition transform duration-300">
-          <svg class="w-14 h-14 sm:w-16 sm:h-16 text-teal-300 drop-shadow-[0_8px_16px_rgba(45,212,191,0.4)]" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <!-- POS Terminal Base 3D Body -->
-            <rect x="14" y="10" width="36" height="46" rx="8" fill="url(#pos-body-grad)" stroke="rgba(255,255,255,0.2)" stroke-width="1.5"/>
-            
-            <!-- Screen Glass Display -->
-            <rect x="18" y="14" width="28" height="22" rx="5" fill="url(#pos-screen-grad)" stroke="#38BDF8" stroke-width="1"/>
-            
-            <!-- VietQR Code Graphic inside Screen -->
-            <rect x="22" y="17" width="7" height="7" fill="#38BDF8" rx="1"/>
-            <rect x="35" y="17" width="7" height="7" fill="#38BDF8" rx="1"/>
-            <rect x="22" y="27" width="7" height="7" fill="#38BDF8" rx="1"/>
-            <rect x="31" y="27" width="4" height="4" fill="#34D399" rx="0.5"/>
-            <rect x="37" y="29" width="5" height="5" fill="#38BDF8" rx="0.5"/>
-
-            <!-- NFC Contactless Waves -->
-            <path d="M42 22C44 24 44 27 42 29" stroke="#34D399" stroke-width="1.5" stroke-linecap="round"/>
-
-            <!-- Contactless Credit Card Inserted -->
-            <rect x="10" y="38" width="44" height="12" rx="4" fill="url(#card-grad)" stroke="rgba(255,255,255,0.3)" stroke-width="1"/>
-            <rect x="14" y="42" width="6" height="4" rx="1" fill="#F59E0B"/>
-            <circle cx="44" cy="44" r="2.5" fill="#EF4444" fill-opacity="0.8"/>
-            <circle cx="47" cy="44" r="2.5" fill="#F59E0B" fill-opacity="0.8"/>
-
-            <!-- Status LEDs -->
-            <circle cx="22" cy="52" r="1.5" fill="#34D399"/>
-            <circle cx="27" cy="52" r="1.5" fill="#60A5FA"/>
-            <circle cx="32" cy="52" r="1.5" fill="#A855F7"/>
-
-            <defs>
-              <linearGradient id="pos-body-grad" x1="14" y1="10" x2="50" y2="56" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#0F2942"/>
-                <stop offset="1" stop-color="#071729"/>
-              </linearGradient>
-              <linearGradient id="pos-screen-grad" x1="18" y1="14" x2="46" y2="36" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#0284C7" stop-opacity="0.3"/>
-                <stop offset="1" stop-color="#0F172A" stop-opacity="0.9"/>
-              </linearGradient>
-              <linearGradient id="card-grad" x1="10" y1="38" x2="54" y2="50" gradientUnits="userSpaceOnUse">
-                <stop stop-color="#0D9488"/>
-                <stop offset="1" stop-color="#2563EB"/>
-              </linearGradient>
-            </defs>
-          </svg>
-        </div>
+        <img src="assets/images/pay.png" alt="Payment 3D Icon" class="w-24 h-24 sm:w-28 sm:h-28 object-contain shrink-0 z-10 drop-shadow-[0_10px_20px_rgba(0,0,0,0.3)] hover:scale-105 transition transform" />
       </div>
 
       <!-- Step 1: Touch Screen Entry & Multi-Mode Search -->
@@ -93,22 +49,31 @@ export function initKioskTouchModule(container) {
           <div id="kiosk-search-type-wrapper" class="w-full"></div>
         </div>
 
-        <!-- Quick Search Mode Selector Pills (Touch Shortcuts) -->
-        <div class="flex flex-wrap items-center justify-center gap-1.5 max-w-md mx-auto" id="kiosk-search-types">
-          <button type="button" data-type="ALL" class="kiosk-type-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#0B2C4D] text-white shadow-xs">
-            🔍 Tất cả
+        <!-- Quick Search Mode Selector Pills (Clean Vector SVG Icons & Labels) -->
+        <div class="flex flex-wrap items-center justify-center gap-2 max-w-md mx-auto" id="kiosk-search-types">
+          <button type="button" data-type="ALL" class="kiosk-type-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-[#0B2C4D] text-white shadow-xs">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+            <span>Tất cả</span>
           </button>
-          <button type="button" data-type="PLATE" class="kiosk-type-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-            🚗 Biển số xe
+
+          <button type="button" data-type="PLATE" class="kiosk-type-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+            <span>Biển số xe</span>
           </button>
-          <button type="button" data-type="APARTMENT" class="kiosk-type-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-            🏢 Căn hộ (A1-1205)
+
+          <button type="button" data-type="APARTMENT" class="kiosk-type-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 7V3H2v18h20V7H12zM6 19H4v-2h2v2zm0-4H4v-2h2v2zm0-4H4V9h2v2zm0-4H4V5h2v2zm4 12H8v-2h2v2zm0-4H8v-2h2v2zm0-4H8V9h2v2zm0-4H8V5h2v2zm10 12h-8v-2h2v-2h-2v-2h2v-2h-2V9h8v10zm-2-8h-2v2h2v-2zm0 4h-2v2h2v-2z"/></svg>
+            <span>Căn hộ (A1-1205)</span>
           </button>
-          <button type="button" data-type="NAME" class="kiosk-type-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-            👤 Họ tên
+
+          <button type="button" data-type="NAME" class="kiosk-type-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/></svg>
+            <span>Họ tên</span>
           </button>
-          <button type="button" data-type="CARD" class="kiosk-type-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
-            💳 Mã thẻ RFID
+
+          <button type="button" data-type="CARD" class="kiosk-type-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200">
+            <svg class="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.11 0-1.99.89-1.99 2L2 18c0 1.11.89 2 2 2h16c1.11 0 2-.89 2-2V6c0-1.11-.89-2-2-2zm0 14H4v-6h16v6zm0-10H4V6h16v2z"/></svg>
+            <span>Mã thẻ RFID</span>
           </button>
         </div>
 
@@ -207,15 +172,15 @@ export function initKioskTouchModule(container) {
     </div>
   `;
 
-  // UISelect Component Integration for Search Categories
+  // UISelect Component Integration for Search Categories (Clean Labels without Raw Emojis)
   const searchTypeUISelect = new UISelect({
     container: container.querySelector('#kiosk-search-type-wrapper'),
     options: [
-      { value: 'ALL', label: '🔍 Tìm đa năng (Tất cả)' },
-      { value: 'PLATE', label: '🚗 Tìm theo Biển số xe' },
-      { value: 'APARTMENT', label: '🏢 Tìm theo Số căn hộ (VD: A1-1205)' },
-      { value: 'NAME', label: '👤 Tìm theo Họ tên cư dân' },
-      { value: 'CARD', label: '💳 Tìm theo Mã thẻ RFID' }
+      { value: 'ALL', label: 'Tất cả loại tìm kiếm' },
+      { value: 'PLATE', label: 'Theo Biển số xe' },
+      { value: 'APARTMENT', label: 'Theo Số căn hộ (VD: A1-1205)' },
+      { value: 'NAME', label: 'Theo Họ tên cư dân' },
+      { value: 'CARD', label: 'Theo Mã thẻ RFID' }
     ],
     value: 'ALL',
     onChange: (val) => {
@@ -230,9 +195,9 @@ export function initKioskTouchModule(container) {
   const updatePillsUI = (selectedType) => {
     typeBtns.forEach(b => {
       if (b.dataset.type === selectedType) {
-        b.className = 'kiosk-type-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-[#0B2C4D] text-white shadow-xs';
+        b.className = 'kiosk-type-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-[#0B2C4D] text-white shadow-xs';
       } else {
-        b.className = 'kiosk-type-btn px-3 py-1.5 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200';
+        b.className = 'kiosk-type-btn inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition bg-slate-100 text-slate-600 hover:bg-slate-200';
       }
     });
   };
@@ -311,27 +276,34 @@ export function initKioskTouchModule(container) {
         return;
       }
 
-      // If multiple vehicles found (e.g. searching apartment number A1-1205), show vehicle selection list!
+      // If multiple vehicles found (e.g. searching apartment number A1-1205), show vehicle selection list with SVG vector icons!
       if (vehicles.length > 1) {
         multiVehiclesBox.classList.remove('hidden');
-        vehicleCardsList.innerHTML = vehicles.map(v => `
-          <button
-            type="button"
-            data-plate="${v.plateNumber || v.plate_number}"
-            class="kiosk-select-vehicle-btn w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition flex items-center justify-between text-left group"
-          >
-            <div class="flex items-center gap-3">
-              <div class="w-10 h-10 rounded-xl bg-[#0B2C4D] text-white font-extrabold text-xs flex items-center justify-center">
-                ${(v.vehicleType || v.vehicle_type) === 'CAR' ? '🚗' : '🏍️'}
+        vehicleCardsList.innerHTML = vehicles.map(v => {
+          const isCar = (v.vehicleType || v.vehicle_type) === 'CAR';
+          return `
+            <button
+              type="button"
+              data-plate="${v.plateNumber || v.plate_number}"
+              class="kiosk-select-vehicle-btn w-full p-3.5 rounded-2xl bg-slate-50 hover:bg-slate-100 border border-slate-200 transition flex items-center justify-between text-left group"
+            >
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl ${isCar ? 'bg-blue-50 text-blue-600' : 'bg-teal-50 text-teal-600'} font-extrabold text-xs flex items-center justify-center shrink-0">
+                  ${isCar ? `
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M18.92 6.01C18.72 5.42 18.16 5 17.5 5h-11c-.66 0-1.21.42-1.42 1.01L3 12v8c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-1h12v1c0 .55.45 1 1 1h1c.55 0 1-.45 1-1v-8l-2.08-5.99zM6.5 16c-.83 0-1.5-.67-1.5-1.5S5.67 13 6.5 13s1.5.67 1.5 1.5S7.33 16 6.5 16zm11 0c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5zM5 11l1.5-4.5h11L19 11H5z"/></svg>
+                  ` : `
+                    <svg class="w-5 h-5 fill-current" viewBox="0 0 24 24"><path d="M19.44 9.03L15.4 5.01l-1.42 1.41 2.59 2.59H13v2h4.58l-1.59 1.59 1.42 1.41 4.03-4.04zM5 12c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1zm14-4c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3zm0 4c-.55 0-1-.45-1-1s.45-1 1-1 1 .45 1 1-.45 1-1 1z"/></svg>
+                  `}
+                </div>
+                <div>
+                  <div class="font-black text-slate-900 text-sm group-hover:text-blue-600 transition">${v.plateNumber || v.plate_number}</div>
+                  <div class="text-[11px] text-slate-400 font-semibold">${v.residentName || v.resident_name || 'Cư dân'} • ${v.apartmentNumber || v.apartment_number}</div>
+                </div>
               </div>
-              <div>
-                <div class="font-black text-slate-900 text-sm group-hover:text-blue-600 transition">${v.plateNumber || v.plate_number}</div>
-                <div class="text-[11px] text-slate-400 font-semibold">${v.residentName || v.resident_name || 'Cư dân'} • ${v.apartmentNumber || v.apartment_number}</div>
-              </div>
-            </div>
-            <span class="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs group-hover:bg-blue-600 group-hover:text-white transition">Chọn xe ➔</span>
-          </button>
-        `).join('');
+              <span class="px-3 py-1.5 rounded-xl bg-blue-50 text-blue-600 font-bold text-xs group-hover:bg-blue-600 group-hover:text-white transition">Chọn xe ➔</span>
+            </button>
+          `;
+        }).join('');
 
         container.querySelectorAll('.kiosk-select-vehicle-btn').forEach(card => {
           card.onclick = () => {
