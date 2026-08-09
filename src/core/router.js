@@ -9,8 +9,14 @@ export class Router {
   }
 
   init() {
-    window.addEventListener('hashchange', () => this.handleRoute());
-    window.addEventListener('DOMContentLoaded', () => this.handleRoute());
+    if (typeof window !== 'undefined') {
+      window.addEventListener('hashchange', () => this.handleRoute());
+    }
+    if (typeof document !== 'undefined' && (document.readyState === 'complete' || document.readyState === 'interactive')) {
+      setTimeout(() => this.handleRoute(), 0);
+    } else if (typeof window !== 'undefined') {
+      window.addEventListener('DOMContentLoaded', () => this.handleRoute());
+    }
   }
 
   addRoute(hash, handler) {

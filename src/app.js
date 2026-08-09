@@ -22,29 +22,24 @@ import { isAuthenticated, logout } from '#services/auth.service.js';
 import { toast } from '#components/toast.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const mainContentContainer = document.getElementById('main-app-content');
-
   // Initialize Layout Controls (Header & Mobile Navigation)
   initHeaderControls();
   initMobileNavigation();
 
-  function toggleAppShellLayout(isStandalone = false) {
-    const sidebar = document.getElementById('main-sidebar');
-    const header = document.getElementById('main-header');
+  function switchShell(targetHash) {
+    if (typeof document === 'undefined') return document.getElementById('main-app-content');
+    const authShell = document.getElementById('auth-shell');
+    const appShell = document.getElementById('app-shell');
     const mainContent = document.getElementById('main-app-content');
 
-    if (isStandalone) {
-      if (sidebar) sidebar.setAttribute('style', 'display: none !important');
-      if (header) header.setAttribute('style', 'display: none !important');
-      if (mainContent) {
-        mainContent.className = 'w-full min-h-screen p-0 m-0 bg-[#071729]';
-      }
+    if (targetHash === '#/login') {
+      if (appShell) appShell.classList.add('hidden');
+      if (authShell) authShell.classList.remove('hidden');
+      return authShell || mainContent;
     } else {
-      if (sidebar) sidebar.removeAttribute('style');
-      if (header) header.removeAttribute('style');
-      if (mainContent) {
-        mainContent.className = 'flex-1 p-3 sm:p-6 space-y-6';
-      }
+      if (authShell) authShell.classList.add('hidden');
+      if (appShell) appShell.classList.remove('hidden');
+      return mainContent;
     }
   }
 
@@ -52,61 +47,60 @@ document.addEventListener('DOMContentLoaded', () => {
   const router = new Router({
     '#/login': () => {
       setActiveNav('#/login');
-      initLoginModule(mainContentContainer);
+      initLoginModule(switchShell('#/login'));
     },
     '#/dashboard': () => {
       setActiveNav('#/dashboard');
-      initDashboardModule(mainContentContainer);
+      initDashboardModule(switchShell('#/dashboard'));
     },
     '#/search': () => {
       setActiveNav('#/search');
-      initVehicleSearchModule(mainContentContainer);
+      initVehicleSearchModule(switchShell('#/search'));
     },
     '#/revenue': () => {
       setActiveNav('#/revenue');
-      initRevenueModule(mainContentContainer);
+      initRevenueModule(switchShell('#/revenue'));
     },
     '#/transactions': () => {
       setActiveNav('#/transactions');
-      initTransactionsModule(mainContentContainer);
+      initTransactionsModule(switchShell('#/transactions'));
     },
     '#/debt': () => {
       setActiveNav('#/debt');
-      initDebtReportModule(mainContentContainer);
+      initDebtReportModule(switchShell('#/debt'));
     },
     '#/cards': () => {
       setActiveNav('#/cards');
-      initCardsModule(mainContentContainer);
+      initCardsModule(switchShell('#/cards'));
     },
     '#/residents': () => {
       setActiveNav('#/residents');
-      initResidentsModule(mainContentContainer);
+      initResidentsModule(switchShell('#/residents'));
     },
     '#/vehicle-access': () => {
       setActiveNav('#/vehicle-access');
-      initVehicleAccessModule(mainContentContainer);
+      initVehicleAccessModule(switchShell('#/vehicle-access'));
     },
     '#/reports': () => {
       setActiveNav('#/reports');
-      initReportsModule(mainContentContainer);
+      initReportsModule(switchShell('#/reports'));
     },
     '#/kiosk': () => {
       setActiveNav('#/kiosk');
-      initKioskTouchModule(mainContentContainer);
+      initKioskTouchModule(switchShell('#/kiosk'));
     },
     '#/mobile': () => {
       setActiveNav('#/mobile');
-      initMobileGateModule(mainContentContainer);
+      initMobileGateModule(switchShell('#/mobile'));
     },
     '#/settings': () => {
       setActiveNav('#/settings');
-      initSettingsModule(mainContentContainer);
+      initSettingsModule(switchShell('#/settings'));
     }
   }, {
     beforeEach: (targetHash) => {
       const publicRoutes = ['#/login', '#/kiosk', '#/mobile'];
-      const isStandalone = targetHash === '#/login';
-      toggleAppShellLayout(isStandalone);
+      switchShell(targetHash);
 
       if (!publicRoutes.includes(targetHash) && !isAuthenticated()) {
         toast.show('Vui lòng đăng nhập để truy cập hệ thống', 'warning');

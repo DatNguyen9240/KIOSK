@@ -65,8 +65,11 @@
   <!-- Mobile Backdrop Overlay for Sidebar Drawer -->
   <div id="sidebar-backdrop" class="hidden fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-30 lg:hidden"></div>
 
-  <!-- Main Container Wrapper -->
-  <div class="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-5 items-start">
+  <!-- STANDALONE AUTH SHELL (For Dedicated Login Page) -->
+  <div id="auth-shell" class="hidden fixed inset-0 z-50 bg-[#071729] overflow-y-auto"></div>
+
+  <!-- MAIN APPLICATION SHELL (For Authenticated Internal Pages) -->
+  <div id="app-shell" class="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-5 items-start">
 
     <!-- LEFT SIDEBAR COLUMN (Hidden on mobile < 1024px, static on desktop) -->
     <div id="app-sidebar" class="hidden lg:block lg:w-64 shrink-0 space-y-5">
