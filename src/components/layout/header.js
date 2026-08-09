@@ -10,6 +10,7 @@ export function initHeaderControls() {
     const userSession = getCurrentUser();
     const user = userSession?.user || userSession || {};
     
+    const fullName = user.fullName || user.full_name || 'Nguyễn Văn A';
     const email = user.email || 'admin@vinhomes.vn';
     const isSuper = !!user.isSuperAdmin || !!user.is_super_admin;
     const roleMap = {
