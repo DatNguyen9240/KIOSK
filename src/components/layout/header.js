@@ -2,18 +2,72 @@ import { TenantSelectorComponent } from '#components/tenant-selector.js';
 import { UIDatepicker } from '#components/ui-datepicker.js';
 import { UISelect } from '#components/ui-select.js';
 import { toast } from '#components/toast.js';
-import { logout } from '#services/auth.service.js';
+import { logout, getCurrentUser } from '#services/auth.service.js';
 
 export function initHeaderControls() {
-  // Wire user profile logout click handler
-  if (typeof document !== 'undefined' && typeof document.querySelector === 'function') {
-    const userProfileCard = document.querySelector('#main-sidebar .bg-slate-50.p-3');
-    if (userProfileCard) {
-      userProfileCard.title = 'Click để Đăng xuất khỏi hệ thống';
-      userProfileCard.onclick = () => {
-        logout();
-        toast.show('Đã đăng xuất khỏi hệ thống', 'info');
+  // Update Profile Card & Popover Info from current logged in user
+  if (typeof document !== 'undefined') {
+    const userSession = getCurrentUser();
+    const user = userSession?.user || userSession || {};
+    
+    const fullName = user.fullName || user.full_name || 'Nguyễn Văn A';
+    const email = user.email || 'admin@vinhomes.vn';
+    const isSuper = !!user.isSuperAdmin || !!user.is_super_admin;
+    const roleText = isSuper ? '👑 Super Admin' : (user.role || 'Quản trị hệ thống');
+    const initials = fullName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'NV';
+
+    const avatarInitials = document.getElementById('user-avatar-initials');
+    const displayName = document.getElementById('user-display-name');
+    const displayRole = document.getElementById('user-display-role');
+    const popoverName = document.getElementById('popover-user-name');
+    const popoverEmail = document.getElementById('popover-user-email');
+
+    if (avatarInitials) avatarInitials.textContent = initials;
+    if (displayName) displayName.textContent = fullName;
+    if (displayRole) displayRole.textContent = roleText;
+    if (popoverName) popoverName.textContent = fullName;
+    if (popoverEmail) popoverEmail.textContent = email;
+
+    // Profile Dropdown Popover Interactivity
+    const profileBtn = document.getElementById('user-profile-btn');
+    const profileDropdown = document.getElementById('user-profile-dropdown');
+    const profileActionBtn = document.getElementById('profile-menu-profile');
+    const settingsActionBtn = document.getElementById('profile-menu-settings');
+    const logoutActionBtn = document.getElementById('profile-menu-logout');
+
+    if (profileBtn && profileDropdown) {
+      profileBtn.onclick = (e) => {
+        e.stopPropagation();
+        profileDropdown.classList.toggle('hidden');
       };
+
+      document.addEventListener('click', (e) => {
+        if (profileDropdown && !profileDropdown.contains(e.target) && !profileBtn.contains(e.target)) {
+          profileDropdown.classList.add('hidden');
+        }
+      });
+
+      if (profileActionBtn) {
+        profileActionBtn.onclick = () => {
+          profileDropdown.classList.add('hidden');
+          toast.show(`Tài khoản: ${fullName} (${email}) • Vai trò: ${roleText}`, 'info');
+        };
+      }
+
+      if (settingsActionBtn) {
+        settingsActionBtn.onclick = () => {
+          profileDropdown.classList.add('hidden');
+          window.location.hash = '#/settings';
+        };
+      }
+
+      if (logoutActionBtn) {
+        logoutActionBtn.onclick = () => {
+          profileDropdown.classList.add('hidden');
+          logout();
+          toast.show('Đã đăng xuất khỏi hệ thống', 'info');
+        };
+      }
     }
   }
   // Multi-Tenant Context Header Initialization
