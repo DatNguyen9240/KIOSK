@@ -28,7 +28,21 @@ export function initKioskTouchModule(container) {
           <h2 class="text-2xl sm:text-3xl font-black tracking-tight">TRA CỨU VÉ & THANH TOÁN KIOSK</h2>
           <p class="text-xs sm:text-sm text-slate-300">Nhập biển số xe để xem số tiền đỗ xe vãng lai và quét mã VietQR tự động mở Barie.</p>
         </div>
-        <img src="assets/images/pay.png" alt="Payment 3D Icon" class="w-24 h-24 object-contain shrink-0 z-10" />
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-2xl bg-gradient-to-tr from-teal-400/20 via-blue-500/20 to-emerald-400/20 border border-white/20 backdrop-blur-md flex items-center justify-center p-3 shrink-0 z-10 shadow-xl shadow-teal-500/10 group hover:scale-105 transition transform">
+          <svg class="w-12 h-12 sm:w-14 sm:h-14 text-teal-300 drop-shadow-[0_4px_12px_rgba(45,212,191,0.5)]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="2" y="4" width="20" height="16" rx="3" fill="url(#pay-kiosk-grad)" stroke="rgba(255,255,255,0.2)"/>
+            <path d="M2 9h20" stroke="currentColor" stroke-width="1.5"/>
+            <rect x="5" y="13" width="4" height="3" rx="0.5" fill="currentColor"/>
+            <circle cx="16.5" cy="14.5" r="1.5" fill="#34D399"/>
+            <circle cx="18.5" cy="14.5" r="1.5" fill="#60A5FA"/>
+            <defs>
+              <linearGradient id="pay-kiosk-grad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#0D9488" stop-opacity="0.6"/>
+                <stop offset="100%" stop-color="#1E3A8A" stop-opacity="0.8"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
       </div>
 
       <!-- Step 1: Touch Screen License Plate Entry -->
