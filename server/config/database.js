@@ -11,7 +11,7 @@ try {
   const pgModule = await import('pg');
   Pool = pgModule.default?.Pool || pgModule.Pool;
 } catch (e) {
-  // pg module not installed yet, operating in multi-tenant memory mode
+  // pg module optional
 }
 
 const pgConfig = {
@@ -38,7 +38,6 @@ if (Pool) {
  */
 export async function withTenantContext(tenantId, callback, isSuperAdmin = false) {
   if (!isPgAvailable || !dbPool) {
-    // Fallback to memory store with strict tenant filtering
     return callback(createMockTenantDbClient(tenantId, isSuperAdmin));
   }
 
@@ -82,7 +81,7 @@ export async function checkDatabaseHealth() {
 }
 
 // =============================================================================
-// MULTI-TENANT IN-MEMORY STORE FALLBACK (For offline / rapid dev)
+// MULTI-TENANT IN-MEMORY STORE FALLBACK (Clean Modular Development Adapter)
 // =============================================================================
 export const MEMORY_DB = {
   tenants: [
@@ -97,6 +96,16 @@ export const MEMORY_DB = {
   tenant_users: [
     { tenant_id: '11111111-1111-1111-1111-111111111111', user_id: 'a1111111-1111-1111-1111-111111111111', role: 'TENANT_ADMIN' },
     { tenant_id: '22222222-2222-2222-2222-222222222222', user_id: 'a2222222-2222-2222-2222-222222222222', role: 'TENANT_ADMIN' }
+  ],
+  parking_areas: [
+    { id: 'pa111111-0000-0000-0000-0000000000b1', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'AREA_B1', name: 'Hầm B1 Vinhomes Ocean Park', is_active: true },
+    { id: 'pa222222-0000-0000-0000-0000000000b1', tenant_id: '22222222-2222-2222-2222-222222222222', code: 'AREA_B1', name: 'Hầm B1 Masteri Waterfront', is_active: true }
+  ],
+  gates: [
+    { id: 'g1111111-0000-0000-0000-00000000in01', tenant_id: '11111111-1111-1111-1111-111111111111', area_id: 'pa111111-0000-0000-0000-0000000000b1', code: 'GATE_IN_1', name: 'Cổng Vào 1 Hầm B1', gate_type: 'IN', is_active: true },
+    { id: 'g1111111-0000-0000-0000-0000000out1', tenant_id: '11111111-1111-1111-1111-111111111111', area_id: 'pa111111-0000-0000-0000-0000000000b1', code: 'GATE_OUT_1', name: 'Cổng Ra 1 Hầm B1', gate_type: 'OUT', is_active: true },
+    { id: 'g2222222-0000-0000-0000-00000000in01', tenant_id: '22222222-2222-2222-2222-222222222222', area_id: 'pa222222-0000-0000-0000-0000000000b1', code: 'GATE_IN_1', name: 'Cổng Vào 1 Masteri', gate_type: 'IN', is_active: true },
+    { id: 'g2222222-0000-0000-0000-0000000out1', tenant_id: '22222222-2222-2222-2222-222222222222', area_id: 'pa222222-0000-0000-0000-0000000000b1', code: 'GATE_OUT_1', name: 'Cổng Ra 1 Masteri', gate_type: 'OUT', is_active: true }
   ],
   towers: [
     { id: 't1-a1', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'A1', name: 'Tháp A1 - Sapphire 1' },
@@ -121,35 +130,43 @@ export const MEMORY_DB = {
     { id: 'V03', tenant_id: '11111111-1111-1111-1111-111111111111', plateNumber: '51H-222.22', plateNormalized: '51H22222', residentName: 'Trần Văn Tuấn', apartmentNumber: 'A1-1205', vehicleType: 'MOTORBIKE', vehicleName: 'Honda SH 150i', cardNumber: 'CARD-8833', status: 'EXPIRED', expireDate: '2026-07-28' },
     { id: 'V04', tenant_id: '22222222-2222-2222-2222-222222222222', plateNumber: '29A-999.88', plateNormalized: '29A99988', residentName: 'Phạm Hoàng Minh', apartmentNumber: 'M1-0501', vehicleType: 'CAR', vehicleName: 'Mercedes C200', cardNumber: 'CARD-9901', status: 'ACTIVE', expireDate: '2026-09-15' }
   ],
+  parking_cards: [
+    { id: 'c1111111-0000-0000-0000-000000008831', tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_id: 'V01', card_number: 'CARD-8831', card_type: 'MONTHLY', status: 'ACTIVE' },
+    { id: 'c1111111-0000-0000-0000-000000008832', tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_id: 'V02', card_number: 'CARD-8832', card_type: 'MONTHLY', status: 'ACTIVE' },
+    { id: 'c2222222-0000-0000-0000-000000009901', tenant_id: '22222222-2222-2222-2222-222222222222', vehicle_id: 'V04', card_number: 'CARD-9901', card_type: 'MONTHLY', status: 'ACTIVE' }
+  ],
   tariff_rules: [
-    { tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'CAR', tariff_type: 'MONTHLY', monthly_fee: 1250000, base_hours: 0, base_fee: 0, extra_fee_per_hour: 0, grace_period_minutes: 15 },
-    { tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'MOTORBIKE', tariff_type: 'MONTHLY', monthly_fee: 120000, base_hours: 0, base_fee: 0, extra_fee_per_hour: 0, grace_period_minutes: 15 },
-    { tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'CAR', tariff_type: 'CASUAL', monthly_fee: 0, base_hours: 2, base_fee: 25000, extra_fee_per_hour: 10000, grace_period_minutes: 15 },
-    { tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'MOTORBIKE', tariff_type: 'CASUAL', monthly_fee: 0, base_hours: 2, base_fee: 5000, extra_fee_per_hour: 3000, grace_period_minutes: 15 },
-    
-    { tenant_id: '22222222-2222-2222-2222-222222222222', vehicle_type: 'CAR', tariff_type: 'MONTHLY', monthly_fee: 1500000, base_hours: 0, base_fee: 0, extra_fee_per_hour: 0, grace_period_minutes: 15 },
-    { tenant_id: '22222222-2222-2222-2222-222222222222', vehicle_type: 'MOTORBIKE', tariff_type: 'MONTHLY', monthly_fee: 150000, base_hours: 0, base_fee: 0, extra_fee_per_hour: 0, grace_period_minutes: 15 },
-    { tenant_id: '22222222-2222-2222-2222-222222222222', vehicle_type: 'CAR', tariff_type: 'CASUAL', monthly_fee: 0, base_hours: 2, base_fee: 30000, extra_fee_per_hour: 15000, grace_period_minutes: 15 }
+    { id: 'tr111111-0000-0000-0000-000000car_m', tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'CAR', tariff_type: 'MONTHLY', monthly_fee: 1250000, grace_period_minutes: 15, is_active: true },
+    { id: 'tr111111-0000-0000-0000-000000car_c', tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'CAR', tariff_type: 'CASUAL', monthly_fee: 0, grace_period_minutes: 15, is_active: true },
+    { id: 'tr111111-0000-0000-0000-000000moto_m', tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'MOTORBIKE', tariff_type: 'MONTHLY', monthly_fee: 120000, grace_period_minutes: 15, is_active: true },
+    { id: 'tr111111-0000-0000-0000-000000moto_c', tenant_id: '11111111-1111-1111-1111-111111111111', vehicle_type: 'MOTORBIKE', tariff_type: 'CASUAL', monthly_fee: 0, grace_period_minutes: 15, is_active: true }
+  ],
+  tariff_tiers: [
+    { tenant_id: '11111111-1111-1111-1111-111111111111', tariff_rule_id: 'tr111111-0000-0000-0000-000000car_c', from_hours: 0, to_hours: 2.0, tier_fee: 25000, is_extra_hourly: false, tier_order: 1 },
+    { tenant_id: '11111111-1111-1111-1111-111111111111', tariff_rule_id: 'tr111111-0000-0000-0000-000000car_c', from_hours: 2.0, to_hours: 6.0, tier_fee: 15000, is_extra_hourly: true, tier_order: 2 },
+    { tenant_id: '11111111-1111-1111-1111-111111111111', tariff_rule_id: 'tr111111-0000-0000-0000-000000car_c', from_hours: 6.0, to_hours: null, tier_fee: 20000, is_extra_hourly: true, tier_order: 3 }
   ],
   vouchers: [
-    { id: 'vch-1', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'HE2024', discount_type: 'PERCENT', discount_value: 10, min_order_amount: 100000, valid_from: '2024-01-01', valid_to: '2026-12-31', usage_limit: 500, used_count: 5, is_active: true },
-    { id: 'vch-2', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'TRIAN100K', discount_type: 'FIXED', discount_value: 100000, min_order_amount: 500000, valid_from: '2024-01-01', valid_to: '2026-12-31', usage_limit: 200, used_count: 12, is_active: true },
-    { id: 'vch-3', tenant_id: '22222222-2222-2222-2222-222222222222', code: 'MASTERI15', discount_type: 'PERCENT', discount_value: 15, min_order_amount: 200000, valid_from: '2024-01-01', valid_to: '2026-12-31', usage_limit: 300, used_count: 0, is_active: true }
+    { id: 'vch-1', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'HE2024', discount_type: 'PERCENTAGE', discount_value: 10, min_order_amount: 100000, valid_from: '2024-01-01', valid_to: '2026-12-31', usage_limit: 500, used_count: 5, is_active: true },
+    { id: 'vch-2', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'TRIAN100K', discount_type: 'FIXED', discount_value: 100000, min_order_amount: 500000, valid_from: '2024-01-01', valid_to: '2026-12-31', usage_limit: 200, used_count: 12, is_active: true }
   ],
   tenant_payment_configs: [
-    { tenant_id: '11111111-1111-1111-1111-111111111111', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '110022334455', bank_account_name: 'BQL CHUNG CU VINHOMES OCEAN PARK', secret_api_key: 'vh_secret_key_8899', qr_timeout_seconds: 120 },
-    { tenant_id: '22222222-2222-2222-2222-222222222222', provider: 'VIETQR', bank_bin: '970415', bank_account_no: '998877665544', bank_account_name: 'BQL MASTERI WATERFRONT', secret_api_key: 'mw_secret_key_1122', qr_timeout_seconds: 120 }
+    { id: 'tpc-1', tenant_id: '11111111-1111-1111-1111-111111111111', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '110022334455', bank_account_name: 'BQL CHUNG CU VINHOMES OCEAN PARK', secret_api_key_encrypted: 'vh_secret_key_8899', qr_timeout_seconds: 900, is_active: true },
+    { id: 'tpc-2', tenant_id: '22222222-2222-2222-2222-222222222222', provider: 'VIETQR', bank_bin: '970415', bank_account_no: '998877665544', bank_account_name: 'BQL MASTERI WATERFRONT', secret_api_key_encrypted: 'mw_secret_key_1122', qr_timeout_seconds: 900, is_active: true }
   ],
+  payment_orders: [],
   renewal_orders: [],
   payment_transactions: [],
+  payment_refunds: [],
+  bank_transactions: [],
   parking_sessions: [],
+  voucher_usages: [],
   audit_logs: []
 };
 
 function createMockTenantDbClient(tenantId, isSuperAdmin) {
   return {
     query: async (sqlText, params = []) => {
-      // Return scoped data based on tenantId
       return { rows: [] };
     }
   };

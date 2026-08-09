@@ -1,6 +1,7 @@
 /**
- * Parking Fee Calculation Engine Service
- * Implements section 20 of Master Plan: Dynamic rate calculation, grace periods, base rates & extra hourly fees.
+ * Dynamic Parking Fee Calculation Engine Service
+ * Implements tiered rate calculation from tenant tariff_rules & tariff_tiers.
+ * Zero hardcoded fallback fees - strictly loads configuration from Database.
  */
 
 import { MEMORY_DB } from '../config/database.js';
@@ -8,68 +9,101 @@ import { MEMORY_DB } from '../config/database.js';
 export class ParkingFeeService {
   /**
    * Calculates parking fee for a given parking duration and vehicle type within a specific Tenant context.
+   *
+   * @param {Object} params
+   * @param {string} params.checkInTime - ISO timestamp of vehicle entry
+   * @param {string} [params.checkOutTime] - ISO timestamp of vehicle exit (defaults to NOW)
+   * @param {string} params.vehicleType - 'CAR', 'MOTORBIKE', 'ELECTRIC_BIKE'
+   * @param {string} params.tenantId - Tenant UUID
+   * @param {boolean} [params.isMonthlySubscriber=false] - Whether vehicle is a monthly subscriber
+   * @returns {Object} { durationMinutes, fee, feeBreakdown, isGracePeriod }
    */
   static calculateFee({ checkInTime, checkOutTime, vehicleType, tenantId, isMonthlySubscriber = false }) {
+    const durationMinutes = this.getDurationMinutes(checkInTime, checkOutTime);
+
+    // 1. Monthly subscribers park for free
     if (isMonthlySubscriber) {
       return {
-        durationMinutes: this.getDurationMinutes(checkInTime, checkOutTime),
+        durationMinutes,
         fee: 0,
         feeBreakdown: 'Gói vé tháng (Miễn phí lượt gửi)',
         isGracePeriod: false
       };
     }
 
-    const checkIn = new Date(checkInTime);
-    const checkOut = checkOutTime ? new Date(checkOutTime) : new Date();
-    const durationMinutes = Math.max(0, Math.ceil((checkOut - checkIn) / (1000 * 60)));
+    // 2. Load active Tariff rule for tenant and vehicle type
+    const tenantTariffs = (MEMORY_DB.tariff_rules || []).filter(
+      t => t.tenant_id === tenantId && t.is_active !== false
+    );
 
-    // Load active Tariff rules for tenant and vehicle type
-    const tenantTariffs = MEMORY_DB.tariff_rules.filter(t => t.tenant_id === tenantId);
-    const tariff = tenantTariffs.find(t => t.vehicle_type === vehicleType && t.tariff_type === 'CASUAL') || {
-      base_hours: 2,
-      base_fee: vehicleType === 'CAR' ? 25000 : 5000,
-      extra_fee_per_hour: vehicleType === 'CAR' ? 10000 : 3000,
-      grace_period_minutes: 15
-    };
+    const rule = tenantTariffs.find(
+      t => t.vehicle_type === vehicleType && t.tariff_type === 'CASUAL'
+    );
 
-    // 1. Check Grace Period
-    if (durationMinutes <= tariff.grace_period_minutes) {
+    if (!rule) {
+      throw new Error(`Tenant chưa cấu hình bảng giá vé lượt (CASUAL) cho loại xe [${vehicleType}].`);
+    }
+
+    // 3. Check Grace Period
+    const graceMinutes = rule.grace_period_minutes || 0;
+    if (durationMinutes <= graceMinutes) {
       return {
         durationMinutes,
         fee: 0,
-        feeBreakdown: `Thời gian đỗ xe < ${tariff.grace_period_minutes} phút (Thời gian gia ân miễn phí)`,
+        feeBreakdown: `Thời gian đỗ xe (${durationMinutes} phút) <= ${graceMinutes} phút (Miễn phí gia ân)`,
         isGracePeriod: true
       };
     }
 
     const totalHours = Math.ceil(durationMinutes / 60);
 
-    // 2. Base Hours & Base Fee
-    if (totalHours <= tariff.base_hours) {
-      return {
-        durationMinutes,
-        fee: tariff.base_fee,
-        feeBreakdown: `Phí cơ bản (${tariff.base_hours} giờ đầu): ${tariff.base_fee.toLocaleString('vi-VN')} VNĐ`,
-        isGracePeriod: false
-      };
+    // 4. Load Multi-Tier Rules from Database
+    const tiers = (MEMORY_DB.tariff_tiers || [])
+      .filter(tier => tier.tariff_rule_id === rule.id || (tier.tenant_id === tenantId && tier.tariff_rule_id === rule.id))
+      .sort((a, b) => a.tier_order - b.tier_order);
+
+    if (tiers.length === 0) {
+      throw new Error(`Tenant chưa cấu hình các khung giờ lũy tiến (tariff_tiers) cho quy tắc [${rule.id}].`);
     }
 
-    // 3. Extra Hours Calculation
-    const extraHours = totalHours - tariff.base_hours;
-    const extraFee = extraHours * tariff.extra_fee_per_hour;
-    const totalFee = tariff.base_fee + extraFee;
+    // 5. Calculate Tiered Fee Range
+    let totalFee = 0;
+    const breakdownParts = [];
+
+    for (const tier of tiers) {
+      if (totalHours <= tier.from_hours) continue;
+
+      const tierToHours = tier.to_hours ?? Infinity;
+      const applicableHours = Math.min(totalHours, tierToHours) - tier.from_hours;
+
+      if (applicableHours > 0) {
+        if (tier.is_extra_hourly) {
+          const tierCost = applicableHours * Number(tier.tier_fee);
+          totalFee += tierCost;
+          const rangeLabel = tier.to_hours ? `${tier.from_hours}-${tier.to_hours}h` : `>${tier.from_hours}h`;
+          breakdownParts.push(`Khung ${rangeLabel}: ${applicableHours}h x ${Number(tier.tier_fee).toLocaleString('vi-VN')}đ = ${tierCost.toLocaleString('vi-VN')}đ`);
+        } else {
+          const tierCost = Number(tier.tier_fee);
+          totalFee += tierCost;
+          breakdownParts.push(`Block ${tier.from_hours}-${tier.to_hours}h: ${tierCost.toLocaleString('vi-VN')}đ`);
+        }
+      }
+    }
 
     return {
       durationMinutes,
       fee: totalFee,
-      feeBreakdown: `Phí cơ bản (${tariff.base_fee.toLocaleString('vi-VN')}đ) + ${extraHours}h quá giờ (${extraFee.toLocaleString('vi-VN')}đ)`,
+      feeBreakdown: breakdownParts.join(' | '),
       isGracePeriod: false
     };
   }
 
+  /**
+   * Helper function to calculate duration in minutes between check-in and check-out.
+   */
   static getDurationMinutes(checkInTime, checkOutTime) {
     const checkIn = new Date(checkInTime);
     const checkOut = checkOutTime ? new Date(checkOutTime) : new Date();
-    return Math.max(0, Math.ceil((checkOut - checkIn) / (1000 * 60)));
+    return Math.max(0, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60)));
   }
 }

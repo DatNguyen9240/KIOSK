@@ -5,7 +5,6 @@
 
 import assert from 'assert';
 import { resolveTenantContext } from '../server/middleware/tenant-context.js';
-import { requirePermission } from '../server/middleware/rbac.js';
 import { ParkingFeeService } from '../server/services/fee-calculator.service.js';
 import { PaymentService } from '../server/services/payment.service.js';
 import { MEMORY_DB } from '../server/config/database.js';
@@ -120,7 +119,7 @@ test('Parking Fee Service: Car đỗ 1h30m (<2h base) charging base fee 25,000 V
   assert.strictEqual(result.fee, 25000, 'Base fee for 2 hours should be 25,000');
 });
 
-test('Parking Fee Service: Car đỗ 4h30m charging base fee (25k) + 3h extra (30k) = 55,000 VNĐ', () => {
+test('Parking Fee Service: Car đỗ 4h30m charging tiered fee (0-2h: 25k, 2-6h: 3h x 15k = 45k) = 70,000 VNĐ', () => {
   const now = new Date();
   const checkIn = new Date(now.getTime() - (4 * 60 + 30) * 60 * 1000); // 4.5 hours ago
 
@@ -131,58 +130,59 @@ test('Parking Fee Service: Car đỗ 4h30m charging base fee (25k) + 3h extra (3
     tenantId: TENANT_A_ID
   });
 
-  // Total 5 hours rounded up = 2 base hours (25k) + 3 extra hours (3 * 10k) = 55,000
-  assert.strictEqual(result.fee, 55000, 'Total fee should be 55,000 VNĐ');
+  assert.strictEqual(result.fee, 70000, 'Tiered fee should be 70,000 VNĐ');
 });
 
 // -----------------------------------------------------------------------------
-// TEST GROUP 3: PAYMENT & IDEMPOTENT WEBHOOK PROCESSING
+// TEST GROUP 3: PAYMENT & IDEMPOTENT SEPAY WEBHOOK PROCESSING
 // -----------------------------------------------------------------------------
 test('Payment Service: Renewal order creation & voucher application', () => {
   const vehicle = MEMORY_DB.vehicles.find(v => v.tenant_id === TENANT_A_ID && v.vehicleType === 'CAR');
 
-  const { order, paymentConfig } = PaymentService.createRenewalOrder({
+  const { paymentOrder, renewalOrder, paymentConfig } = PaymentService.createRenewalOrder({
     tenantId: TENANT_A_ID,
     vehicleId: vehicle.id,
     durationMonths: 1,
     voucherCode: 'HE2024' // 10% discount
   });
 
-  assert.strictEqual(order.status, 'WAITING_PAYMENT');
-  assert.strictEqual(order.original_amount, 1250000);
-  assert.strictEqual(order.discount_amount, 125000);
-  assert.strictEqual(order.final_amount, 1125000);
+  assert.strictEqual(paymentOrder.status, 'WAITING_PAYMENT');
+  assert.strictEqual(renewalOrder.original_amount, 1250000);
+  assert.strictEqual(renewalOrder.discount_amount, 125000);
+  assert.strictEqual(renewalOrder.final_amount, 1125000);
   assert.ok(paymentConfig.qrUrl.includes('1125000'), 'VietQR URL should contain final amount');
 });
 
-test('Payment Webhook Idempotency: Duplicate webhook calls processed exactly ONCE', () => {
+test('Payment Webhook Idempotency: Duplicate SePay webhooks processed exactly ONCE', () => {
   const vehicle = MEMORY_DB.vehicles.find(v => v.tenant_id === TENANT_A_ID);
-  const { order } = PaymentService.createRenewalOrder({
+  const { paymentOrder } = PaymentService.createRenewalOrder({
     tenantId: TENANT_A_ID,
     vehicleId: vehicle.id,
     durationMonths: 1
   });
 
-  const gatewayTxId = `GTX-${Date.now()}`;
+  const gatewayTxId = `SEPAY-TX-${Date.now()}`;
 
   // First Webhook Delivery
-  const res1 = PaymentService.processPaymentWebhook({
+  const res1 = PaymentService.processSePayWebhook({
     tenantId: TENANT_A_ID,
-    gatewayTransactionId: gatewayTxId,
-    orderCode: order.order_code,
-    amount: order.final_amount
+    transactionId: gatewayTxId,
+    transferContent: `Thanh toan don hang ${paymentOrder.order_code}`,
+    amount: paymentOrder.expected_amount,
+    gateway: 'SEPAY'
   });
 
   assert.strictEqual(res1.success, true);
-  assert.strictEqual(res1.alreadyProcessed, false);
-  assert.strictEqual(order.status, 'PAID');
+  assert.strictEqual(res1.matched, true);
+  assert.strictEqual(paymentOrder.status, 'PAID');
 
   // Second Webhook Delivery (Duplicate re-transmission)
-  const res2 = PaymentService.processPaymentWebhook({
+  const res2 = PaymentService.processSePayWebhook({
     tenantId: TENANT_A_ID,
-    gatewayTransactionId: gatewayTxId,
-    orderCode: order.order_code,
-    amount: order.final_amount
+    transactionId: gatewayTxId,
+    transferContent: `Thanh toan don hang ${paymentOrder.order_code}`,
+    amount: paymentOrder.expected_amount,
+    gateway: 'SEPAY'
   });
 
   assert.strictEqual(res2.success, true);
