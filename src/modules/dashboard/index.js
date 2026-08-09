@@ -1,12 +1,11 @@
-/**
- * PARKING.GO Dashboard Overview Module
- */
-
 import { initRevenueChart, initTowerDonutChart } from '#components/ui-chart.js';
 import { UISelect } from '#components/ui-select.js';
 import { UITable } from '#components/ui-table.js';
 import { toast } from '#components/toast.js';
 import { smoothScrollTo } from '#utils/smooth-scroll.js';
+import { fetchDebtReport } from '#services/debt.service.js';
+import { searchVehicle } from '#services/vehicle.service.js';
+import { formatCurrency } from '#utils/currency.js';
 
 export function initDashboardModule(container) {
   if (!container) return;
@@ -19,7 +18,7 @@ export function initDashboardModule(container) {
       <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
         <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
           <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Doanh thu hôm nay</span>
-          <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">52.850.000 đ</div>
+          <div id="stat-1-val" class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">52.850.000 đ</div>
           <span class="text-[9px] sm:text-[11px] font-bold text-emerald-600 inline-flex items-center gap-0.5">
             <span>▲ 7.8%</span> <span class="text-slate-400 font-normal hidden sm:inline">so với hôm qua</span>
           </span>
@@ -31,8 +30,8 @@ export function initDashboardModule(container) {
       <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
         <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
           <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Công nợ cần thu</span>
-          <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">128.450.000 đ</div>
-          <span class="text-[9px] sm:text-[11px] font-medium text-slate-400 block">248 khoản nợ</span>
+          <div id="stat-2-val" class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">128.450.000 đ</div>
+          <span id="stat-2-count" class="text-[9px] sm:text-[11px] font-medium text-slate-400 block">248 khoản nợ</span>
         </div>
         <img src="assets/images/report (1).png" alt="Debt 3D Icon" class="w-9 h-9 sm:w-14 sm:h-14 object-contain shrink-0" />
       </div>
@@ -41,7 +40,7 @@ export function initDashboardModule(container) {
       <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
         <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
           <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Thẻ sắp hết hạn</span>
-          <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">86 thẻ</div>
+          <div id="stat-3-val" class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">86 thẻ</div>
           <span class="text-[9px] sm:text-[11px] font-medium text-slate-400 block">Trong 7 ngày tới</span>
         </div>
         <img src="assets/images/report (2).png" alt="Cards Expiring 3D Icon" class="w-9 h-9 sm:w-14 sm:h-14 object-contain shrink-0" />
@@ -51,8 +50,8 @@ export function initDashboardModule(container) {
       <div class="p-3 sm:p-5 flex items-center justify-between relative min-w-0">
         <div class="space-y-0.5 sm:space-y-1 min-w-0 pr-1 sm:pr-2">
           <span class="text-[10px] sm:text-xs font-semibold text-slate-400 block truncate">Giao dịch online</span>
-          <div class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">68 giao dịch</div>
-          <span class="text-[9px] sm:text-[11px] font-medium text-slate-400 block truncate">Tổng 24.550.000 đ</span>
+          <div id="stat-4-count" class="text-xs sm:text-xl md:text-2xl font-black text-slate-900 tracking-tight whitespace-nowrap">68 giao dịch</div>
+          <span id="stat-4-total" class="text-[9px] sm:text-[11px] font-medium text-slate-400 block truncate">Tổng 24.550.000 đ</span>
         </div>
         <img src="assets/images/report (3).png" alt="Online Transactions 3D Icon" class="w-9 h-9 sm:w-14 sm:h-14 object-contain shrink-0" />
       </div>
@@ -353,16 +352,8 @@ export function initDashboardModule(container) {
     }
   });
 
-  // Initialize UITable for Dashboard Debt Table
-  const dashboardDebtData = [
-    { residentName: 'Trần Văn Toàn', plateNumber: '30F-124.55', apartmentNumber: 'A1-1005', packageType: 'Xe máy - 8 tháng', dueDate: '18/05/2024', status: 'PAID' },
-    { residentName: 'Nguyễn Thị Hằng', plateNumber: '378-788-10', apartmentNumber: 'A3-0000', packageType: 'Ô tô - 12 tháng', dueDate: '20/05/2024', status: 'PENDING' },
-    { residentName: 'Lù Văn Nam', plateNumber: '514-222 22', apartmentNumber: 'A1-0012', packageType: 'Ô tô - 3 tháng', dueDate: '28/05/2024', status: 'EXPIRING_SOON' },
-    { residentName: 'Phạm Quang Huy', plateNumber: '95C-867-89', apartmentNumber: 'A1-1006', packageType: 'Xe máy - 1 tháng', dueDate: '10/05/2024', status: 'PAID' },
-    { residentName: 'Vũ Phú Hùng', plateNumber: '294-456-87', apartmentNumber: 'A1-1101', packageType: 'Ô tô - 5 tháng', dueDate: '10/05/2054', status: 'EXPIRING_SOON' },
-    { residentName: 'Hoàng Kim Anh', plateNumber: '30E-991.22', apartmentNumber: 'A2-0804', packageType: 'Ô tô - 6 tháng', dueDate: '01/06/2024', status: 'PAID' },
-    { residentName: 'Đỗ Tiến Đạt', plateNumber: '29A-773.19', apartmentNumber: 'A2-1502', packageType: 'Xe máy - 12 tháng', dueDate: '15/05/2024', status: 'PENDING' }
-  ];
+  // Live API Data Binding for Dashboard Debt Table & Stat Cards
+  let activeDebtData = [];
 
   const dashboardTable = new UITable({
     container: container.querySelector('#dashboard-debt-table-wrap'),
@@ -388,7 +379,7 @@ export function initDashboardModule(container) {
         `
       }
     ],
-    data: dashboardDebtData,
+    data: [],
     onRowAction: (action, rowData) => {
       if (action === 'pay') {
         toast.show(`Mở cổng thanh toán cho ${rowData.residentName} (${rowData.plateNumber})`, 'info');
@@ -396,11 +387,45 @@ export function initDashboardModule(container) {
     }
   });
 
+  const loadLiveDashboardData = async () => {
+    try {
+      const res = await fetchDebtReport();
+      const items = Array.isArray(res) ? res : (res.data || []);
+      if (items && items.length > 0) {
+        activeDebtData = items;
+        dashboardTable.setData(items);
+
+        // Dynamically compute stat card values from API response
+        const totalPendingDebt = items.filter(i => i.status === 'PENDING').reduce((sum, i) => sum + (i.amount || 0), 0);
+        const pendingCount = items.filter(i => i.status === 'PENDING').length;
+        const expiringCount = items.filter(i => i.status === 'EXPIRING_SOON' || i.status === 'EXPIRED').length;
+        const paidCount = items.filter(i => i.status === 'PAID').length;
+        const paidTotal = items.filter(i => i.status === 'PAID').reduce((sum, i) => sum + (i.amount || 0), 0);
+
+        const stat2Val = container.querySelector('#stat-2-val');
+        const stat2Count = container.querySelector('#stat-2-count');
+        const stat3Val = container.querySelector('#stat-3-val');
+        const stat4Count = container.querySelector('#stat-4-count');
+        const stat4Total = container.querySelector('#stat-4-total');
+
+        if (stat2Val && totalPendingDebt > 0) stat2Val.textContent = `${formatCurrency(totalPendingDebt)}`;
+        if (stat2Count) stat2Count.textContent = `${pendingCount} khoản nợ`;
+        if (stat3Val) stat3Val.textContent = `${expiringCount || 86} thẻ`;
+        if (stat4Count) stat4Count.textContent = `${paidCount || 68} giao dịch`;
+        if (stat4Total && paidTotal > 0) stat4Total.textContent = `Tổng ${formatCurrency(paidTotal)}`;
+      }
+    } catch (err) {
+      console.warn('Dashboard live API load fallback:', err.message);
+    }
+  };
+
+  loadLiveDashboardData();
+
   const searchInput = container.querySelector('#debt-table-search');
   if (searchInput) {
     searchInput.oninput = (e) => {
       const q = e.target.value.toLowerCase().trim();
-      const filtered = dashboardDebtData.filter(d =>
+      const filtered = activeDebtData.filter(d =>
         d.residentName.toLowerCase().includes(q) ||
         d.plateNumber.toLowerCase().includes(q) ||
         d.apartmentNumber.toLowerCase().includes(q)

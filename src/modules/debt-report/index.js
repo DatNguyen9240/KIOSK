@@ -2,13 +2,13 @@
  * Debt Report & Tower Breakdown Module
  */
 
-import { fetchDebtReport } from '../../services/debt.service.js';
-import { DEFAULT_TOWERS } from '../../core/constants.js';
-import { formatCurrency } from '../../utils/currency.js';
-import { debounce } from '../../utils/debounce.js';
-import { toast } from '../../components/toast.js';
-import { UISelect } from '../../components/ui-select.js';
-import { UITable } from '../../components/ui-table.js';
+import { fetchDebtReport } from '#services/debt.service.js';
+import { DEFAULT_TOWERS } from '#core/constants.js';
+import { formatCurrency } from '#utils/currency.js';
+import { debounce } from '#utils/debounce.js';
+import { toast } from '#components/toast.js';
+import { UISelect } from '#components/ui-select.js';
+import { UITable } from '#components/ui-table.js';
 
 export function initDebtReportModule(container) {
   if (!container) return;

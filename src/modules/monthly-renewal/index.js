@@ -2,13 +2,13 @@
  * Resident Monthly Card Renewal Module
  */
 
-import { calculateRenewalFee } from '../../services/renewal.service.js';
-import { validateVoucher } from '../../services/voucher.service.js';
-import { QrPaymentComponent } from '../../components/qr-payment.js';
-import { renderReceiptHtml } from '../../components/receipt.js';
-import { formatCurrency } from '../../utils/currency.js';
-import { toast } from '../../components/toast.js';
-import { smoothScrollTo } from '../../utils/smooth-scroll.js';
+import { calculateRenewalFee } from '#services/renewal.service.js';
+import { validateVoucher } from '#services/voucher.service.js';
+import { QrPaymentComponent } from '#components/qr-payment.js';
+import { renderReceiptHtml } from '#components/receipt.js';
+import { formatCurrency } from '#utils/currency.js';
+import { toast } from '#components/toast.js';
+import { smoothScrollTo } from '#utils/smooth-scroll.js';
 
 export function initMonthlyRenewalModule(container) {
   if (!container) return;

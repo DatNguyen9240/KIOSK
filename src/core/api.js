@@ -22,7 +22,7 @@ export async function apiRequest(endpoint, options = {}) {
   }
 
   const activeTenantId = tenantContext.getActiveTenantId();
-  const token = localStorage.getItem('parking_go_jwt_token');
+  const token = typeof localStorage !== 'undefined' ? localStorage.getItem('parking_go_jwt_token') : null;
 
   const reqHeaders = {
     'Content-Type': 'application/json',

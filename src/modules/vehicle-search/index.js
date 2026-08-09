@@ -2,11 +2,11 @@
  * Vehicle Search Module
  */
 
-import { searchVehicle } from '../../services/vehicle.service.js';
-import { debounce } from '../../utils/debounce.js';
-import { toast } from '../../components/toast.js';
-import { UISelect } from '../../components/ui-select.js';
-import { UITable } from '../../components/ui-table.js';
+import { searchVehicle } from '#services/vehicle.service.js';
+import { debounce } from '#utils/debounce.js';
+import { toast } from '#components/toast.js';
+import { UISelect } from '#components/ui-select.js';
+import { UITable } from '#components/ui-table.js';
 
 export function initVehicleSearchModule(container) {
   if (!container) return;
