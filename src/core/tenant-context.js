@@ -15,12 +15,14 @@ class TenantContextManager {
   }
 
   loadActiveTenant() {
-    const saved = localStorage.getItem(this.storageKey);
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        // ignore error
+    if (typeof localStorage !== 'undefined') {
+      const saved = localStorage.getItem(this.storageKey);
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          // ignore error
+        }
       }
     }
     return DEFAULT_TENANTS[0];
@@ -36,7 +38,9 @@ class TenantContextManager {
 
   setActiveTenant(tenant) {
     this.activeTenant = tenant;
-    localStorage.setItem(this.storageKey, JSON.stringify(tenant));
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem(this.storageKey, JSON.stringify(tenant));
+    }
     console.log(`[TenantContext] Active Tenant switched to: ${tenant.name} (${tenant.code})`);
     this.notifyListeners(tenant);
   }
