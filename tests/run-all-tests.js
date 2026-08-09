@@ -1,6 +1,6 @@
 /**
  * PARKING.GO KIOSK — MASTER PRODUCTION TEST SUITE RUNNER
- * Executes all 11 Backend, Frontend, E2E, Latency Benchmark, and 9-Page UI test suites in one master pass.
+ * Executes all 16 Backend, Frontend, UI Button, E2E, Latency Benchmark, and 9-Page UI test suites in one master pass.
  * Run with: node tests/run-all-tests.js
  */
 
@@ -19,7 +19,7 @@ const testFiles = [
   'tests/backend/api-e2e.test.js',
   'tests/backend/benchmark.test.js',
 
-  // Frontend Suites
+  // Frontend Component & Button Audit Suites
   'tests/frontend/kiosk-gate-ui.test.js',
   'tests/frontend/vietqr-timer-ui.test.js',
   'tests/frontend/vehicle-search-ui.test.js',
@@ -27,6 +27,7 @@ const testFiles = [
   'tests/frontend/monthly-renewal-portal-ui.test.js',
   'tests/frontend/mobile-gate-station-ui.test.js',
   'tests/frontend/audit-logs-ui.test.js',
+  'tests/frontend/button-interactions.test.js',
 
   // E2E Lifecycle & All 9 Pages Suites
   'tests/full-flow-e2e.test.js',
