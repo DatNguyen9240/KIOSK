@@ -1,0 +1,24 @@
+# Git & Documentation
+.git/
+.gitignore
+README.md
+BACKEND.md
+
+# Dependencies
+node_modules/
+server/node_modules/
+
+# Environment Secrets
+.env
+.env.*
+
+# Tests & Logs
+tests/
+scripts/
+*.log
+
+# Temp & OS
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

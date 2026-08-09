@@ -39,10 +39,10 @@ const sendError = (res, message = 'Internal Server Error', status = 500, errors 
 };
 
 // =============================================================================
-// PUBLIC & AUTH ROUTES
+// PUBLIC & UNPROTECTED ROUTES (Auth & External Webhooks)
 // =============================================================================
 
-// Login Endpoint
+// 1. User Login Endpoint
 router.post('/auth/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -54,7 +54,6 @@ router.post('/auth/login', (req, res) => {
     return sendError(res, 'Thông tin đăng nhập không chính xác.', 401);
   }
 
-  // Find tenant access for user
   const tenantUser = (MEMORY_DB.tenant_users || []).find(tu => tu.user_id === user.id);
   const activeTenantId = tenantUser ? tenantUser.tenant_id : MEMORY_DB.tenants[0].id;
   const roleObj = (MEMORY_DB.roles || []).find(r => r.id === tenantUser?.role_id);
@@ -83,7 +82,41 @@ router.post('/auth/login', (req, res) => {
   });
 });
 
-// Apply Multi-Tenant Isolation & Auth Middleware to all subsequent API routes
+// 2. SePay Bank Webhook Receiver (Public Endpoint called directly by SePay Gateway)
+router.post('/webhooks/payment/sepay', (req, res) => {
+  try {
+    const { transactionId, id, transferContent, content, amount, transferAmount, accountNumber, gateway } = req.body;
+    const tenantIdHeader = req.headers['x-tenant-id'] || null;
+
+    let authHeader = req.headers['x-sepay-secret'] || null;
+    const auth = req.headers['authorization'] || '';
+    if (auth.toLowerCase().startsWith('apikey')) {
+      authHeader = auth;
+    }
+
+    const result = PaymentService.processSePayWebhook({
+      tenantId: tenantIdHeader,
+      transactionId: transactionId || id,
+      transferContent: transferContent || content,
+      amount: amount || transferAmount,
+      accountNumber,
+      gateway: gateway || 'SEPAY',
+      authHeader
+    });
+
+    if (!result.success && result.reason === 'INVALID_SEPAY_SECRET') {
+      return sendError(res, 'Invalid SePay Secret Key', 401);
+    }
+
+    return sendSuccess(res, result);
+  } catch (err) {
+    return sendError(res, err.message, 400);
+  }
+});
+
+// =============================================================================
+// PROTECTED MULTI-TENANT API ROUTES (Requires Authorization & X-Tenant-ID Header)
+// =============================================================================
 router.use(authenticateToken);
 router.use(resolveTenantContext);
 
@@ -207,24 +240,6 @@ router.post('/orders/renewal', (req, res) => {
     });
 
     return sendSuccess(res, result, 201);
-  } catch (err) {
-    return sendError(res, err.message, 400);
-  }
-});
-
-// SePay Bank Webhook Receiver
-router.post('/webhooks/payment/sepay', (req, res) => {
-  try {
-    const { transactionId, transferContent, amount, gateway } = req.body;
-    const result = PaymentService.processSePayWebhook({
-      tenantId: req.tenantId,
-      transactionId,
-      transferContent,
-      amount,
-      gateway
-    });
-
-    return sendSuccess(res, result);
   } catch (err) {
     return sendError(res, err.message, 400);
   }
