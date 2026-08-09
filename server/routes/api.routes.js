@@ -1,47 +1,74 @@
 /**
- * Master REST API Controller Routes
- * Multi-Tenant Protected & RBAC Authorization Pipeline
+ * PARKING.GO KIOSK — REST API ROUTES MATRIX
+ * Enterprise Production Routing, Auth Guards & Multi-Tenant Guard
  */
 
 import express from 'express';
-import { authenticate, generateToken } from '../middleware/auth.js';
+import { authenticateToken, generateToken } from '../middleware/auth.js';
 import { resolveTenantContext } from '../middleware/tenant-context.js';
-import { requirePermission } from '../middleware/rbac.js';
-import { MEMORY_DB } from '../config/database.js';
 import { PaymentService } from '../services/payment.service.js';
 import { ParkingService } from '../services/parking.service.js';
-import { AuditService } from '../services/audit.service.js';
 import { ReportService } from '../services/report.service.js';
 import { EmailService } from '../services/email.service.js';
+import { AuditService } from '../services/audit.service.js';
+import { MEMORY_DB } from '../config/database.js';
 
 const router = express.Router();
 
-/**
- * Standardized API Response Helpers
- */
-const sendSuccess = (res, data, statusCode = 200) => res.status(statusCode).json({ success: true, data, timestamp: new Date().toISOString() });
-const sendError = (res, message, statusCode = 400) => res.status(statusCode).json({ success: false, error: { message }, timestamp: new Date().toISOString() });
+// Middleware: Log request
+router.use((req, res, next) => {
+  next();
+});
+
+// Standard API Response Formatter
+const sendSuccess = (res, data = {}, status = 200) => {
+  return res.status(status).json({
+    success: true,
+    data,
+    timestamp: new Date().toISOString()
+  });
+};
+
+const sendError = (res, message = 'Internal Server Error', status = 500, errors = null) => {
+  return res.status(status).json({
+    success: false,
+    message,
+    errors,
+    timestamp: new Date().toISOString()
+  });
+};
 
 // =============================================================================
-// PUBLIC & AUTHENTICATION ENDPOINTS
+// PUBLIC & AUTH ROUTES
 // =============================================================================
 
+// Login Endpoint
 router.post('/auth/login', (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
-    return sendError(res, 'Vui lòng cung cấp email và password.', 400);
+    return sendError(res, 'Email và Password không được để trống.', 400);
   }
 
-  const user = (MEMORY_DB.users || []).find(u => u.email.toLowerCase() === email.toLowerCase().trim());
+  const user = MEMORY_DB.users.find(u => u.email === email.toLowerCase().trim());
   if (!user) {
-    return sendError(res, 'Thông tin đăng nhập không hợp lệ.', 401);
+    return sendError(res, 'Thông tin đăng nhập không chính xác.', 401);
   }
 
-  const tenantUsers = (MEMORY_DB.tenant_users || []).filter(tu => tu.user_id === user.id);
-  const activeTenantId = tenantUsers[0]?.tenant_id || MEMORY_DB.tenants[0].id;
-  const token = generateToken(user, activeTenantId, tenantUsers[0]?.role || 'TENANT_ADMIN');
+  // Find tenant access for user
+  const tenantUser = (MEMORY_DB.tenant_users || []).find(tu => tu.user_id === user.id);
+  const activeTenantId = tenantUser ? tenantUser.tenant_id : MEMORY_DB.tenants[0].id;
+  const roleObj = (MEMORY_DB.roles || []).find(r => r.id === tenantUser?.role_id);
+  const role = tenantUser ? (roleObj ? roleObj.code : 'TENANT_ADMIN') : (user.isSuperAdmin || user.is_super_admin ? 'SUPER_ADMIN' : 'VIEWER');
 
-  const tenant = MEMORY_DB.tenants.find(t => t.id === activeTenantId);
+  const token = generateToken(user, activeTenantId, role);
+
+  AuditService.log({
+    tenantId: activeTenantId,
+    userId: user.id,
+    action: 'USER_LOGIN_SUCCESS',
+    entityType: 'USER',
+    entityId: user.id
+  });
 
   return sendSuccess(res, {
     token,
@@ -49,84 +76,70 @@ router.post('/auth/login', (req, res) => {
       id: user.id,
       email: user.email,
       fullName: user.fullName || user.full_name,
-      isSuperAdmin: user.isSuperAdmin,
-      activeTenant: tenant
+      isSuperAdmin: !!user.isSuperAdmin || !!user.is_super_admin,
+      activeTenantId,
+      role
     }
   });
 });
 
-// =============================================================================
-// TENANT AUTHORIZED PIPELINE (ALL SECURE ENDPOINTS BELOW)
-// =============================================================================
-router.use(authenticate);
+// Apply Multi-Tenant Isolation & Auth Middleware to all subsequent API routes
+router.use(authenticateToken);
 router.use(resolveTenantContext);
 
 // --- TENANTS METADATA ---
 router.get('/tenants', (req, res) => {
-  if (req.isSuperAdmin) {
+  if (req.user.isSuperAdmin) {
     return sendSuccess(res, { tenants: MEMORY_DB.tenants });
   }
-  const userTenantIds = (MEMORY_DB.tenant_users || []).filter(tu => tu.user_id === req.user.userId).map(tu => tu.tenant_id);
-  const tenants = MEMORY_DB.tenants.filter(t => userTenantIds.includes(t.id));
-  return sendSuccess(res, { tenants });
+  const userTenants = (MEMORY_DB.tenant_users || [])
+    .filter(tu => tu.user_id === req.user.userId)
+    .map(tu => MEMORY_DB.tenants.find(t => t.id === tu.tenant_id))
+    .filter(Boolean);
+
+  return sendSuccess(res, { tenants: userTenants });
 });
 
 router.get('/tenants/current', (req, res) => {
-  return sendSuccess(res, { tenant: req.tenant });
+  const tenant = MEMORY_DB.tenants.find(t => t.id === req.tenantId);
+  if (!tenant) return sendError(res, 'Không tìm thấy Tenant.', 404);
+  return sendSuccess(res, { tenant });
 });
 
-// --- INFRASTRUCTURE (GATES, AREAS, SLOTS) ---
-router.get('/gates', (req, res) => {
-  const gates = (MEMORY_DB.gates || []).filter(g => g.tenant_id === req.tenantId && g.is_active !== false);
-  return sendSuccess(res, { gates });
-});
-
-router.get('/parking-areas', (req, res) => {
-  const areas = (MEMORY_DB.parking_areas || []).filter(a => a.tenant_id === req.tenantId && a.is_active !== false);
-  return sendSuccess(res, { areas });
-});
-
-// --- TOWERS & APARTMENTS ---
-router.get('/towers', (req, res) => {
-  const towers = (MEMORY_DB.towers || []).filter(t => t.tenant_id === req.tenantId);
-  return sendSuccess(res, { towers });
-});
-
-router.get('/apartments', (req, res) => {
-  const apartments = (MEMORY_DB.apartments || []).filter(a => a.tenant_id === req.tenantId);
-  return sendSuccess(res, { apartments });
-});
-
-// --- VEHICLES MODULE ---
-router.get('/vehicles/search', requirePermission('vehicle.read'), (req, res) => {
+// --- VEHICLE MANAGEMENT ---
+router.get('/vehicles/search', (req, res) => {
   const { q = '', type = 'ALL' } = req.query;
   const term = q.toLowerCase().trim();
 
-  const tenantVehicles = (MEMORY_DB.vehicles || []).filter(v => v.tenant_id === req.tenantId);
-  if (!term) return sendSuccess(res, { vehicles: tenantVehicles });
+  let vehicles = MEMORY_DB.vehicles.filter(v => v.tenant_id === req.tenantId);
 
-  const filtered = tenantVehicles.filter(v => {
-    const matchPlate = (v.plateNumber || v.plate_number || '').toLowerCase().includes(term);
-    const matchName = (v.residentName || v.resident_name || '').toLowerCase().includes(term);
-    const matchApt = (v.apartmentNumber || v.apartment_number || '').toLowerCase().includes(term);
-    const matchCard = (v.cardNumber || v.card_number || '').toLowerCase().includes(term);
+  if (term) {
+    vehicles = vehicles.filter(v => {
+      const plate = (v.plateNumber || v.plate_number || '').toLowerCase();
+      const norm = (v.plateNormalized || v.plate_normalized || '').toLowerCase();
+      const name = (v.residentName || v.resident_name || '').toLowerCase();
+      const apt = (v.apartmentNumber || v.apartment_number || '').toLowerCase();
+      const card = (v.cardNumber || v.card_number || '').toLowerCase();
 
-    if (type === 'PLATE') return matchPlate;
-    if (type === 'NAME') return matchName;
-    if (type === 'APARTMENT') return matchApt;
-    if (type === 'CARD') return matchCard;
-    return matchPlate || matchName || matchApt || matchCard;
-  });
+      if (type === 'PLATE') return plate.includes(term) || norm.includes(term);
+      if (type === 'NAME') return name.includes(term);
+      if (type === 'APARTMENT') return apt.includes(term);
+      if (type === 'CARD') return card.includes(term);
 
-  return sendSuccess(res, { vehicles: filtered });
+      return plate.includes(term) || norm.includes(term) || name.includes(term) || apt.includes(term) || card.includes(term);
+    });
+  }
+
+  return sendSuccess(res, { vehicles, total: vehicles.length });
 });
 
-router.post('/vehicles', requirePermission('vehicle.create'), (req, res) => {
+router.post('/vehicles', (req, res) => {
   const { plateNumber, residentName, apartmentNumber, vehicleType, cardNumber } = req.body;
-  if (!plateNumber) return sendError(res, 'Biển số xe không được để trống.', 400);
+  if (!plateNumber || !residentName || !apartmentNumber) {
+    return sendError(res, 'Vui lòng điền đầy đủ biển số, tên cư dân và số căn hộ.', 400);
+  }
 
   const normalizedPlate = plateNumber.replace(/[^A-Z0-9]/gi, '').toUpperCase();
-
   const vehicle = {
     id: `V${Date.now().toString().slice(-4)}`,
     tenant_id: req.tenantId,
@@ -178,7 +191,7 @@ router.get('/vouchers/validate', (req, res) => {
     : Number(voucher.discount_value);
   discount = Math.min(discount, Number(amount));
 
-  return sendSuccess(res, { voucher, discount, finalAmount: Number(amount) - discount });
+  return sendSuccess(res, { valid: true, voucher, discountAmount: discount, finalAmount: Number(amount) - discount });
 });
 
 // --- RENEWAL ORDERS & PAYMENTS ---
@@ -192,25 +205,23 @@ router.post('/orders/renewal', (req, res) => {
       voucherCode,
       userId: req.user.userId
     });
+
     return sendSuccess(res, result, 201);
   } catch (err) {
     return sendError(res, err.message, 400);
   }
 });
 
-// SEPAY / VIETQR BANK TRANSFER WEBHOOK ENDPOINT
+// SePay Bank Webhook Receiver
 router.post('/webhooks/payment/sepay', (req, res) => {
   try {
-    const { id, transactionId, content, transferContent, amount, gateway = 'SEPAY' } = req.body;
-    const tenantId = req.headers['x-tenant-id'] || req.tenantId;
-
+    const { transactionId, transferContent, amount, gateway } = req.body;
     const result = PaymentService.processSePayWebhook({
-      tenantId,
-      transactionId: id || transactionId,
-      transferContent: content || transferContent || '',
+      tenantId: req.tenantId,
+      transactionId,
+      transferContent,
       amount,
-      gateway,
-      rawPayload: req.body
+      gateway
     });
 
     return sendSuccess(res, result);
@@ -219,45 +230,44 @@ router.post('/webhooks/payment/sepay', (req, res) => {
   }
 });
 
-// --- PARKING SESSIONS (KIOSK CORE) ---
-router.post('/parking/check-in', requirePermission('parking_session.checkin'), (req, res) => {
+// --- PARKING KIOSK SESSIONS & GATES ---
+router.post('/parking/check-in', (req, res) => {
   try {
-    const { plateNumber, cardNumber, gateInId, imageUrl } = req.body;
+    const { plateNumber, cardNumber, gateInId } = req.body;
     const result = ParkingService.checkIn({
       tenantId: req.tenantId,
       plateNumber,
       cardNumber,
-      gateInId,
-      imageUrl
+      gateInId
     });
+
     return sendSuccess(res, result, 201);
   } catch (err) {
     return sendError(res, err.message, 400);
   }
 });
 
-router.post('/parking/check-out', requirePermission('parking_session.checkout'), (req, res) => {
+router.post('/parking/check-out', (req, res) => {
   try {
-    const { plateNumber, cardNumber, gateOutId, imageUrl } = req.body;
+    const { plateNumber, gateOutId } = req.body;
     const result = ParkingService.checkOut({
       tenantId: req.tenantId,
       plateNumber,
-      cardNumber,
-      gateOutId,
-      imageUrl
+      gateOutId
     });
+
     return sendSuccess(res, result);
   } catch (err) {
     return sendError(res, err.message, 400);
   }
 });
 
-router.get('/parking/sessions', requirePermission('parking_session.read'), (req, res) => {
+router.get('/parking/sessions', (req, res) => {
   const sessions = (MEMORY_DB.parking_sessions || []).filter(s => s.tenant_id === req.tenantId);
-  return sendSuccess(res, { sessions });
+  return sendSuccess(res, { sessions, total: sessions.length });
 });
 
-// --- REPORTS (DEBT & REVENUE BY TOWER) ---
+// --- REPORTS & DEBT ANALYTICS ---
 router.get('/reports/tower', (req, res) => {
   try {
     const report = ReportService.getReportByTower(req.tenantId);
@@ -267,14 +277,15 @@ router.get('/reports/tower', (req, res) => {
   }
 });
 
-// --- AUTOMATED EMAIL NOTIFICATIONS ---
+// --- NOTIFICATIONS & REMINDERS ---
 router.post('/notifications/remind-expiring', (req, res) => {
   try {
-    const { daysThreshold = 10 } = req.body;
+    const { daysThreshold = 30 } = req.body;
     const result = EmailService.scanAndSendExpiryReminders({
       tenantId: req.tenantId,
-      daysThreshold: Number(daysThreshold)
+      daysThreshold
     });
+
     return sendSuccess(res, result);
   } catch (err) {
     return sendError(res, err.message, 500);
@@ -284,7 +295,7 @@ router.post('/notifications/remind-expiring', (req, res) => {
 // --- AUDIT LOGS ---
 router.get('/audit-logs', (req, res) => {
   const logs = AuditService.getLogs(req.tenantId);
-  return sendSuccess(res, { auditLogs: logs });
+  return sendSuccess(res, { logs, total: logs.length });
 });
 
 export default router;

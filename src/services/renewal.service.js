@@ -6,16 +6,15 @@ import { apiRequest } from '../core/api.js';
 import { CONFIG } from '../core/config.js';
 
 const MONTHLY_RATES = {
-  CAR: 1200000,       // 1.200.000đ / tháng
-  MOTORBIKE: 100000,  // 100.000đ / tháng
-  BICYCLE: 30000,     // 30.000đ / tháng
-  ELECTRIC_BIKE: 60000// 60.000đ / tháng
+  CAR: 1250000,
+  MOTORBIKE: 120000,
+  ELECTRIC_BIKE: 80000
 };
 
-export async function calculateRenewalFee({ vehicleType, months = 1, fromDate, toDate }) {
+export async function calculateRenewalFee({ vehicleType, months = 1 }) {
   if (CONFIG.MOCK_MODE) {
     await new Promise(res => setTimeout(res, 100));
-    const ratePerMonth = MONTHLY_RATES[vehicleType] || 100000;
+    const ratePerMonth = MONTHLY_RATES[vehicleType] || 120000;
     const baseFee = ratePerMonth * months;
 
     return {
@@ -27,10 +26,7 @@ export async function calculateRenewalFee({ vehicleType, months = 1, fromDate, t
     };
   }
 
-  return apiRequest('/renewal/calculate-fee', {
-    method: 'POST',
-    body: { vehicleType, months, fromDate, toDate }
-  });
+  return apiRequest('/tariffs');
 }
 
 export async function submitRenewalRequest(renewalData) {
@@ -43,5 +39,5 @@ export async function submitRenewalRequest(renewalData) {
     };
   }
 
-  return apiRequest('/renewal/submit', { method: 'POST', body: renewalData });
+  return apiRequest('/orders/renewal', { method: 'POST', body: renewalData });
 }

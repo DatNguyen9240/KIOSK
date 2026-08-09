@@ -84,6 +84,12 @@ export async function checkDatabaseHealth() {
 // MULTI-TENANT IN-MEMORY STORE FALLBACK (Clean Modular Development Adapter)
 // =============================================================================
 export const MEMORY_DB = {
+  roles: [
+    { id: '00000000-0000-0000-0000-000000000001', code: 'SUPER_ADMIN', name: 'Super Administrator' },
+    { id: '00000000-0000-0000-0000-000000000002', code: 'TENANT_ADMIN', name: 'Tenant Administrator' },
+    { id: '00000000-0000-0000-0000-000000000003', code: 'PARKING_MANAGER', name: 'Parking Manager' },
+    { id: '00000000-0000-0000-0000-000000000004', code: 'GATE_OPERATOR', name: 'Gate Operator' }
+  ],
   tenants: [
     { id: '11111111-1111-1111-1111-111111111111', code: 'VINHOMES_OCEAN', name: 'Vinhomes Ocean Park', domain: 'vinhomes.kiosk.com', is_active: true },
     { id: '22222222-2222-2222-2222-222222222222', code: 'MASTERI_WATERFRONT', name: 'Masteri Waterfront', domain: 'masteri.kiosk.com', is_active: true }
@@ -94,8 +100,8 @@ export const MEMORY_DB = {
     { id: 'a2222222-2222-2222-2222-222222222222', email: 'admin@masteri.vn', fullName: 'Trần Quản Lý (Masteri)', isSuperAdmin: false }
   ],
   tenant_users: [
-    { tenant_id: '11111111-1111-1111-1111-111111111111', user_id: 'a1111111-1111-1111-1111-111111111111', role: 'TENANT_ADMIN' },
-    { tenant_id: '22222222-2222-2222-2222-222222222222', user_id: 'a2222222-2222-2222-2222-222222222222', role: 'TENANT_ADMIN' }
+    { tenant_id: '11111111-1111-1111-1111-111111111111', user_id: 'a1111111-1111-1111-1111-111111111111', role_id: '00000000-0000-0000-0000-000000000002', role: 'TENANT_ADMIN' },
+    { tenant_id: '22222222-2222-2222-2222-222222222222', user_id: 'a2222222-2222-2222-2222-222222222222', role_id: '00000000-0000-0000-0000-000000000002', role: 'TENANT_ADMIN' }
   ],
   parking_areas: [
     { id: 'pa111111-0000-0000-0000-0000000000b1', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'AREA_B1', name: 'Hầm B1 Vinhomes Ocean Park', is_active: true },

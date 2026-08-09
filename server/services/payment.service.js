@@ -9,6 +9,46 @@ import { AuditService } from './audit.service.js';
 
 export class PaymentService {
   /**
+   * Validate a Voucher code against order amount.
+   */
+  static validateVoucher({ tenantId, voucherCode, orderAmount }) {
+    if (!voucherCode) throw new Error('Vui lòng nhập mã voucher.');
+    const voucher = (MEMORY_DB.vouchers || []).find(
+      v => v.tenant_id === tenantId && v.code === voucherCode && v.is_active !== false
+    );
+
+    if (!voucher) {
+      return { valid: false, message: `Mã voucher [${voucherCode}] không tồn tại hoặc đã hết hạn.` };
+    }
+
+    if (voucher.used_count >= voucher.usage_limit) {
+      return { valid: false, message: `Mã voucher [${voucherCode}] đã hết lượt sử dụng.` };
+    }
+
+    if (Number(orderAmount) < Number(voucher.min_order_amount)) {
+      return { valid: false, message: `Đơn hàng tối thiểu ${voucher.min_order_amount.toLocaleString('vi-VN')} VNĐ để áp dụng voucher.` };
+    }
+
+    let discountAmount = 0;
+    if (voucher.discount_type === 'PERCENTAGE' || voucher.discount_type === 'PERCENT') {
+      discountAmount = Math.round((Number(orderAmount) * Number(voucher.discount_value)) / 100);
+    } else {
+      discountAmount = Number(voucher.discount_value);
+    }
+
+    const finalAmount = Math.max(0, Number(orderAmount) - discountAmount);
+
+    return {
+      valid: true,
+      voucherCode,
+      discountAmount,
+      finalAmount,
+      description: voucher.description || `Giảm ${discountAmount.toLocaleString('vi-VN')} VNĐ`,
+      voucher
+    };
+  }
+
+  /**
    * Creates a Universal Payment Order (Aggregate Root) and linked Renewal Order.
    *
    * @param {Object} params
@@ -58,65 +98,64 @@ export class PaymentService {
       }
 
       if (voucherObj.discount_type === 'PERCENTAGE' || voucherObj.discount_type === 'PERCENT') {
-        discountAmount = (originalAmount * voucherObj.discount_value) / 100;
+        discountAmount = Math.round((originalAmount * Number(voucherObj.discount_value)) / 100);
       } else {
         discountAmount = Number(voucherObj.discount_value);
       }
-
-      discountAmount = Math.min(discountAmount, originalAmount);
     }
 
     const finalAmount = Math.max(0, originalAmount - discountAmount);
-    const orderCode = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(Math.random() * 1000)}`;
 
-    // 3. Load Tenant Payment Configuration (Zero Hardcoding)
-    const payConfig = (MEMORY_DB.tenant_payment_configs || []).find(c => c.tenant_id === tenantId && c.is_active !== false);
-    if (!payConfig) {
-      throw new Error(`Tenant chưa cấu hình tài khoản ngân hàng nhận tiền (tenant_payment_configs).`);
-    }
-
-    // 4. Calculate updated vehicle expiry date
+    // 3. Compute New Expiry Date
     const currentExpiry = new Date(vehicle.expireDate || vehicle.expiry_date || Date.now());
     const baseDate = currentExpiry > new Date() ? currentExpiry : new Date();
     const newExpiryDate = new Date(baseDate);
     newExpiryDate.setMonth(newExpiryDate.getMonth() + Number(durationMonths));
     const formattedNewExpiry = newExpiryDate.toISOString().split('T')[0];
 
-    // 5. Create Universal Payment Order (Aggregate Root)
-    const qrTimeout = payConfig.qr_timeout_seconds || 900;
-    const expiresAt = new Date(Date.now() + qrTimeout * 1000).toISOString();
+    // 4. Generate Order Code & Payment Order Aggregate Root
+    const orderCode = `ORD-${Date.now().toString().slice(-6)}-${Math.floor(100 + Math.random() * 900)}`;
+    const paymentOrderId = `po-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
 
     const paymentOrder = {
-      id: `pord-${Date.now()}`,
+      id: paymentOrderId,
       tenant_id: tenantId,
       order_code: orderCode,
+      order_type: 'MONTHLY_RENEWAL',
       expected_amount: finalAmount,
-      paid_amount: 0,
-      currency: 'VND',
       status: 'WAITING_PAYMENT',
-      expires_at: expiresAt,
+      created_by: userId,
       created_at: new Date().toISOString()
     };
 
-    MEMORY_DB.payment_orders = MEMORY_DB.payment_orders || [];
-    MEMORY_DB.payment_orders.push(paymentOrder);
-
-    // 6. Create Linked Renewal Order Record
+    // 5. Create Monthly Renewal Order Record
+    const renewalOrderId = `ren-${Date.now()}-${Math.floor(100 + Math.random() * 900)}`;
     const renewalOrder = {
-      id: `ren-${Date.now()}`,
+      id: renewalOrderId,
       tenant_id: tenantId,
-      payment_order_id: paymentOrder.id,
+      payment_order_id: paymentOrderId,
       vehicle_id: vehicle.id,
-      plate_number: vehicle.plateNumber || vehicle.plate_number,
-      vehicle_type: vehicle.vehicleType || vehicle.vehicle_type,
+      resident_id: vehicle.resident_id || vehicle.residentId,
       duration_months: Number(durationMonths),
       original_amount: originalAmount,
       discount_amount: discountAmount,
-      final_amount: finalAmount,
       voucher_id: voucherObj ? voucherObj.id : null,
+      final_amount: finalAmount,
+      old_expiry_date: vehicle.expireDate || vehicle.expiry_date,
       new_expiry_date: formattedNewExpiry,
       created_at: new Date().toISOString()
     };
+
+    // 6. Fetch Tenant VietQR Configuration
+    const payConfig = (MEMORY_DB.tenant_payment_configs || []).find(p => p.tenant_id === tenantId);
+    if (!payConfig) {
+      throw new Error(`Tenant chưa cấu hình tài khoản nhận tiền VietQR.`);
+    }
+
+    const qrTimeout = payConfig.qr_timeout_seconds || 120;
+
+    MEMORY_DB.payment_orders = MEMORY_DB.payment_orders || [];
+    MEMORY_DB.payment_orders.push(paymentOrder);
 
     MEMORY_DB.renewal_orders = MEMORY_DB.renewal_orders || [];
     MEMORY_DB.renewal_orders.push(renewalOrder);
@@ -153,92 +192,57 @@ export class PaymentService {
     );
 
     if (bankTx && bankTx.status === 'MATCHED') {
-      return { success: true, alreadyProcessed: true, bankTransaction: bankTx };
+      console.log(`[SePay Webhook] Transaction ${transactionId} already processed (Idempotent replay).`);
+      return { success: true, matched: true, alreadyProcessed: true, bankTransaction: bankTx };
     }
 
-    // 2. Resolve Payment Config for this Tenant
-    const payConfig = (MEMORY_DB.tenant_payment_configs || []).find(c => c.tenant_id === tenantId && c.is_active !== false);
+    // 2. Parse Order Code from Transfer Content
+    const orderCodeMatch = transferContent ? transferContent.match(/ORD-\d+-\d+/i) : null;
+    const orderCode = orderCodeMatch ? orderCodeMatch[0].toUpperCase() : null;
 
-    // 3. Log Raw Bank Feed Record if not existing
-    if (!bankTx) {
-      bankTx = {
-        id: `btx-${Date.now()}`,
-        tenant_id: tenantId,
-        tenant_payment_config_id: payConfig ? payConfig.id : null,
-        bank_account_no: rawPayload.accountNumber || (payConfig ? payConfig.bank_account_no : 'N/A'),
-        gateway,
-        transaction_id: String(transactionId),
-        direction: 'CREDIT',
-        amount: Number(amount),
-        transfer_content: transferContent || '',
-        reference_code: null,
-        status: 'UNMATCHED',
-        payment_order_id: null,
-        transaction_time: new Date().toISOString(),
-        created_at: new Date().toISOString()
-      };
-      MEMORY_DB.bank_transactions.push(bankTx);
+    if (!orderCode) {
+      console.warn(`[SePay Webhook] No order code match in content: "${transferContent}"`);
+      return { success: false, matched: false, reason: 'ORDER_CODE_NOT_FOUND' };
     }
 
-    // 4. Extract Order Code from Transfer Content (e.g. "ORD-123456-789")
-    const orderCodeMatch = (transferContent || '').match(/ORD-[A-Z0-9-]+/i);
-    if (!orderCodeMatch) {
-      console.warn(`[SePay Auto-Match Fail] Could not extract order code from transfer content: "${transferContent}"`);
-      return { success: false, matched: false, message: 'Không tìm thấy mã đơn hàng trong nội dung chuyển khoản.' };
-    }
-
-    const orderCode = orderCodeMatch[0].toUpperCase();
-    bankTx.reference_code = orderCode;
-
-    // 5. Locate Payment Order Aggregate Root
-    MEMORY_DB.payment_orders = MEMORY_DB.payment_orders || [];
-    const paymentOrder = MEMORY_DB.payment_orders.find(po => po.tenant_id === tenantId && po.order_code === orderCode);
+    // 3. Match Payment Order Aggregate Root
+    const paymentOrder = (MEMORY_DB.payment_orders || []).find(
+      po => po.tenant_id === tenantId && po.order_code === orderCode
+    );
 
     if (!paymentOrder) {
-      throw new Error(`Đơn hàng thanh toán [${orderCode}] không tồn tại trong Tenant context.`);
+      console.warn(`[SePay Webhook] Payment Order [${orderCode}] not found for tenant.`);
+      return { success: false, matched: false, reason: 'PAYMENT_ORDER_NOT_FOUND' };
     }
 
-    if (paymentOrder.status === 'PAID') {
-      bankTx.status = 'MATCHED';
-      bankTx.payment_order_id = paymentOrder.id;
-      return { success: true, alreadyProcessed: true, message: 'Đơn hàng đã được đánh dấu PAID trước đó.' };
-    }
-
-    // 6. Amount Verification
-    if (Number(amount) < Number(paymentOrder.expected_amount)) {
-      console.warn(`[SePay Underpaid] Received ${amount} < Expected ${paymentOrder.expected_amount}`);
-      paymentOrder.paid_amount = Number(amount);
-      return { success: false, underpaid: true, expected: paymentOrder.expected_amount, received: amount };
-    }
-
-    // 7. Record Payment Transaction Attempt
-    MEMORY_DB.payment_transactions = MEMORY_DB.payment_transactions || [];
-    const txRecord = {
-      id: `tx-${Date.now()}`,
+    // 4. Record Bank Transaction Record
+    bankTx = {
+      id: `btx-${Date.now()}`,
       tenant_id: tenantId,
-      payment_order_id: paymentOrder.id,
-      provider: gateway,
-      gateway_transaction_id: String(transactionId),
-      bank_reference: String(transactionId),
-      expected_amount: Number(paymentOrder.expected_amount),
-      received_amount: Number(amount),
-      currency: 'VND',
-      status: 'SUCCESS',
-      idempotency_key: idempotencyKey,
-      raw_payload: rawPayload,
-      processed_at: new Date().toISOString()
+      gateway,
+      transaction_id: String(transactionId),
+      transfer_content: transferContent,
+      amount: Number(amount),
+      matched_order_id: paymentOrder.id,
+      status: 'PENDING',
+      created_at: new Date().toISOString()
     };
-    MEMORY_DB.payment_transactions.push(txRecord);
+    MEMORY_DB.bank_transactions.push(bankTx);
 
-    // 8. Update Payment Order & Bank Transaction State
+    // 5. Amount Verification
+    if (Number(amount) < Number(paymentOrder.expected_amount)) {
+      bankTx.status = 'UNDERPAID';
+      console.warn(`[SePay Underpaid] Received ${amount} < Expected ${paymentOrder.expected_amount}`);
+      return { success: false, matched: false, underpaid: true, expected: paymentOrder.expected_amount, received: amount };
+    }
+
+    // 6. Update Payment Order Status to PAID
     paymentOrder.status = 'PAID';
     paymentOrder.paid_amount = Number(amount);
     paymentOrder.paid_at = new Date().toISOString();
-
     bankTx.status = 'MATCHED';
-    bankTx.payment_order_id = paymentOrder.id;
 
-    // 9. Process Target Action (Vehicle Renewal or Parking Session Completion)
+    // 7. Process Target Action (Vehicle Renewal or Parking Session Completion)
     const renewalOrder = (MEMORY_DB.renewal_orders || []).find(r => r.payment_order_id === paymentOrder.id);
     if (renewalOrder) {
       const vehicle = MEMORY_DB.vehicles.find(v => v.id === renewalOrder.vehicle_id);

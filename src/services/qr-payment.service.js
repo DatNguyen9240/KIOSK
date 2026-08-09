@@ -16,8 +16,7 @@ export async function createQrPaymentTransaction(paymentData) {
     const expiresAt = now + (QR_COUNTDOWN_SECONDS * 1000);
     const transactionId = 'TXN-' + Math.floor(100000 + Math.random() * 900000);
 
-    // Mock VietQR / E-wallet QR Payload URL
-    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=PARKING_GO_${transactionId}_AMOUNT_${paymentData.finalAmount || 50000}`;
+    const qrUrl = `https://img.vietqr.io/image/970422-110022334455-compact2.png?amount=${paymentData.finalAmount || 50000}&addInfo=ORD-${transactionId}`;
 
     return {
       success: true,
@@ -30,7 +29,7 @@ export async function createQrPaymentTransaction(paymentData) {
     };
   }
 
-  return apiRequest('/payment/create-qr', { method: 'POST', body: paymentData });
+  return apiRequest('/orders/renewal', { method: 'POST', body: paymentData });
 }
 
 export function startQrCountdownTimer(expiresAtTimestamp, onTick, onExpire) {
@@ -46,7 +45,7 @@ export function startQrCountdownTimer(expiresAtTimestamp, onTick, onExpire) {
     }
   };
 
-  update(); // Initial tick
+  update();
   activeTimerInterval = setInterval(update, 1000);
 }
 
@@ -57,14 +56,13 @@ export function stopQrCountdownTimer() {
   }
 }
 
-export async function checkPaymentStatus(transactionId) {
+export async function checkPaymentStatus(orderCode) {
   if (CONFIG.MOCK_MODE) {
-    // Return waiting status in mock mode
     return {
-      transactionId,
+      orderCode,
       status: PAYMENT_STATUS.WAITING_PAYMENT
     };
   }
 
-  return apiRequest(`/payment/status/${transactionId}`);
+  return apiRequest(`/parking/sessions`);
 }

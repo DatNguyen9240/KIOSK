@@ -57,5 +57,5 @@ export async function fetchDebtReport(filters = {}) {
     };
   }
 
-  return apiRequest('/reports/debt', { params: filters });
+  return apiRequest('/reports/tower', { params: filters });
 }
