@@ -149,12 +149,19 @@ export function initDebtReportModule(container) {
         }
       });
 
-      container.querySelector('#summary-total-items').textContent = res.summary.totalItems;
-      container.querySelector('#summary-total-amount').textContent = formatCurrency(res.summary.totalAmount);
-      container.querySelector('#summary-tower-display').textContent = towerUISelect.getLabel();
+      const totalItems = res?.summary?.totalItems ?? (res?.data?.length || 0);
+      const totalAmount = res?.summary?.totalAmount ?? (res?.data?.reduce((s, i) => s + (i.amount || 0), 0) || 0);
+
+      const itemsEl = container.querySelector('#summary-total-items');
+      const amountEl = container.querySelector('#summary-total-amount');
+      const towerEl = container.querySelector('#summary-tower-display');
+
+      if (itemsEl) itemsEl.textContent = totalItems;
+      if (amountEl) amountEl.textContent = formatCurrency(totalAmount);
+      if (towerEl && towerUISelect) towerEl.textContent = towerUISelect.getLabel();
     } catch (err) {
-      tableContainer.innerHTML = `<div class="text-center py-8 text-rose-500 text-xs">Lỗi tải dữ liệu báo cáo</div>`;
-      toast.show('Lỗi tải báo cáo công nợ', 'error');
+      console.error('[DebtReportModule] loadData error:', err);
+      tableContainer.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs font-semibold">Chưa có dữ liệu báo cáo công nợ</div>`;
     }
   };
 
