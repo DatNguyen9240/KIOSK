@@ -16,8 +16,11 @@ COPY package.json server/package.json ./server/
 WORKDIR /app/server
 RUN npm install --only=production
 
-# Copy backend source code & database schemas
+# Copy frontend static assets, source code & backend/database
 WORKDIR /app
+COPY index.html ./
+COPY assets/ ./assets/
+COPY src/ ./src/
 COPY server/ ./server/
 COPY db/ ./db/
 
