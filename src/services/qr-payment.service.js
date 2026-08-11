@@ -14,9 +14,8 @@ export async function createQrPaymentTransaction(paymentData) {
     await new Promise(res => setTimeout(res, 300));
     const now = Date.now();
     const expiresAt = now + (QR_COUNTDOWN_SECONDS * 1000);
-    const transactionId = 'TXN-' + Math.floor(100000 + Math.random() * 900000);
-
-    const qrUrl = `https://img.vietqr.io/image/970422-0000150005814-compact2.png?amount=${paymentData.finalAmount || 50000}&addInfo=ORD-${transactionId}`;
+    const transactionId = 'ORDTXN' + Math.floor(100000 + Math.random() * 900000);
+    const qrUrl = `https://img.vietqr.io/image/970422-0000150005814-compact2.png?amount=${paymentData.finalAmount || 50000}&addInfo=${transactionId}`;
 
     return {
       success: true,

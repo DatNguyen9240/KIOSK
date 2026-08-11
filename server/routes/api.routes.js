@@ -117,8 +117,11 @@ router.post('/webhooks/payment/sepay', (req, res) => {
 // 3. Public Payment Status Polling Endpoint (Used by Frontend QR Screen)
 router.get('/payment/status/:orderCode', (req, res) => {
   const { orderCode } = req.params;
-  const cleanCode = (orderCode || '').replace(/[^A-Z0-9]/gi, '');
-  const order = (MEMORY_DB.payment_orders || []).find(po => (po.order_code || '').replace(/[^A-Z0-9]/gi, '') === cleanCode);
+  const cleanCode = (orderCode || '').replace(/[^A-Z0-9]/gi, '').replace(/^ORD/i, '');
+  const order = (MEMORY_DB.payment_orders || []).find(po => {
+    const poClean = (po.order_code || '').replace(/[^A-Z0-9]/gi, '').replace(/^ORD/i, '');
+    return poClean === cleanCode || poClean.endsWith(cleanCode) || cleanCode.endsWith(poClean);
+  });
 
   if (!order) {
     return sendSuccess(res, { orderCode, status: 'WAITING_PAYMENT', matched: false });
