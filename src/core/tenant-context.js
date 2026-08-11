@@ -3,7 +3,7 @@
  */
 
 export const DEFAULT_TENANTS = [
-  { id: '11111111-1111-1111-1111-111111111111', code: 'VINHOMES_OCEAN', name: 'Vinhomes Ocean Park', domain: 'vinhomes.kiosk.com' },
+  { id: '11111111-1111-1111-1111-111111111111', code: 'THAP_1', name: 'Tháp 1', domain: 'thap1.kiosk.com' },
   { id: '22222222-2222-2222-2222-222222222222', code: 'MASTERI_WATERFRONT', name: 'Masteri Waterfront', domain: 'masteri.kiosk.com' }
 ];
 

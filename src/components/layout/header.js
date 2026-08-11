@@ -11,7 +11,7 @@ export function initHeaderControls() {
     const user = userSession?.user || userSession || {};
     
     const fullName = user.fullName || user.full_name || 'Nguyễn Văn A';
-    const email = user.email || 'admin@vinhomes.vn';
+    const email = user.email || 'admin@thap1.vn';
     const isSuper = !!user.isSuperAdmin || !!user.is_super_admin;
     const roleMap = {
       'SUPER_ADMIN': '👑 Super Admin',

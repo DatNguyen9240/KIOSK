@@ -34,8 +34,8 @@ export function initTenantManagementModule(container) {
   const loadTenants = () => {
     const data = MOCK_TENANTS.map(t => ({
       ...t,
-      contact: t.code === 'VINHOMES_OCEAN' ? 'admin@vinhomes.vn' : 'admin@masteri.vn',
-      towersCount: t.code === 'VINHOMES_OCEAN' ? 3 : 2
+      contact: (t.code === 'THAP_1' || t.code === 'VINHOMES_OCEAN') ? 'admin@thap1.vn' : 'admin@masteri.vn',
+      towersCount: (t.code === 'THAP_1' || t.code === 'VINHOMES_OCEAN') ? 3 : 2
     }));
 
     new UITable({

@@ -5,7 +5,7 @@
 import { apiRequest } from '../core/api.js';
 import { MOCK_USERS } from '../core/mock-data.js';
 
-export async function login(email = 'admin@vinhomes.vn', password = 'admin') {
+export async function login(email = 'admin@thap1.vn', password = 'admin') {
   try {
     const res = await apiRequest('/auth/login', {
       method: 'POST',

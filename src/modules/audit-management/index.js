@@ -29,8 +29,8 @@ export function initAuditManagementModule(container) {
     // Mock audit logs matching DB columns
     const mockLogs = [
       { id: '1', actor: 'superadmin@PARKING', action: 'UPDATE_TARIFF', entity_type: 'tariff_rules', ip_address: '118.70.12.33', created_at: '2026-08-11 09:30:00', old_data: { monthly_fee: 1000000 }, new_data: { monthly_fee: 1200000 } },
-      { id: '2', actor: 'admin@vinhomes.vn', action: 'BLOCK_CARD', entity_type: 'parking_cards', ip_address: '1.53.190.102', created_at: '2026-08-11 10:15:24', old_data: { status: 'ACTIVE' }, new_data: { status: 'BLOCKED', reason: 'Lost card reported' } },
-      { id: '3', actor: 'admin@vinhomes.vn', action: 'APPROVE_VEHICLE', entity_type: 'vehicle_requests', ip_address: '1.53.190.102', created_at: '2026-08-11 10:45:00', old_data: { status: 'WAITING_APPROVE' }, new_data: { status: 'APPROVED' } }
+      { id: '2', actor: 'admin@thap1.vn', action: 'BLOCK_CARD', entity_type: 'parking_cards', ip_address: '1.53.190.102', created_at: '2026-08-11 10:15:24', old_data: { status: 'ACTIVE' }, new_data: { status: 'BLOCKED', reason: 'Lost card reported' } },
+      { id: '3', actor: 'admin@thap1.vn', action: 'APPROVE_VEHICLE', entity_type: 'vehicle_requests', ip_address: '1.53.190.102', created_at: '2026-08-11 10:45:00', old_data: { status: 'WAITING_APPROVE' }, new_data: { status: 'APPROVED' } }
     ];
 
     new UITable({

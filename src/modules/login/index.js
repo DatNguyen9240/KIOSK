@@ -79,7 +79,7 @@ export function initLoginModule(container) {
               <div class="space-y-1">
                 <label class="text-xs font-bold text-slate-700 block">Email hệ thống</label>
                 <div class="relative">
-                  <input type="email" id="login-email" required value="admin@vinhomes.vn" placeholder="nhap.email@vinhomes.vn" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition" />
+                  <input type="email" id="login-email" required value="admin@thap1.vn" placeholder="nhap.email@thap1.vn" class="w-full pl-10 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 transition" />
                   <svg class="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 fill-current" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
                 </div>
               </div>
@@ -111,8 +111,8 @@ export function initLoginModule(container) {
               <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block text-center">Tài khoản thử nghiệm nhanh (Click để chọn)</span>
               <div class="grid grid-cols-2 gap-2 text-xs font-bold">
                 <button type="button" id="quick-login-vinhomes" class="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-slate-700 text-left transition space-y-0.5">
-                  <div class="text-[#0B2C4D]">🏢 Vinhomes Admin</div>
-                  <div class="text-[10px] text-slate-400 font-medium">admin@vinhomes.vn</div>
+                  <div class="text-[#0B2C4D]">🏢 Tháp 1 Admin</div>
+                  <div class="text-[10px] text-slate-400 font-medium">admin@thap1.vn</div>
                 </button>
                 <button type="button" id="quick-login-superadmin" class="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-slate-700 text-left transition space-y-0.5">
                   <div class="text-emerald-700">👑 Super Admin</div>
@@ -160,9 +160,9 @@ export function initLoginModule(container) {
     const quickVinhomes = container.querySelector('#quick-login-vinhomes');
     if (quickVinhomes) {
       quickVinhomes.onclick = () => {
-        emailInput.value = 'admin@vinhomes.vn';
+        emailInput.value = 'admin@thap1.vn';
         passwordInput.value = 'admin';
-        handleLoginSubmit('admin@vinhomes.vn', 'admin');
+        handleLoginSubmit('admin@thap1.vn', 'admin');
       };
     }
 

@@ -3,13 +3,13 @@
  */
 
 export const MOCK_TENANTS = [
-  { id: '11111111-1111-1111-1111-111111111111', code: 'VINHOMES_OCEAN', name: 'Vinhomes Ocean Park', domain: 'vinhomes.kiosk.com', is_active: true },
+  { id: '11111111-1111-1111-1111-111111111111', code: 'THAP_1', name: 'Tháp 1', domain: 'thap1.kiosk.com', is_active: true },
   { id: '22222222-2222-2222-2222-222222222222', code: 'MASTERI_WATERFRONT', name: 'Masteri Waterfront', domain: 'masteri.kiosk.com', is_active: true }
 ];
 
 export const MOCK_USERS = [
   { id: 'a0000000-0000-0000-0000-000000000000', email: 'superadmin@PARKING', fullName: 'Super Administrator', isSuperAdmin: true },
-  { id: 'a1111111-1111-1111-1111-111111111111', email: 'admin@vinhomes.vn', fullName: 'Nguyễn Quản Lý (Vinhomes)', isSuperAdmin: false },
+  { id: 'a1111111-1111-1111-1111-111111111111', email: 'admin@thap1.vn', fullName: 'Nguyễn Quản Lý (Tháp 1)', isSuperAdmin: false },
   { id: 'a2222222-2222-2222-2222-222222222222', email: 'admin@masteri.vn', fullName: 'Trần Quản Lý (Masteri)', isSuperAdmin: false }
 ];
 

@@ -30,8 +30,8 @@ export function authenticate(req, res, next) {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     req.user = {
       userId: 'a1111111-1111-1111-1111-111111111111',
-      email: 'admin@vinhomes.vn',
-      fullName: 'Nguyễn Quản Lý (Vinhomes)',
+      email: 'admin@thap1.vn',
+      fullName: 'Nguyễn Quản Lý (Tháp 1)',
       isSuperAdmin: false,
       activeTenantId: '11111111-1111-1111-1111-111111111111',
       role: 'TENANT_ADMIN'
@@ -43,8 +43,8 @@ export function authenticate(req, res, next) {
   if (!jwt) {
     req.user = {
       userId: 'a1111111-1111-1111-1111-111111111111',
-      email: 'admin@vinhomes.vn',
-      fullName: 'Nguyễn Quản Lý (Vinhomes)',
+      email: 'admin@thap1.vn',
+      fullName: 'Nguyễn Quản Lý (Tháp 1)',
       isSuperAdmin: false,
       activeTenantId: '11111111-1111-1111-1111-111111111111',
       role: 'TENANT_ADMIN'

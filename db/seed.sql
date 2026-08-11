@@ -33,26 +33,26 @@ INSERT INTO permissions (id, code, module, description) VALUES
 (gen_random_uuid(), 'tenant.manage', 'tenant', 'Manage tenant settings');
 
 -- 3. SEED TENANTS
--- Tenant A: Vinhomes Ocean Park
+-- Tenant A: Tháp 1
 -- Tenant B: Masteri Waterfront
 INSERT INTO tenants (id, code, name, domain, contact_email, contact_phone, is_active) VALUES
-('11111111-1111-1111-1111-111111111111', 'VINHOMES_OCEAN', 'Vinhomes Ocean Park', 'vinhomes.kiosk.com', 'admin@vinhomes.vn', '1900232389', true),
+('11111111-1111-1111-1111-111111111111', 'THAP_1', 'Tháp 1', 'thap1.kiosk.com', 'admin@thap1.vn', '1900232389', true),
 ('22222222-2222-2222-2222-222222222222', 'MASTERI_WATERFRONT', 'Masteri Waterfront', 'masteri.kiosk.com', 'admin@masteri.vn', '18006868', true);
 
 -- 4. SEED USERS
 -- Password for demo users: "Password123!" (hashed with bcrypt cost 10)
 INSERT INTO users (id, email, password_hash, full_name, phone, is_super_admin) VALUES
 ('a0000000-0000-0000-0000-000000000000', 'superadmin@PARKING', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'System Administrator', '0901000000', true),
-('a1111111-1111-1111-1111-111111111111', 'admin@vinhomes.vn', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'Nguyễn Quản Lý (Vinhomes)', '0901111111', false),
+('a1111111-1111-1111-1111-111111111111', 'admin@thap1.vn', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'Nguyễn Quản Lý (Tháp 1)', '0901111111', false),
 ('a2222222-2222-2222-2222-222222222222', 'admin@masteri.vn', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'Trần Quản Lý (Masteri)', '0902222222', false);
 
 -- Assign Tenant Users
 INSERT INTO tenant_users (tenant_id, user_id, role_id) VALUES
-('11111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000002'), -- Tenant Admin Vinhomes
+('11111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000002'), -- Tenant Admin Tháp 1
 ('22222222-2222-2222-2222-222222222222', 'a2222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000002'); -- Tenant Admin Masteri
 
 -- 5. SEED TOWERS
--- Vinhomes Towers: A1, A2, A3
+-- Tháp 1 Towers: A1, A2, A3
 -- Masteri Towers: M1, M2
 INSERT INTO towers (id, tenant_id, code, name, description) VALUES
 ('t1111111-0000-0000-0000-0000000000a1', '11111111-1111-1111-1111-111111111111', 'A1', 'Tháp A1 - Sapphire 1', 'Tòa nhà căn hộ cao cấp A1'),
