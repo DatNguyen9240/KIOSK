@@ -6,7 +6,8 @@
 // Automatically switch to mock mode if running on common static dev ports (like VS Code Live Server 5500)
 // to prevent red console errors from failed API fetch requests.
 const isLocalStaticServer = typeof window !== 'undefined' && 
-  (window.location.port === '5500' || window.location.port === '5000' || window.location.port === '8080' || window.location.port === '5501');
+  window.location.port !== '' && 
+  window.location.port !== '3000';
 
 export const CONFIG = Object.freeze({
   API_BASE_URL: '/api',
