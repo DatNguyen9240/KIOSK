@@ -31,14 +31,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const authShell = document.getElementById('auth-shell');
     const appShell = document.getElementById('app-shell');
     const mainContent = document.getElementById('main-app-content');
+    const mobileBottomTab = document.getElementById('mobile-bottom-tab-wrap');
 
-    if (targetHash === '#/login') {
+    const isStandalone = ['#/login', '#/kiosk', '#/mobile'].includes(targetHash);
+
+    if (isStandalone) {
       if (appShell) appShell.classList.add('hidden');
+      if (mobileBottomTab) mobileBottomTab.classList.add('hidden');
       if (authShell) authShell.classList.remove('hidden');
       return authShell || mainContent;
     } else {
       if (authShell) authShell.classList.add('hidden');
       if (appShell) appShell.classList.remove('hidden');
+      if (mobileBottomTab) mobileBottomTab.classList.remove('hidden');
       return mainContent;
     }
   }

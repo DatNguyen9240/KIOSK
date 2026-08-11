@@ -19,7 +19,7 @@ export function initLoginModule(container) {
       <div class="max-w-4xl w-full bg-slate-900/90 backdrop-blur-xl rounded-3xl border border-slate-800 shadow-2xl overflow-hidden grid grid-cols-1 md:grid-cols-2 relative z-10">
         
         <!-- Left Side: Enterprise Branding & Showcase -->
-        <div class="p-8 sm:p-12 bg-gradient-to-br from-[#0B2C4D] to-[#041220] flex flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-800">
+        <div class="hidden md:flex p-8 sm:p-12 bg-gradient-to-br from-[#0B2C4D] to-[#041220] flex-col justify-between relative overflow-hidden border-b md:border-b-0 md:border-r border-slate-800">
           <div class="space-y-6 relative z-10">
             <!-- Brand Badge -->
             <div class="flex items-center gap-3">
