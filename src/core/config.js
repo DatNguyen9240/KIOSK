@@ -5,14 +5,17 @@
 
 // Automatically switch to mock mode if running on common static dev ports (like VS Code Live Server 5500)
 // to prevent red console errors from failed API fetch requests.
-const isLocalStaticServer = typeof window !== 'undefined' && 
-  window.location.port !== '' && 
-  window.location.port !== '3000';
+const isStaticHost = typeof window !== 'undefined' && (
+  window.location.hostname.includes('vercel.app') ||
+  window.location.hostname.includes('github.io') ||
+  window.location.hostname.includes('netlify.app') ||
+  (window.location.port !== '' && window.location.port !== '3000')
+);
 
 export const CONFIG = Object.freeze({
   API_BASE_URL: '/api',
   REQUEST_TIMEOUT_MS: 15000,
-  MOCK_MODE: isLocalStaticServer, // Auto-toggle mock mode on static dev servers
+  MOCK_MODE: isStaticHost, // Auto-toggle mock mode on static hosts (Vercel, GitHub Pages, Live Server)
   APP_NAME: 'PARKING',
   DEFAULT_PAGE_SIZE: 10,
   QR_REFRESH_INTERVAL_MS: 120000
