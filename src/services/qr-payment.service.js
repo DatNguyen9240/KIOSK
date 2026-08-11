@@ -58,7 +58,11 @@ export function stopQrCountdownTimer() {
 export async function checkPaymentStatus(orderCode) {
   try {
     const cleanCode = (orderCode || '').replace(/[^A-Z0-9]/gi, '');
-    const apiUrl = typeof window !== 'undefined' && window.location.hostname.includes('103.190.38.46')
+    const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
+    const isLocalhost = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname);
+    
+    // Switch to relative path '/api' when hosted on HTTPS (e.g. Vercel) to avoid Mixed Content errors
+    const apiUrl = (isHttps || !isLocalhost)
       ? `/api/payment/status/${cleanCode}`
       : `http://103.190.38.46:3000/api/payment/status/${cleanCode}`;
 
