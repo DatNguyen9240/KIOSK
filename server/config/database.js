@@ -157,8 +157,8 @@ export const MEMORY_DB = {
     { id: 'vch-2', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'TRIAN100K', discount_type: 'FIXED', discount_value: 100000, min_order_amount: 500000, valid_from: '2024-01-01', valid_to: '2026-12-31', usage_limit: 200, used_count: 12, is_active: true }
   ],
   tenant_payment_configs: [
-    { id: 'tpc-1', tenant_id: '11111111-1111-1111-1111-111111111111', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '0000150005814', bank_account_name: 'NGUYEN THANH DAT', secret_api_key_encrypted: 'vh_secret_key_8899', qr_timeout_seconds: 900, is_active: true },
-    { id: 'tpc-2', tenant_id: '22222222-2222-2222-2222-222222222222', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '0000150005814', bank_account_name: 'NGUYEN THANH DAT', secret_api_key_encrypted: 'mw_secret_key_1122', qr_timeout_seconds: 900, is_active: true }
+    { id: 'tpc-1', tenant_id: '11111111-1111-1111-1111-111111111111', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '0000150005814', bank_account_name: 'NGUYEN THANH DAT', secret_api_key_encrypted: 'dateptrainhatvutru123', qr_timeout_seconds: 900, is_active: true },
+    { id: 'tpc-2', tenant_id: '22222222-2222-2222-2222-222222222222', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '0000150005814', bank_account_name: 'NGUYEN THANH DAT', secret_api_key_encrypted: 'dateptrainhatvutru123', qr_timeout_seconds: 900, is_active: true }
   ],
   payment_orders: [],
   renewal_orders: [],

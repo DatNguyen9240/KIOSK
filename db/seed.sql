@@ -109,8 +109,8 @@ INSERT INTO tariff_rules (tenant_id, vehicle_type, tariff_type, monthly_fee, bas
 
 -- 11. SEED PAYMENT CONFIGURATIONS
 INSERT INTO tenant_payment_configs (tenant_id, provider, bank_bin, bank_account_no, bank_account_name, secret_api_key_encrypted, qr_timeout_seconds) VALUES
-('11111111-1111-1111-1111-111111111111', 'VIETQR', '970422', '0000150005814', 'NGUYEN THANH DAT', 'vh_secret_key_8899', 900),
-('22222222-2222-2222-2222-222222222222', 'VIETQR', '970422', '0000150005814', 'NGUYEN THANH DAT', 'mw_secret_key_1122', 900);
+('11111111-1111-1111-1111-111111111111', 'VIETQR', '970422', '0000150005814', 'NGUYEN THANH DAT', 'dateptrainhatvutru123', 900),
+('22222222-2222-2222-2222-222222222222', 'VIETQR', '970422', '0000150005814', 'NGUYEN THANH DAT', 'dateptrainhatvutru123', 900);
 
 -- 12. SEED VOUCHERS
 INSERT INTO vouchers (tenant_id, code, discount_type, discount_value, min_order_amount, valid_from, valid_to, usage_limit) VALUES
