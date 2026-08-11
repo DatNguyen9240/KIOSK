@@ -167,20 +167,22 @@ export class PaymentService {
    * and legacy test payload (transferContent, amount, transactionId).
    */
   static processSePayWebhook({ tenantId = null, transactionId = null, id = null, transferContent = null, content = null, amount = null, transferAmount = null, accountNumber = null, gateway = 'SEPAY', authHeader = null }) {
-    const rawTxId = String(transactionId || id || '');
-    if (!rawTxId) {
-      throw new Error('Thiếu transactionId/id của giao dịch ngân hàng SePay.');
-    }
-
+    const rawTxId = String(transactionId ?? id ?? '');
     const rawContent = String(transferContent || content || '');
     const rawAmount = Number(amount || transferAmount || 0);
+
+    // Handle SePay "Gửi thử" (Test Webhook Button Ping)
+    const isTestPing = !rawTxId || rawTxId === '0' || /test/i.test(rawContent);
 
     // 1. Extract Order Code (ORDTXN198222, ORD-123-456, etc.) from transfer content
     const orderCodeMatch = rawContent.match(/ORD[-_]?[A-Z0-9]+/i);
     const orderCode = orderCodeMatch ? orderCodeMatch[0].toUpperCase() : null;
 
     if (!orderCode) {
-      console.warn(`[SePay Webhook] Không tìm thấy mã đơn hàng (ORD-...) trong nội dung CK: "${rawContent}"`);
+      console.warn(`[SePay Webhook] Nội dung CK: "${rawContent}"`);
+      if (isTestPing) {
+        return { success: true, matched: true, isTestPing: true, message: 'SePay Webhook Test Received Successfully' };
+      }
       return { success: false, matched: false, reason: 'ORDER_CODE_NOT_FOUND' };
     }
 
