@@ -7,12 +7,14 @@
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
 
 -- Clean up existing tables if re-running
+DROP TABLE IF EXISTS notification_logs CASCADE;
 DROP TABLE IF EXISTS email_reminder_logs CASCADE;
 DROP TABLE IF EXISTS audit_logs CASCADE;
 DROP TABLE IF EXISTS parking_sessions CASCADE;
 DROP TABLE IF EXISTS bank_transactions CASCADE;
 DROP TABLE IF EXISTS payment_refunds CASCADE;
 DROP TABLE IF EXISTS payment_transactions CASCADE;
+DROP TABLE IF EXISTS subscriptions CASCADE;
 DROP TABLE IF EXISTS renewal_orders CASCADE;
 DROP TABLE IF EXISTS voucher_usages CASCADE;
 DROP TABLE IF EXISTS payment_orders CASCADE;
@@ -21,17 +23,22 @@ DROP TABLE IF EXISTS tenant_payment_configs CASCADE;
 DROP TABLE IF EXISTS tariff_tiers CASCADE;
 DROP TABLE IF EXISTS tariff_rules CASCADE;
 DROP TABLE IF EXISTS parking_card_events CASCADE;
+DROP TABLE IF EXISTS card_inventory CASCADE;
 DROP TABLE IF EXISTS parking_cards CASCADE;
 DROP TABLE IF EXISTS vehicle_assignments CASCADE;
+DROP TABLE IF EXISTS vehicle_requests CASCADE;
 DROP TABLE IF EXISTS vehicles CASCADE;
 DROP TABLE IF EXISTS residents CASCADE;
 DROP TABLE IF EXISTS apartments CASCADE;
 DROP TABLE IF EXISTS towers CASCADE;
+DROP TABLE IF EXISTS parking_floors CASCADE;
 DROP TABLE IF EXISTS parking_slots CASCADE;
 DROP TABLE IF EXISTS gates CASCADE;
 DROP TABLE IF EXISTS parking_areas CASCADE;
 DROP TABLE IF EXISTS role_permissions CASCADE;
 DROP TABLE IF EXISTS tenant_users CASCADE;
+DROP TABLE IF EXISTS user_login_history CASCADE;
+DROP TABLE IF EXISTS user_device_sessions CASCADE;
 DROP TABLE IF EXISTS permissions CASCADE;
 DROP TABLE IF EXISTS roles CASCADE;
 DROP TABLE IF EXISTS users CASCADE;
@@ -117,6 +124,27 @@ CREATE TABLE tenant_users (
     CONSTRAINT uk_tenant_users_composite UNIQUE (tenant_id, id)
 );
 
+CREATE TABLE user_device_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device_token VARCHAR(255) NULL,
+    ip_address VARCHAR(50) NOT NULL,
+    user_agent TEXT NULL,
+    last_active_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    expires_at TIMESTAMPTZ NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE TABLE user_login_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    ip_address VARCHAR(50) NOT NULL,
+    user_agent TEXT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('SUCCESS', 'FAILED_PASSWORD', 'BLOCKED', 'MFA_PENDING')),
+    failed_attempts_at_login INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- -----------------------------------------------------------------------------
 -- 2. INFRASTRUCTURE: AREAS, GATES, SLOTS, TOWERS & APARTMENTS
 -- -----------------------------------------------------------------------------
@@ -134,6 +162,17 @@ CREATE TABLE parking_areas (
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     CONSTRAINT uk_parking_areas_code UNIQUE (tenant_id, code),
     CONSTRAINT uk_parking_areas_composite UNIQUE (tenant_id, id)
+);
+
+CREATE TABLE parking_floors (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    area_id UUID NOT NULL REFERENCES parking_areas(id) ON DELETE RESTRICT,
+    floor_name VARCHAR(50) NOT NULL,
+    total_slots INT NOT NULL DEFAULT 0 CHECK (total_slots >= 0),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_parking_floors_name UNIQUE (area_id, floor_name),
+    CONSTRAINT uk_parking_floors_composite UNIQUE (tenant_id, id)
 );
 
 CREATE TABLE gates (
@@ -159,6 +198,7 @@ CREATE TABLE parking_slots (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
     area_id UUID NOT NULL,
+    floor_id UUID,
     code VARCHAR(50) NOT NULL,
     slot_type VARCHAR(20) NOT NULL DEFAULT 'CASUAL',
     status VARCHAR(20) NOT NULL DEFAULT 'VACANT' CHECK (status IN ('VACANT', 'OCCUPIED', 'RESERVED', 'MAINTENANCE')),
@@ -168,7 +208,9 @@ CREATE TABLE parking_slots (
     CONSTRAINT uk_slots_code UNIQUE (area_id, code),
     CONSTRAINT uk_slots_composite UNIQUE (tenant_id, id),
     CONSTRAINT fk_slots_area_tenant FOREIGN KEY (tenant_id, area_id) 
-        REFERENCES parking_areas(tenant_id, id) ON DELETE RESTRICT
+        REFERENCES parking_areas(tenant_id, id) ON DELETE RESTRICT,
+    CONSTRAINT fk_slots_floor_tenant FOREIGN KEY (tenant_id, floor_id) 
+        REFERENCES parking_floors(tenant_id, id) ON DELETE SET NULL
 );
 
 CREATE TABLE towers (
@@ -273,6 +315,22 @@ CREATE UNIQUE INDEX uk_active_vehicle_assignment
 ON vehicle_assignments(tenant_id, vehicle_id) 
 WHERE unassigned_at IS NULL;
 
+CREATE TABLE vehicle_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    resident_id UUID NOT NULL REFERENCES residents(id) ON DELETE RESTRICT,
+    plate_number VARCHAR(20) NOT NULL,
+    vehicle_type VARCHAR(20) NOT NULL CHECK (vehicle_type IN ('CAR', 'MOTORBIKE', 'ELECTRIC_BIKE')),
+    document_urls TEXT[] NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'WAITING_APPROVE' CHECK (status IN ('WAITING_APPROVE', 'APPROVED', 'REJECTED')),
+    reject_reason TEXT NULL,
+    approved_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    approved_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_vehicle_requests_composite UNIQUE (tenant_id, id)
+);
+
 CREATE TABLE parking_cards (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
@@ -308,6 +366,19 @@ CREATE TABLE parking_card_events (
     CONSTRAINT uk_card_events_composite UNIQUE (tenant_id, id),
     CONSTRAINT fk_card_events_card_tenant FOREIGN KEY (tenant_id, card_id) 
         REFERENCES parking_cards(tenant_id, id) ON DELETE RESTRICT
+);
+
+CREATE TABLE card_inventory (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    card_number VARCHAR(50) NOT NULL,
+    card_type VARCHAR(20) NOT NULL DEFAULT 'CASUAL' CHECK (card_type IN ('MONTHLY', 'CASUAL')),
+    status VARCHAR(20) NOT NULL DEFAULT 'IN_STOCK' CHECK (status IN ('IN_STOCK', 'FAULTY', 'LOST', 'RECALLED', 'DEPLOYED')),
+    notes TEXT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_card_inventory_number UNIQUE (tenant_id, card_number),
+    CONSTRAINT uk_card_inventory_composite UNIQUE (tenant_id, id)
 );
 
 -- -----------------------------------------------------------------------------
@@ -456,6 +527,22 @@ CREATE UNIQUE INDEX uk_renewal_payment_order_unique
 ON renewal_orders(tenant_id, payment_order_id) 
 WHERE payment_order_id IS NOT NULL;
 
+CREATE TABLE subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE RESTRICT,
+    plan_code VARCHAR(50) NOT NULL,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'NEAR_EXPIRED', 'EXPIRED', 'SUSPENDED')),
+    auto_renew BOOLEAN NOT NULL DEFAULT FALSE,
+    last_renewal_order_id UUID NULL REFERENCES renewal_orders(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_subscriptions_vehicle UNIQUE(tenant_id, vehicle_id),
+    CONSTRAINT uk_subscriptions_composite UNIQUE(tenant_id, id)
+);
+
 CREATE TABLE payment_transactions (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
@@ -598,6 +685,23 @@ CREATE TABLE email_reminder_logs (
     error_message TEXT,
     CONSTRAINT fk_reminder_vehicle_tenant FOREIGN KEY (tenant_id, vehicle_id) 
         REFERENCES vehicles(tenant_id, id) ON DELETE CASCADE
+);
+
+CREATE TABLE notification_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    user_id UUID REFERENCES users(id) ON DELETE SET NULL,
+    resident_id UUID REFERENCES residents(id) ON DELETE SET NULL,
+    channel VARCHAR(20) NOT NULL CHECK (channel IN ('EMAIL', 'SMS', 'PUSH', 'WEBHOOK')),
+    event_type VARCHAR(50) NOT NULL,
+    recipient VARCHAR(255) NOT NULL,
+    title VARCHAR(255) NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'SENT', 'FAILED')),
+    error_message TEXT NULL,
+    sent_at TIMESTAMPTZ NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    CONSTRAINT uk_notification_logs_composite UNIQUE (tenant_id, id)
 );
 
 -- =============================================================================
@@ -767,5 +871,48 @@ CREATE POLICY rls_audit_logs ON audit_logs FOR ALL
 ALTER TABLE email_reminder_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE email_reminder_logs FORCE ROW LEVEL SECURITY;
 CREATE POLICY rls_email_reminder_logs ON email_reminder_logs FOR ALL
+    USING (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true')
+    WITH CHECK (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true');
+
+-- Policies for additional tables:
+ALTER TABLE user_device_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_device_sessions FORCE ROW LEVEL SECURITY;
+CREATE POLICY rls_user_device_sessions ON user_device_sessions FOR ALL
+    USING (user_id = current_setting('app.current_user_id', true)::UUID OR current_setting('app.is_super_admin', true) = 'true')
+    WITH CHECK (user_id = current_setting('app.current_user_id', true)::UUID OR current_setting('app.is_super_admin', true) = 'true');
+
+ALTER TABLE user_login_history ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_login_history FORCE ROW LEVEL SECURITY;
+CREATE POLICY rls_user_login_history ON user_login_history FOR ALL
+    USING (user_id = current_setting('app.current_user_id', true)::UUID OR current_setting('app.is_super_admin', true) = 'true')
+    WITH CHECK (user_id = current_setting('app.current_user_id', true)::UUID OR current_setting('app.is_super_admin', true) = 'true');
+
+ALTER TABLE parking_floors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE parking_floors FORCE ROW LEVEL SECURITY;
+CREATE POLICY rls_parking_floors ON parking_floors FOR ALL
+    USING (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true')
+    WITH CHECK (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true');
+
+ALTER TABLE vehicle_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vehicle_requests FORCE ROW LEVEL SECURITY;
+CREATE POLICY rls_vehicle_requests ON vehicle_requests FOR ALL
+    USING (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true')
+    WITH CHECK (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true');
+
+ALTER TABLE card_inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE card_inventory FORCE ROW LEVEL SECURITY;
+CREATE POLICY rls_card_inventory ON card_inventory FOR ALL
+    USING (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true')
+    WITH CHECK (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true');
+
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions FORCE ROW LEVEL SECURITY;
+CREATE POLICY rls_subscriptions ON subscriptions FOR ALL
+    USING (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true')
+    WITH CHECK (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true');
+
+ALTER TABLE notification_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_logs FORCE ROW LEVEL SECURITY;
+CREATE POLICY rls_notification_logs ON notification_logs FOR ALL
     USING (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true')
     WITH CHECK (tenant_id = current_tenant_id() OR current_setting('app.is_super_admin', true) = 'true');

@@ -472,7 +472,264 @@ Tất cả 24 bảng trong sơ đồ tổng thể đều có đặc tả DDL & R
 
 ---
 
-# 15. CHECKLIST DEFINITION OF DONE FOR DB MIGRATION & NESTJS/PRISMA
+# 15. BỔ SUNG KIẾN TRÚC ENTERPRISE HOÀN CHỈNH (Vin/CapitaLand/Smart City Level)
+
+Để nâng cấp hệ thống đạt tiêu chuẩn vận hành thực tế tại các khu đô thị thông minh (Smart City), tòa nhà hạng A, các module backend và cấu trúc schema cần được mở rộng với các lớp vận hành realtime, quản lý vòng đời và xử lý bất đồng bộ.
+
+## 15.1 Auth Service & Device Session (Mở rộng bảo mật)
+* **MFA & OTP Verification**: Tích hợp lớp xác thực OTP qua Email/SMS/Authenticator App khi phát hiện IP bất thường hoặc thực hiện các tác vụ quản trị trọng yếu (Cấp thẻ, Refund tiền).
+* **Device Session & Login History**: Quản lý thiết bị đăng nhập của người vận hành, lưu lịch sử IP và User Agent để phát hiện bất thường, hỗ trợ cấu hình lockout tài khoản sau 5 lần nhập sai mật khẩu liên tiếp.
+
+### DDL Bổ sung cho Auth Security:
+```sql
+-- 1. user_device_sessions (Quản lý thiết bị đăng nhập)
+CREATE TABLE user_device_sessions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    device_token VARCHAR(255) NULL,
+    ip_address VARCHAR(50) NOT NULL,
+    user_agent TEXT NULL,
+    last_active_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 2. user_login_history (Lịch sử đăng nhập & Account Lockout)
+CREATE TABLE user_login_history (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    ip_address VARCHAR(50) NOT NULL,
+    user_agent TEXT NULL,
+    status VARCHAR(20) NOT NULL CHECK (status IN ('SUCCESS', 'FAILED_PASSWORD', 'BLOCKED', 'MFA_PENDING')),
+    failed_attempts_at_login INT NOT NULL DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP
+);
+
+ALTER TABLE user_device_sessions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_login_history ENABLE ROW LEVEL SECURITY;
+```
+
+---
+
+## 15.2 User & Permission Service (Bổ sung API CRUD)
+* **CRUD API người dùng nội bộ**: 
+  - `POST /users`: Tạo mới tài khoản nhân viên vận hành bãi xe.
+  - `PUT /users/{id}/role`: Phân bổ lại vai trò quản trị (RBAC) cho người dùng trong Tenant.
+  - `DELETE /users/{id}`: Soft delete tài khoản nhân viên.
+  - `GET /permissions`: Lấy danh sách toàn bộ các permission có trong hệ thống để phục vụ giao diện gán quyền.
+
+---
+
+## 15.3 Realtime Parking Map Engine (Sơ đồ hầm xe trực quan)
+* **Parking Floor & Realtime Space Mapping**: Quản lý vị trí đậu xe chia theo từng tầng hầm (B1, B2, L1...) và ô đỗ (A01, A02, A03...).
+* **Realtime Status**: 
+  - `GREEN` (Vacant): Trống
+  - `RED` (Occupied): Đang có xe đỗ
+  - `YELLOW` (Reserved): Đã được đặt trước (dành cho căn hộ Vip hoặc xe tháng đã đăng ký chỗ cố định)
+
+### DDL Bổ sung cho Sơ đồ bãi đỗ:
+```sql
+-- 3. parking_floors (Tầng hầm đỗ xe)
+CREATE TABLE parking_floors (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    area_id UUID NOT NULL REFERENCES parking_areas(id) ON DELETE RESTRICT,
+    floor_name VARCHAR(50) NOT NULL, -- VD: Tầng hầm B1, B2
+    total_slots INT NOT NULL DEFAULT 0 CHECK (total_slots >= 0),
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_parking_floors_name UNIQUE(area_id, floor_name),
+    CONSTRAINT uk_parking_floors_composite UNIQUE(tenant_id, id)
+);
+
+-- Bổ sung floor_id vào bảng parking_slots hiện tại:
+ALTER TABLE parking_slots ADD COLUMN floor_id UUID NULL REFERENCES parking_floors(id) ON DELETE SET NULL;
+ALTER TABLE parking_floors ENABLE ROW LEVEL SECURITY;
+ALTER TABLE parking_floors FORCE ROW LEVEL SECURITY;
+```
+
+---
+
+## 15.4 Vehicle Verification Lifecycle (Duyệt xe mới)
+* **Vehicle Request Flow**: Cư dân đăng ký xe mới qua Mobile App/Web Portal sẽ ở trạng thái `WAITING_APPROVE`. Ban quản lý kiểm tra giấy tờ xe (đăng ký, đăng kiểm) trước khi phê duyệt chuyển trạng thái sang `ACTIVE`.
+
+### DDL Bổ sung cho Đăng ký xe:
+```sql
+-- 4. vehicle_requests (Yêu cầu đăng ký / phê duyệt xe cư dân)
+CREATE TABLE vehicle_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    resident_id UUID NOT NULL REFERENCES residents(id) ON DELETE RESTRICT,
+    plate_number VARCHAR(20) NOT NULL,
+    vehicle_type VARCHAR(20) NOT NULL CHECK (vehicle_type IN ('CAR', 'MOTORBIKE', 'ELECTRIC_BIKE')),
+    document_urls TEXT[] NULL, -- Link ảnh chụp đăng ký, đăng kiểm xe
+    status VARCHAR(20) NOT NULL DEFAULT 'WAITING_APPROVE' CHECK (status IN ('WAITING_APPROVE', 'APPROVED', 'REJECTED')),
+    reject_reason TEXT NULL,
+    approved_by UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    approved_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_vehicle_requests_composite UNIQUE(tenant_id, id)
+);
+
+ALTER TABLE vehicle_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE vehicle_requests FORCE ROW LEVEL SECURITY;
+```
+
+---
+
+## 15.5 Card Inventory Management (Quản lý kho thẻ xe)
+* **Card Status Tracking**: Phân biệt thẻ đang lưu kho, thẻ lỗi kỹ thuật cần thu hồi, thẻ báo mất bởi cư dân, và thẻ đã cấp phát cho xe hoạt động.
+
+### DDL Bổ sung cho Kho thẻ:
+```sql
+-- 5. card_inventory (Kho lưu trữ thẻ vật lý RFID)
+CREATE TABLE card_inventory (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    card_number VARCHAR(50) NOT NULL,
+    card_type VARCHAR(20) NOT NULL DEFAULT 'CASUAL' CHECK (card_type IN ('MONTHLY', 'CASUAL')),
+    status VARCHAR(20) NOT NULL DEFAULT 'IN_STOCK' CHECK (status IN ('IN_STOCK', 'FAULTY', 'LOST', 'RECALLED', 'DEPLOYED')),
+    notes TEXT NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_card_inventory_number UNIQUE(tenant_id, card_number),
+    CONSTRAINT uk_card_inventory_composite UNIQUE(tenant_id, id)
+);
+
+ALTER TABLE card_inventory ENABLE ROW LEVEL SECURITY;
+ALTER TABLE card_inventory FORCE ROW LEVEL SECURITY;
+```
+
+---
+
+## 15.6 Subscription Lifecycle Engine (Đăng ký chu kỳ tháng)
+* **Subscription Lifecycle**: Thay vì chỉ tạo đơn hàng đơn thuần, vòng đời vé tháng được theo dõi thông qua trạng thái hợp đồng thuê bao (`subscriptions`).
+  - Trạng thái vòng đời: `ACTIVE` ➔ `NEAR_EXPIRED` (còn 7 ngày) ➔ `EXPIRED` ➔ `RENEWED` (sau khi thanh toán đơn hàng mới).
+
+### DDL Bổ sung cho Vòng đời thuê bao:
+```sql
+-- 6. subscriptions (Hợp đồng gia hạn chu kỳ vé tháng của xe cư dân)
+CREATE TABLE subscriptions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    vehicle_id UUID NOT NULL REFERENCES vehicles(id) ON DELETE RESTRICT,
+    plan_code VARCHAR(50) NOT NULL, -- Mã gói (Ví dụ: OTO_THANG_VHM, XE_MAY_THANG)
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'NEAR_EXPIRED', 'EXPIRED', 'SUSPENDED')),
+    auto_renew BOOLEAN NOT NULL DEFAULT FALSE,
+    last_renewal_order_id UUID NULL REFERENCES renewal_orders(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_subscriptions_vehicle UNIQUE(tenant_id, vehicle_id),
+    CONSTRAINT uk_subscriptions_composite UNIQUE(tenant_id, id)
+);
+
+ALTER TABLE subscriptions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE subscriptions FORCE ROW LEVEL SECURITY;
+```
+
+---
+
+## 15.7 Realtime Parking Session & Gate Control System
+* **Realtime Event Streams via WebSockets**: Backend phát phát tín hiệu WebSocket khi có sự kiện:
+  - `vehicle_enter`: Xe vào trạm quét, nhận diện LPR thành công.
+  - `vehicle_exit`: Xe đến làn ra, tính toán phí tự động.
+  - `gate_event` / `camera_event`: Lỗi camera nhận diện, mất kết nối thiết bị trạm.
+* **Gate Control API**:
+  - `POST /api/gate/check-in`: Ghi nhận xe vào (gửi kèm ảnh chụp làn xe, biển số nhận diện).
+  - `POST /api/gate/check-out`: Ghi nhận xe ra (gửi kèm ảnh chụp làn ra, tự động tính phí).
+  - `POST /api/gate/manual-open`: Lệnh ghi đè mở Barie từ xa (lưu log người mở và lý do khẩn cấp).
+  - `GET /api/gate/status`: Trạng thái kết nối thiết bị Barie/Camera.
+* **Offline Mode Sync**: Thiết bị trạm cổng khi mất kết nối mạng sẽ chạy local lưu hàng đợi (sync queue). Khi có mạng trở lại, client tự động đẩy dữ liệu Offline lên API để đồng bộ.
+
+---
+
+## 15.8 Notification Dispatcher (Lớp phân phối thông báo đa kênh)
+* **Notification Channels**: Hỗ trợ gửi thông báo qua Email, SMS, Webhook hoặc App Push Notification.
+* **Enterprise Events Trigger**:
+  - `CARD_EXPIRED`: Gửi cảnh báo trước 7 ngày khi vé tháng hết hạn.
+  - `PAYMENT_SUCCESS`: Xác nhận đã nhận tiền gia hạn xe/vé vãng lai.
+  - `DEBT_CREATED`: Phát sinh công nợ tháng mới cho căn hộ.
+  - `VEHICLE_BLOCKED`: Cảnh báo khi biển số xe bị đưa vào danh sách đen (Blacklist).
+
+### DDL Bổ sung cho Notification Logs:
+```sql
+-- 7. notification_logs (Nhật ký phân phối thông báo hệ thống)
+CREATE TABLE notification_logs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE RESTRICT,
+    user_id UUID NULL REFERENCES users(id) ON DELETE SET NULL,
+    resident_id UUID NULL REFERENCES residents(id) ON DELETE SET NULL,
+    channel VARCHAR(20) NOT NULL CHECK (channel IN ('EMAIL', 'SMS', 'PUSH', 'WEBHOOK')),
+    event_type VARCHAR(50) NOT NULL, -- VD: PAYMENT_SUCCESS, SUBSCRIPTION_EXPIRED
+    recipient VARCHAR(255) NOT NULL, -- Địa chỉ email hoặc số điện thoại
+    title VARCHAR(255) NULL,
+    content TEXT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'PENDING' CHECK (status IN ('PENDING', 'SENT', 'FAILED')),
+    error_message TEXT NULL,
+    sent_at TIMESTAMP WITH TIME ZONE NULL,
+    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT uk_notification_logs_composite UNIQUE(tenant_id, id)
+);
+
+ALTER TABLE notification_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notification_logs FORCE ROW LEVEL SECURITY;
+```
+
+---
+
+## 15.9 Scheduler Service (Bộ lập lịch tác vụ tự động)
+* **Daily Expiry Scan (Cron job lúc 08:00 hàng ngày)**:
+  - Backend thực hiện quét bảng `subscriptions` và `vehicles`.
+  - Tìm các bản ghi có `end_date` trùng khớp với `NOW() + 7 days`.
+  - Chuyển trạng thái sang `NEAR_EXPIRED`.
+  - Đẩy Job vào hàng đợi gửi Email cảnh báo gia hạn cho cư dân.
+
+---
+
+## 15.10 Report Engine & Enterprise Auditing
+* **Database Views & Materialized Views**: Sử dụng Materialized View để tổng hợp dữ liệu doanh thu theo giờ/ngày/tháng và báo cáo công nợ theo từng tháp (`tower_report`) nhằm đảm bảo tốc độ query luôn ở mức O(1).
+* **Enterprise Audit Log Schema**: Ghi nhận chi tiết lịch sử thay đổi để phục vụ kiểm toán:
+  - **WHO**: Người thực hiện (UUID User).
+  - **WHEN**: Thời điểm (Timestamp).
+  - **FROM IP**: Địa chỉ IP thực hiện request.
+  - **ACTION**: Thao tác (INSERT, UPDATE, DELETE).
+  - **OLD DATA / NEW DATA**: Dữ liệu trước và sau khi thay đổi (lưu dạng JSONB).
+
+---
+
+## 15.11 Queue Worker Architecture (BullMQ + Redis)
+Hệ thống sử dụng Redis làm Message Broker và BullMQ để xử lý các background jobs nặng, tránh blocking API chính:
+* `email-worker`: Xử lý gửi email nhắc nợ, gửi hóa đơn gia hạn.
+* `payment-worker`: Kiểm tra trạng thái đơn hàng hết hạn, xử lý retry kết nối SePay ngân hàng.
+* `report-worker`: Cập nhật tự động (Refresh) các Materialized Views doanh thu hàng đêm.
+* `sync-worker`: Đồng bộ dữ liệu xe/cư dân với hệ thống quản lý căn hộ BMS trung tâm của khu đô thị.
+
+### Cấu trúc Thư mục Hệ thống (Monorepo/Modular Layout):
+```text
+parking-platform-monorepo/
+ ├ apps/
+ │  ├ api/                  # Main REST API Server (NestJS)
+ │  │  ├ src/
+ │  │  │  ├ modules/
+ │  │  │  │  ├ auth/        # MFA, Device Session
+ │  │  │  │  ├ tenant/      # Multi-Tenant context control
+ │  │  │  │  ├ gate/        # Gate Control & LPR Camera API
+ │  │  │  │  ├ map/         # Parking Map Engine
+ │  │  │  │  ├ subscription/# Plan & Lifecycle Management
+ │  │  │  │  └ ...
+ │  ├ worker/               # Background Job Processor (BullMQ Node.js Workers)
+ │  │  ├ src/
+ │  │  │  ├ email-worker.js
+ │  │  │  ├ payment-worker.js
+ │  │  │  ├ report-worker.js
+ │  │  │  └ sync-worker.js
+```
+
+---
+
+# 16. CHECKLIST DEFINITION OF DONE FOR DB MIGRATION & NESTJS/PRISMA
 
 ```text
 [ ] FORCE ROW LEVEL SECURITY (ALTER TABLE ... FORCE ROW LEVEL SECURITY) áp dụng cho 100% bảng thuộc Tenant
@@ -482,5 +739,7 @@ Tất cả 24 bảng trong sơ đồ tổng thể đều có đặc tả DDL & R
 [ ] Payment Orders có `expires_at` và Exclusivity Partial Indexes (Không bị dùng chung bởi Renewal & Session)
 [ ] Bank Transactions có `direction` ('CREDIT' / 'DEBIT') sẵn sàng cho SePay auto-match
 [ ] Voucher Checkout xử lý bằng Pessimistic Lock `SELECT FOR UPDATE` + `voucher_usages` audit
+[ ] Sơ đồ bãi xe (floors/slots), Vòng đời thuê bao (subscriptions) và Kho thẻ (card_inventory) được định nghĩa đầy đủ DDL
+[ ] Hàng đợi xử lý nền (BullMQ + Redis) và Hệ thống ghi nhật ký kiểm toán (Audit Logs JSONB) sẵn sàng cho môi trường Productive
 [ ] Sẵn sàng 100% để migration DB + viết NestJS Prisma Services!
 ```

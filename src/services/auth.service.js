@@ -3,6 +3,7 @@
  */
 
 import { apiRequest } from '../core/api.js';
+import { MOCK_USERS } from '../core/mock-data.js';
 
 export async function login(email = 'admin@vinhomes.vn', password = 'admin') {
   try {
@@ -19,8 +20,32 @@ export async function login(email = 'admin@vinhomes.vn', password = 'admin') {
       return res.data;
     }
   } catch (err) {
-    console.warn('[AuthService] Login failed:', err.message);
+    console.warn('[AuthService] Live API login failed, checking frontend mock database:', err.message);
   }
+
+  // Frontend Fallback Mock Mode (For static servers like Live Server port 5500)
+  const normEmail = email.toLowerCase().trim();
+  let mockUser = MOCK_USERS.find(u => u.email.toLowerCase() === normEmail);
+  
+  // Add resident mock credential fallback
+  if (!mockUser && normEmail === 'tuan.tv@gmail.com') {
+    mockUser = { id: 'a9999999-9999-9999-9999-999999999999', email: 'tuan.tv@gmail.com', fullName: 'Trần Văn Tuấn', isSuperAdmin: false };
+  }
+
+  const expectedPassword = normEmail.includes('superadmin') ? 'superadmin' : 'admin';
+
+  if (mockUser && password === expectedPassword) {
+    const mockData = {
+      token: `mock-jwt-token-for-${mockUser.email}-${Date.now()}`,
+      user: mockUser
+    };
+    if (typeof localStorage !== 'undefined') {
+      localStorage.setItem('parking_go_jwt_token', mockData.token);
+      localStorage.setItem('parking_go_user', JSON.stringify(mockData.user));
+    }
+    return mockData;
+  }
+
   return null;
 }
 
