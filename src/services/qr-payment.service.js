@@ -57,12 +57,19 @@ export function stopQrCountdownTimer() {
 }
 
 export async function checkPaymentStatus(orderCode) {
-  if (CONFIG.MOCK_MODE) {
-    return {
-      orderCode,
-      status: PAYMENT_STATUS.WAITING_PAYMENT
-    };
-  }
+  try {
+    const cleanCode = (orderCode || '').replace(/[^A-Z0-9]/gi, '');
+    const apiUrl = typeof window !== 'undefined' && window.location.hostname.includes('103.190.38.46')
+      ? `/api/payment/status/${cleanCode}`
+      : `http://103.190.38.46:3000/api/payment/status/${cleanCode}`;
 
-  return apiRequest(`/parking/sessions`);
+    const response = await fetch(apiUrl);
+    const data = await response.json();
+    if (data && data.data) {
+      return data.data;
+    }
+    return { orderCode, status: 'WAITING_PAYMENT', matched: false };
+  } catch (err) {
+    return { orderCode, status: 'WAITING_PAYMENT', matched: false };
+  }
 }

@@ -114,6 +114,25 @@ router.post('/webhooks/payment/sepay', (req, res) => {
   }
 });
 
+// 3. Public Payment Status Polling Endpoint (Used by Frontend QR Screen)
+router.get('/payment/status/:orderCode', (req, res) => {
+  const { orderCode } = req.params;
+  const cleanCode = (orderCode || '').replace(/[^A-Z0-9]/gi, '');
+  const order = (MEMORY_DB.payment_orders || []).find(po => (po.order_code || '').replace(/[^A-Z0-9]/gi, '') === cleanCode);
+
+  if (!order) {
+    return sendSuccess(res, { orderCode, status: 'WAITING_PAYMENT', matched: false });
+  }
+
+  return sendSuccess(res, {
+    orderCode: order.order_code,
+    status: order.status,
+    paidAmount: order.paid_amount,
+    paidAt: order.paid_at,
+    matched: order.status === 'PAID'
+  });
+});
+
 // =============================================================================
 // PROTECTED MULTI-TENANT API ROUTES (Requires Authorization & X-Tenant-ID Header)
 // =============================================================================
