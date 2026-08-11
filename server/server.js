@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK Multi-Tenant Express Server Application Entry Point
+ * PARKING KIOSK Multi-Tenant Express Server Application Entry Point
  */
 
 import express from 'express';
@@ -44,7 +44,7 @@ app.use(express.static(rootDir));
 app.get('/health', (req, res) => {
   res.json({
     status: 'UP',
-    system: 'PARKING.GO Multi-Tenant Engine',
+    system: 'PARKING Multi-Tenant Engine',
     timestamp: new Date().toISOString()
   });
 });
@@ -57,7 +57,7 @@ app.get('*', (req, res) => {
 // Start Server
 app.listen(PORT, async () => {
   console.log(`=======================================================`);
-  console.log(`   PARKING.GO KIOSK Multi-Tenant Server Ready!`);
+  console.log(`   PARKING KIOSK Multi-Tenant Server Ready!`);
   console.log(`   Server Running on: http://localhost:${PORT}`);
   console.log(`=======================================================`);
   await checkDatabaseHealth();

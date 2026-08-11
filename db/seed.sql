@@ -1,5 +1,5 @@
 -- =============================================================================
--- PARKING.GO KIOSK — MULTI-TENANT SEED DATA
+-- PARKING KIOSK — MULTI-TENANT SEED DATA
 -- =============================================================================
 
 -- Disable RLS bypass for seeding by setting super admin flag
@@ -42,7 +42,7 @@ INSERT INTO tenants (id, code, name, domain, contact_email, contact_phone, is_ac
 -- 4. SEED USERS
 -- Password for demo users: "Password123!" (hashed with bcrypt cost 10)
 INSERT INTO users (id, email, password_hash, full_name, phone, is_super_admin) VALUES
-('a0000000-0000-0000-0000-000000000000', 'superadmin@parking.go', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'System Administrator', '0901000000', true),
+('a0000000-0000-0000-0000-000000000000', 'superadmin@PARKING', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'System Administrator', '0901000000', true),
 ('a1111111-1111-1111-1111-111111111111', 'admin@vinhomes.vn', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'Nguyễn Quản Lý (Vinhomes)', '0901111111', false),
 ('a2222222-2222-2222-2222-222222222222', 'admin@masteri.vn', '$2a$10$EixZaYVK1fsbw1ZfbX3OXePaWxn96p36WQOEg6Lruj3vjPGga31lW', 'Trần Quản Lý (Masteri)', '0902222222', false);
 
@@ -108,9 +108,9 @@ INSERT INTO tariff_rules (tenant_id, vehicle_type, tariff_type, monthly_fee, bas
 ('22222222-2222-2222-2222-222222222222', 'CAR', 'CASUAL', 0, 2, 30000, 15000, 15);
 
 -- 11. SEED PAYMENT CONFIGURATIONS
-INSERT INTO tenant_payment_configs (tenant_id, provider, bank_bin, bank_account_no, bank_account_name, secret_api_key, qr_timeout_seconds) VALUES
-('11111111-1111-1111-1111-111111111111', 'VIETQR', '970422', '110022334455', 'BQL CHUNG CU VINHOMES OCEAN PARK', 'vh_secret_key_8899', 120),
-('22222222-2222-2222-2222-222222222222', 'VIETQR', '970415', '998877665544', 'BQL MASTERI WATERFRONT', 'mw_secret_key_1122', 120);
+INSERT INTO tenant_payment_configs (tenant_id, provider, bank_bin, bank_account_no, bank_account_name, secret_api_key_encrypted, qr_timeout_seconds) VALUES
+('11111111-1111-1111-1111-111111111111', 'VIETQR', '970422', '0000150005814', 'NGUYEN THANH DAT', 'vh_secret_key_8899', 900),
+('22222222-2222-2222-2222-222222222222', 'VIETQR', '970422', '0000150005814', 'NGUYEN THANH DAT', 'mw_secret_key_1122', 900);
 
 -- 12. SEED VOUCHERS
 INSERT INTO vouchers (tenant_id, code, discount_type, discount_value, min_order_amount, valid_from, valid_to, usage_limit) VALUES

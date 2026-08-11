@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — ALL-PAGES COMPLETE VERIFICATION SUITE
+ * PARKING KIOSK — ALL-PAGES COMPLETE VERIFICATION SUITE
  * Tests route resolution, view mounting, and UI rendering for 100% of system pages/views (9 Navigation Items).
  * Run with: node tests/all-pages-e2e.test.js
  */

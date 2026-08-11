@@ -1,4 +1,4 @@
-# PARKING.GO KIOSK — ENTERPRISE UI/UX SPECIFICATION
+# PARKING KIOSK — ENTERPRISE UI/UX SPECIFICATION
 ## Multi-Tenant Parking Operational Platform (Figma Scope & Screen Map Spec)
 
 ---

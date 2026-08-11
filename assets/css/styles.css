@@ -148,3 +148,385 @@ html, body {
 }
 .flatpickr-day { font-weight: 600 !important; font-size: 12px !important; }
 .flatpickr-prev-month svg, .flatpickr-next-month svg { fill: #fff !important; }
+
+/* Resident dashboard */
+#resident-shell {
+  background: #f4f7fb;
+}
+
+.resident-dashboard-page {
+  min-height: 100%;
+  padding: 16px;
+}
+
+.resident-dashboard-card {
+  max-width: 520px;
+  margin: 0 auto;
+  background: #ffffff;
+  border: 1px solid #e6edf5;
+  border-radius: 8px;
+  padding: 18px;
+  box-shadow: 0 14px 30px -28px rgba(15, 23, 42, 0.35);
+}
+
+.resident-search-header {
+  display: grid;
+  gap: 14px;
+}
+
+.resident-eyebrow {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.resident-tabs {
+  display: flex;
+  gap: 18px;
+  overflow-x: auto;
+  padding-bottom: 2px;
+}
+
+.resident-tab {
+  position: relative;
+  flex: none;
+  padding: 0 0 10px;
+  border: 0;
+  background: transparent;
+  color: #6b7b91;
+  font-size: 12px;
+  font-weight: 700;
+  border-bottom: 2px solid transparent;
+}
+
+.resident-tab.is-active {
+  color: #165dff;
+  border-bottom-color: #165dff;
+}
+
+.resident-searchbar {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.resident-input-wrap {
+  position: relative;
+}
+
+.resident-search-icon {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateY(-50%);
+  border: 2px solid #a8b4c4;
+  border-radius: 50%;
+}
+
+.resident-search-icon::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  bottom: -4px;
+  width: 6px;
+  height: 2px;
+  border-radius: 999px;
+  background: #a8b4c4;
+  transform: rotate(45deg);
+}
+
+.resident-input-wrap input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px 0 34px;
+  border: 1px solid #e1e8f1;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #17324a;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.resident-input-wrap input::placeholder {
+  color: #8b99ab;
+}
+
+.resident-primary-btn,
+.resident-secondary-btn,
+.resident-link-btn {
+  height: 40px;
+  border-radius: 8px;
+  border: 0;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.resident-primary-btn {
+  min-width: 92px;
+  padding: 0 16px;
+  background: #165dff;
+  color: #ffffff;
+}
+
+.resident-secondary-btn {
+  min-width: 104px;
+  padding: 0 16px;
+  background: #edf3fb;
+  color: #165dff;
+}
+
+.resident-link-btn {
+  height: 28px;
+  padding: 0;
+  background: transparent;
+  color: #165dff;
+}
+
+.resident-vehicle-card,
+.resident-history-card,
+.resident-debt-card,
+.resident-empty-state {
+  margin-top: 16px;
+  border: 1px solid #e6edf5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.resident-vehicle-card {
+  display: grid;
+  grid-template-columns: minmax(124px, 170px) minmax(0, 1fr);
+  gap: 16px;
+  padding: 16px;
+}
+
+.resident-vehicle-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.resident-vehicle-art {
+  position: relative;
+  width: 100%;
+  max-width: 160px;
+  aspect-ratio: 1.2;
+  border-radius: 18px;
+  background: linear-gradient(180deg, #f8fbff 0%, #eef4fa 100%);
+  overflow: hidden;
+}
+
+.resident-vehicle-photo {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  display: block;
+}
+
+.resident-vehicle-plate {
+  position: absolute;
+  left: 50%;
+  bottom: 10px;
+  transform: translateX(-50%);
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #1e293b;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  box-shadow: 0 6px 12px -8px rgba(15, 23, 42, 0.3);
+}
+
+.resident-vehicle-info {
+  min-width: 0;
+  display: grid;
+  gap: 14px;
+}
+
+.resident-plate {
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+}
+
+.resident-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.resident-status span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.resident-status.success { color: #0f9d58; }
+.resident-status.success span { background: #0f9d58; }
+.resident-status.warn { color: #d97706; }
+.resident-status.warn span { background: #d97706; }
+.resident-status.danger { color: #ef4444; }
+.resident-status.danger span { background: #ef4444; }
+
+.resident-meta-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 18px;
+}
+
+.resident-meta-grid dt {
+  color: #7c8ca0;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.resident-meta-grid dd {
+  color: #1f2d3f;
+  font-size: 12px;
+  font-weight: 800;
+  margin-top: 3px;
+}
+
+.resident-actions {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.resident-history-card,
+.resident-debt-card {
+  padding: 12px;
+}
+
+.resident-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 4px 4px 10px;
+}
+
+.resident-section-head h2 {
+  color: #0f172a;
+  font-size: 12px;
+  font-weight: 900;
+}
+
+.resident-section-head p {
+  color: #7c8ca0;
+  font-size: 10px;
+  font-weight: 700;
+  margin-top: 2px;
+}
+
+.resident-table-wrap {
+  overflow-x: auto;
+}
+
+.resident-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.resident-table th,
+.resident-table td {
+  padding: 10px 8px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.resident-table th {
+  color: #7b8796;
+  font-size: 10px;
+  font-weight: 900;
+}
+
+.resident-table td {
+  color: #24364a;
+  font-size: 11px;
+  font-weight: 700;
+  border-top: 1px solid #eef3f8;
+}
+
+.resident-debt-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.resident-debt-grid article {
+  padding: 12px;
+  border: 1px solid #eef3f8;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.resident-debt-grid span {
+  display: block;
+  color: #7c8ca0;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.resident-debt-grid strong {
+  display: block;
+  margin-top: 8px;
+  color: #0f172a;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.resident-empty-state {
+  padding: 18px;
+  text-align: center;
+}
+
+.resident-empty-state p {
+  color: #0f172a;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.resident-empty-state span {
+  display: block;
+  margin-top: 6px;
+  color: #7c8ca0;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+@media (max-width: 640px) {
+  .resident-dashboard-page {
+    padding: 10px;
+  }
+
+  .resident-dashboard-card {
+    padding: 14px;
+  }
+
+  .resident-vehicle-card {
+    grid-template-columns: 1fr;
+  }
+
+  .resident-meta-grid,
+  .resident-debt-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .resident-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .resident-primary-btn,
+  .resident-secondary-btn {
+    width: 100%;
+  }
+}

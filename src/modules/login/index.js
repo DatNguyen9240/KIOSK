@@ -1,5 +1,5 @@
 /**
- * PARKING.GO Standalone Enterprise Login Module
+ * PARKING Standalone Enterprise Login Module
  */
 
 import { login } from '#services/auth.service.js';
@@ -32,7 +32,7 @@ export function initLoginModule(container) {
                   </svg>
                 </div>
                 <div>
-                  <h1 class="text-xl font-black text-white tracking-wider">PARKING.GO</h1>
+                  <h1 class="text-xl font-black text-white tracking-wider">PARKING</h1>
                   <span class="text-[10px] text-emerald-400 font-bold uppercase tracking-widest block">Enterprise Parking Engine</span>
                 </div>
               </div>
@@ -60,7 +60,7 @@ export function initLoginModule(container) {
             </div>
 
             <div class="pt-8 text-[11px] text-slate-500 font-medium">
-              © 2026 PARKING.GO Inc. All rights reserved.
+              © 2026 PARKING Inc. All rights reserved.
             </div>
           </div>
 
@@ -116,7 +116,7 @@ export function initLoginModule(container) {
                 </button>
                 <button type="button" id="quick-login-superadmin" class="p-2.5 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-2xl text-slate-700 text-left transition space-y-0.5">
                   <div class="text-emerald-700">👑 Super Admin</div>
-                  <div class="text-[10px] text-slate-400 font-medium">superadmin@parking.go</div>
+                  <div class="text-[10px] text-slate-400 font-medium">superadmin@PARKING</div>
                 </button>
               </div>
             </div>
@@ -169,9 +169,9 @@ export function initLoginModule(container) {
     const quickSuper = container.querySelector('#quick-login-superadmin');
     if (quickSuper) {
       quickSuper.onclick = () => {
-        emailInput.value = 'superadmin@parking.go';
+        emailInput.value = 'superadmin@PARKING';
         passwordInput.value = 'superadmin';
-        handleLoginSubmit('superadmin@parking.go', 'superadmin');
+        handleLoginSubmit('superadmin@PARKING', 'superadmin');
       };
     }
   };

@@ -1,5 +1,5 @@
 # =============================================================================
-# PARKING.GO KIOSK — BACKEND REST API DOCKERFILE
+# PARKING KIOSK — BACKEND REST API DOCKERFILE
 # Multi-stage lightweight Node.js 20 Alpine container for Backend & Database API
 # =============================================================================
 

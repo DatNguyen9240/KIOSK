@@ -1,5 +1,5 @@
 /**
- * PARKING.GO Vehicle Access Log Module
+ * PARKING Vehicle Access Log Module
  */
 
 import { initVehicleSearchModule } from '#modules/vehicle-search/index.js';

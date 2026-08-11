@@ -1,7 +1,7 @@
 {
   "name": "parking-go-backend",
   "version": "1.0.0",
-  "description": "PARKING.GO KIOSK Multi-Tenant Backend API Engine",
+  "description": "PARKING KIOSK Multi-Tenant Backend API Engine",
   "main": "server.js",
   "type": "module",
   "scripts": {

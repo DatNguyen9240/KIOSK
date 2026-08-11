@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — REST API ROUTES MATRIX
+ * PARKING KIOSK — REST API ROUTES MATRIX
  * Enterprise Production Routing, Auth Guards & Multi-Tenant Guard
  */
 

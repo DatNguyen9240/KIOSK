@@ -1,5 +1,5 @@
 -- =============================================================================
--- PARKING.GO KIOSK — PRODUCTION MULTI-TENANT DATABASE SCHEMA & RLS POLICIES
+-- PARKING KIOSK — PRODUCTION MULTI-TENANT DATABASE SCHEMA & RLS POLICIES
 -- PostgreSQL 13+ Compatible
 -- Fully aligned with BACKEND.md Production Architecture (Production Ready: 10/10)
 -- =============================================================================

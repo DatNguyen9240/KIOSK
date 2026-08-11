@@ -25,7 +25,7 @@ export function renderReceiptHtml(transactionData = {}) {
       <div class="text-center pb-4 border-b border-slate-100 mb-4">
         <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto mb-2">✓</div>
         <h2 class="text-xl font-black text-slate-900">THANH TOÁN THÀNH CÔNG</h2>
-        <p class="text-xs text-slate-400 mt-1">Cảm ơn bạn đã sử dụng dịch vụ PARKING.GO</p>
+        <p class="text-xs text-slate-400 mt-1">Cảm ơn bạn đã sử dụng dịch vụ PARKING</p>
       </div>
 
       <div class="space-y-2 text-xs mb-4">

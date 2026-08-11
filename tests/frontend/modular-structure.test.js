@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — MODULAR STRUCTURE & PAGE MODULES TEST SUITE
+ * PARKING KIOSK — MODULAR STRUCTURE & PAGE MODULES TEST SUITE
  * Verifies that 100% of page modules export valid initializers and render HTML without errors.
  * Run with: node tests/frontend/modular-structure.test.js
  */

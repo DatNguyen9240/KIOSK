@@ -50,7 +50,7 @@ export function initMobileGateModule(container) {
 
       <!-- Footer Bar -->
       <div class="text-center text-[10px] text-slate-500 py-2 border-t border-slate-800">
-        PARKING.GO Mobile Gate Control v2.4
+        PARKING Mobile Gate Control v2.4
       </div>
     </div>
   `;

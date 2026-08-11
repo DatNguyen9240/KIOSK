@@ -1,5 +1,5 @@
 /**
- * PARKING.GO Residents Directory Module
+ * PARKING Residents Directory Module
  */
 
 import { initVehicleSearchModule } from '#modules/vehicle-search/index.js';

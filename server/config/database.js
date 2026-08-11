@@ -95,7 +95,7 @@ export const MEMORY_DB = {
     { id: '22222222-2222-2222-2222-222222222222', code: 'MASTERI_WATERFRONT', name: 'Masteri Waterfront', domain: 'masteri.kiosk.com', is_active: true }
   ],
   users: [
-    { id: 'a0000000-0000-0000-0000-000000000000', email: 'superadmin@parking.go', fullName: 'Super Administrator', isSuperAdmin: true },
+    { id: 'a0000000-0000-0000-0000-000000000000', email: 'superadmin@PARKING', fullName: 'Super Administrator', isSuperAdmin: true },
     { id: 'a1111111-1111-1111-1111-111111111111', email: 'admin@vinhomes.vn', fullName: 'Nguyễn Quản Lý (Vinhomes)', isSuperAdmin: false },
     { id: 'a2222222-2222-2222-2222-222222222222', email: 'admin@masteri.vn', fullName: 'Trần Quản Lý (Masteri)', isSuperAdmin: false }
   ],
@@ -157,8 +157,8 @@ export const MEMORY_DB = {
     { id: 'vch-2', tenant_id: '11111111-1111-1111-1111-111111111111', code: 'TRIAN100K', discount_type: 'FIXED', discount_value: 100000, min_order_amount: 500000, valid_from: '2024-01-01', valid_to: '2026-12-31', usage_limit: 200, used_count: 12, is_active: true }
   ],
   tenant_payment_configs: [
-    { id: 'tpc-1', tenant_id: '11111111-1111-1111-1111-111111111111', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '110022334455', bank_account_name: 'BQL CHUNG CU VINHOMES OCEAN PARK', secret_api_key_encrypted: 'vh_secret_key_8899', qr_timeout_seconds: 900, is_active: true },
-    { id: 'tpc-2', tenant_id: '22222222-2222-2222-2222-222222222222', provider: 'VIETQR', bank_bin: '970415', bank_account_no: '998877665544', bank_account_name: 'BQL MASTERI WATERFRONT', secret_api_key_encrypted: 'mw_secret_key_1122', qr_timeout_seconds: 900, is_active: true }
+    { id: 'tpc-1', tenant_id: '11111111-1111-1111-1111-111111111111', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '0000150005814', bank_account_name: 'NGUYEN THANH DAT', secret_api_key_encrypted: 'vh_secret_key_8899', qr_timeout_seconds: 900, is_active: true },
+    { id: 'tpc-2', tenant_id: '22222222-2222-2222-2222-222222222222', provider: 'VIETQR', bank_bin: '970422', bank_account_no: '0000150005814', bank_account_name: 'NGUYEN THANH DAT', secret_api_key_encrypted: 'mw_secret_key_1122', qr_timeout_seconds: 900, is_active: true }
   ],
   payment_orders: [],
   renewal_orders: [],

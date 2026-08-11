@@ -1,5 +1,5 @@
 /**
- * PARKING.GO Transactions Log Module
+ * PARKING Transactions Log Module
  */
 
 import { initMonthlyRenewalModule } from '#modules/monthly-renewal/index.js';

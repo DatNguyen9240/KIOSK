@@ -8,7 +8,7 @@ export const MOCK_TENANTS = [
 ];
 
 export const MOCK_USERS = [
-  { id: 'a0000000-0000-0000-0000-000000000000', email: 'superadmin@parking.go', fullName: 'Super Administrator', isSuperAdmin: true },
+  { id: 'a0000000-0000-0000-0000-000000000000', email: 'superadmin@PARKING', fullName: 'Super Administrator', isSuperAdmin: true },
   { id: 'a1111111-1111-1111-1111-111111111111', email: 'admin@vinhomes.vn', fullName: 'Nguyễn Quản Lý (Vinhomes)', isSuperAdmin: false },
   { id: 'a2222222-2222-2222-2222-222222222222', email: 'admin@masteri.vn', fullName: 'Trần Quản Lý (Masteri)', isSuperAdmin: false }
 ];

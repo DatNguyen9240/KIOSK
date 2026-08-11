@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — AUDIO SOUND EFFECTS & VOICE ANNOUNCER SERVICE
+ * PARKING KIOSK — AUDIO SOUND EFFECTS & VOICE ANNOUNCER SERVICE
  * Uses Web Audio API for zero-dependency crystal-clear 2-tone "Ting-Ting" chimes
  * combined with Web Speech API for Vietnamese voice announcements ("Cảm ơn quý khách!").
  */

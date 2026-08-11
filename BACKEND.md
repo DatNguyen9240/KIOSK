@@ -1,4 +1,4 @@
-# PARKING.GO KIOSK — MASTER IMPLEMENTATION PLAN
+# PARKING KIOSK — MASTER IMPLEMENTATION PLAN
 
 ## Multi-Tenant Parking Management Platform (Production Architecture & Schema Specification)
 
@@ -6,7 +6,7 @@
 
 # 1. MỤC TIÊU HỆ THỐNG
 
-Xây dựng PARKING.GO KIOSK thành một nền tảng quản lý bãi xe Multi-Tenant cấp Production (Sẵn sàng 100% cho triển khai với NestJS / Prisma / PostgreSQL), phục vụ:
+Xây dựng PARKING KIOSK thành một nền tảng quản lý bãi xe Multi-Tenant cấp Production (Sẵn sàng 100% cho triển khai với NestJS / Prisma / PostgreSQL), phục vụ:
 
 * Chung cư, khu đô thị, tòa nhà văn phòng, bãi xe độc lập.
 * Nhiều khu vực / nhiều tháp / nhiều phân khu trong cùng một dự án.

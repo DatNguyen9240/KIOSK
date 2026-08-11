@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — FRONTEND BUTTON & ACTION DELEGATION AUDIT SUITE
+ * PARKING KIOSK — FRONTEND BUTTON & ACTION DELEGATION AUDIT SUITE
  * Verifies that 100% of UI buttons, event listeners, modal triggers, and form submit actions are fully wired.
  * Run with: node tests/frontend/button-interactions.test.js
  */

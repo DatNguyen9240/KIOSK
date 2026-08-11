@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — LAYOUT COMPONENTS TEST SUITE
+ * PARKING KIOSK — LAYOUT COMPONENTS TEST SUITE
  * Verifies that Header and MobileNav layout components initialize cleanly.
  * Run with: node tests/frontend/layout-components.test.js
  */

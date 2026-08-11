@@ -1,5 +1,5 @@
 /**
- * PARKING.GO Parking Cards Module
+ * PARKING Parking Cards Module
  */
 
 import { initMonthlyRenewalModule } from '#modules/monthly-renewal/index.js';

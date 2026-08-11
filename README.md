@@ -1,4 +1,4 @@
-# PARKING.GO KIOSK — Hệ Thống Quản Lý Bãi Xe Multi-Tenant Cấp Enterprise
+# PARKING KIOSK — Hệ Thống Quản Lý Bãi Xe Multi-Tenant Cấp Enterprise
 
 Nền tảng quản lý bãi xe thông minh, đa chi nhánh (Multi-Tenant) tích hợp Kiosk tự động tại cổng, VietQR / SePay Auto-Reconciliation, Quản lý thẻ tháng cư dân và báo cáo công nợ phân khu theo Tháp.
 

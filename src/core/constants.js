@@ -1,5 +1,5 @@
 /**
- * PARKING.GO System Constants
+ * PARKING System Constants
  */
 
 export const PAYMENT_STATUS = Object.freeze({

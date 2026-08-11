@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — MASTER PRODUCTION TEST SUITE RUNNER
+ * PARKING KIOSK — MASTER PRODUCTION TEST SUITE RUNNER
  * Executes all 16 Backend, Frontend, UI Button, E2E, Latency Benchmark, and 9-Page UI test suites in one master pass.
  * Run with: node tests/run-all-tests.js
  */
@@ -7,7 +7,7 @@
 import { execSync } from 'child_process';
 
 console.log(`=============================================================================`);
-console.log(`  [PARKING.GO MASTER TEST HARNESS] EXECUTING FULL PRODUCTION SUITE`);
+console.log(`  [PARKING MASTER TEST HARNESS] EXECUTING FULL PRODUCTION SUITE`);
 console.log(`=============================================================================`);
 
 const testFiles = [
@@ -54,7 +54,7 @@ for (const file of testFiles) {
 const durationMs = performance.now() - startTime;
 
 console.log(`\n=============================================================================`);
-console.log(`  PARKING.GO MASTER TEST HARNESS VERIFICATION REPORT`);
+console.log(`  PARKING MASTER TEST HARNESS VERIFICATION REPORT`);
 console.log(`=============================================================================`);
 console.log(`  Total Test Suites Executed : ${testFiles.length}`);
 console.log(`  Passed Suites              : ${totalPassed} / ${testFiles.length} (100%)`);

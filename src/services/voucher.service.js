@@ -8,6 +8,7 @@ import { CONFIG } from '../core/config.js';
 
 const MOCK_VOUCHERS = {
   'HE2024': { discountAmount: 125000, description: 'Giảm 10% đơn gia hạn' },
+  'VOUCHER10': { discountAmount: 120000, description: 'Giảm 120.000đ (VOUCHER10)' },
   'TRIAN100K': { discountAmount: 100000, description: 'Giảm 100.000đ trực tiếp' }
 };
 

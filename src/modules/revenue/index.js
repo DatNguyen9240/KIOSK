@@ -1,5 +1,5 @@
 /**
- * PARKING.GO Revenue Management Module
+ * PARKING Revenue Management Module
  */
 
 import { initMonthlyRenewalModule } from '#modules/monthly-renewal/index.js';

@@ -1,5 +1,5 @@
 /**
- * PARKING.GO Settings Module
+ * PARKING Settings Module
  */
 
 import { initKioskTouchModule } from '#modules/kiosk/index.js';

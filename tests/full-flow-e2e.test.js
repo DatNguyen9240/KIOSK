@@ -1,5 +1,5 @@
 /**
- * PARKING.GO KIOSK — COMPLETE FULL-FLOW END-TO-END SYSTEM TEST
+ * PARKING KIOSK — COMPLETE FULL-FLOW END-TO-END SYSTEM TEST
  * Simulates real-world user lifecycle: Auth -> Tenant Guard -> Search -> Voucher -> Renewal Order -> VietQR -> SePay Webhook Auto-Match -> Kiosk Barrier Session -> Tower Report.
  * Run with: node tests/full-flow-e2e.test.js
  */
