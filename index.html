@@ -428,6 +428,44 @@
     </nav>
   </div>
 
+  <!-- QUICK VEHICLE SEARCH DRAWER (Drawer tìm kiếm nhanh bên phải) -->
+  <div id="drawer-backdrop" class="hidden fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-40 transition-opacity duration-300"></div>
+  <div id="quick-search-drawer" class="fixed top-0 right-0 h-full w-96 bg-white border-l border-slate-200/80 shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- Drawer Header -->
+    <div class="p-5 border-b border-slate-100 flex items-center justify-between bg-slate-50 shrink-0">
+      <div>
+        <h4 class="font-extrabold text-[#0B2C4D] text-sm">Tìm kiếm xe & Lịch sử</h4>
+        <p class="text-[10px] text-slate-400 font-semibold mt-0.5">Hồ sơ chi tiết phương tiện & Công nợ</p>
+      </div>
+      <button id="close-drawer-btn" class="w-7 h-7 rounded-full bg-slate-200/60 hover:bg-slate-300/80 text-slate-700 flex items-center justify-center font-bold text-xs transition">✕</button>
+    </div>
+
+    <!-- Drawer Body -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-4 text-xs">
+      <!-- Search Form Group -->
+      <div class="bg-slate-50 p-3 rounded-2xl border border-slate-100 space-y-3">
+        <!-- Tabs -->
+        <div class="flex border-b border-slate-200 text-[10px] font-bold text-slate-500 gap-3 pb-1 justify-between">
+          <button class="pb-1 border-b-2 border-[#0B2C4D] text-[#0B2C4D] select-none font-extrabold">Theo biển số</button>
+          <button class="pb-1 border-transparent hover:text-slate-900 select-none">Theo chủ xe</button>
+          <button class="pb-1 border-transparent hover:text-slate-900 select-none">Theo căn hộ</button>
+          <button class="pb-1 border-transparent hover:text-slate-900 select-none">Theo thẻ</button>
+        </div>
+        
+        <!-- Input Form -->
+        <div class="flex gap-2">
+          <input type="text" id="drawer-search-input" placeholder="Nhập biển số (VD: 51K-123.45)..." class="flex-1 px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-mono font-bold uppercase focus:outline-none" />
+          <button id="drawer-search-btn" class="px-4 py-2 bg-[#0B2C4D] hover:bg-slate-800 text-white font-bold rounded-xl transition text-xs">Tìm</button>
+        </div>
+      </div>
+
+      <!-- Results Container -->
+      <div id="drawer-results-box" class="space-y-4">
+        <div class="text-center py-16 text-slate-400 text-xs font-semibold">Nhập biển số hoặc chọn xe trên Dashboard để xem thông tin</div>
+      </div>
+    </div>
+  </div>
+
   <!-- ES Modules Entry Point -->
   <script type="module" src="src/app.js"></script>
 </body>

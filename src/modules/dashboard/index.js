@@ -1,4 +1,4 @@
-import { initRevenueChart, initTowerDonutChart } from '#components/ui-chart.js';
+import { initRevenueChart, initTowerDonutChart, initAccessColumnChart, initDebtDonutChart } from '#components/ui-chart.js';
 import { UISelect } from '#components/ui-select.js';
 import { UITable } from '#components/ui-table.js';
 import { toast } from '#components/toast.js';
@@ -110,6 +110,45 @@ export function initDashboardModule(container) {
                 <span class="text-slate-700">Tháp A3</span>
               </div>
               <span class="font-bold text-slate-900">15% (40.32 Tỷ)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NEW WIDGETS ROW: ACCESS & DEBT CHARTS -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+      <!-- Access Column Chart -->
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4">
+        <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Xe ra vào hôm nay</h3>
+        <div class="relative h-[200px] w-full">
+          <canvas id="access-column-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Debt Donut Chart -->
+      <div class="bg-white p-3.5 sm:p-5 rounded-2xl sm:rounded-3xl border border-slate-200/70 shadow-card space-y-4 flex flex-col justify-between">
+        <h3 class="font-extrabold text-slate-900 text-sm md:text-base">Công nợ theo nhóm</h3>
+        <div class="grid grid-cols-1 md:grid-cols-12 gap-4 items-center">
+          <div class="md:col-span-6 relative flex items-center justify-center h-40">
+            <canvas id="debt-donut-canvas"></canvas>
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center pointer-events-none w-full">
+              <div class="text-[9px] font-bold uppercase text-slate-400 leading-none">TỔNG NỢ</div>
+              <div class="text-sm font-black text-rose-600 leading-none mt-1">156.32M</div>
+            </div>
+          </div>
+          <div class="md:col-span-6 space-y-2 text-xs">
+            <div class="flex justify-between font-bold">
+              <span class="text-slate-500">Chưa đến hạn:</span>
+              <span class="text-emerald-600">85.60M (54.7%)</span>
+            </div>
+            <div class="flex justify-between font-bold">
+              <span class="text-slate-500">Sắp đến hạn (7 ngày):</span>
+              <span class="text-amber-500">32.45M (20.8%)</span>
+            </div>
+            <div class="flex justify-between font-bold">
+              <span class="text-slate-500">Quá hạn:</span>
+              <span class="text-rose-500">38.27M (24.5%)</span>
             </div>
           </div>
         </div>
@@ -352,6 +391,10 @@ export function initDashboardModule(container) {
     }
   });
 
+  // Initialize new widgets charts
+  initAccessColumnChart(container.querySelector('#access-column-canvas'));
+  initDebtDonutChart(container.querySelector('#debt-donut-canvas'));
+
   // Live API Data Binding for Dashboard Debt Table & Stat Cards
   let activeDebtData = [];
 
@@ -382,7 +425,11 @@ export function initDashboardModule(container) {
     data: [],
     onRowAction: (action, rowData) => {
       if (action === 'pay') {
-        toast.show(`Mở cổng thanh toán cho ${rowData.residentName} (${rowData.plateNumber})`, 'info');
+        if (window.parkingGoQuickSearch) {
+          window.parkingGoQuickSearch.open(rowData.plateNumber);
+        } else {
+          toast.show(`Mở cổng thanh toán cho ${rowData.residentName} (${rowData.plateNumber})`, 'info');
+        }
       }
     }
   });
@@ -470,6 +517,19 @@ export function initDashboardModule(container) {
       document.body.appendChild(modal);
       modal.querySelector('#close-transfer-modal').onclick = () => modal.remove();
       toast.show('Xác nhận thanh toán giữ xe thành công!', 'success');
+    };
+  }
+
+  const showcaseSearch2 = container.querySelector('#showcase-search-2');
+  if (showcaseSearch2) {
+    showcaseSearch2.onclick = () => {
+      const plateInput = container.querySelector('#showcase-plate-2');
+      const plate = plateInput ? plateInput.value : '';
+      if (window.parkingGoQuickSearch) {
+        window.parkingGoQuickSearch.open(plate);
+      } else {
+        toast.show(`Tìm kiếm biển số: ${plate}`, 'info');
+      }
     };
   }
 

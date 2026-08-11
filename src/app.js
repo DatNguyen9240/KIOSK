@@ -23,11 +23,13 @@ import { initAuditManagementModule } from '#modules/audit-management/index.js';
 import { initResidentPortalModule } from '#modules/resident-portal/index.js';
 import { isAuthenticated, logout } from '#services/auth.service.js';
 import { toast } from '#components/toast.js';
+import { initQuickSearchDrawer } from './utils/drawer.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize Layout Controls (Header & Mobile Navigation)
   initHeaderControls();
   initMobileNavigation();
+  initQuickSearchDrawer();
 
   function switchShell(targetHash) {
     if (typeof document === 'undefined') return document.getElementById('main-app-content');

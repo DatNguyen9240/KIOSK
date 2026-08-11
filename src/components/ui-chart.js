@@ -132,3 +132,73 @@ export function initTowerDonutChart(canvasEl, onHoverSegment = null) {
     }
   });
 }
+
+export function initAccessColumnChart(canvasEl) {
+  if (!canvasEl || typeof Chart === 'undefined') return null;
+  const ctx = canvasEl.getContext('2d');
+
+  return new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['00', '02', '04', '06', '08', '10', '12', '14', '16', '18', '20', '22'],
+      datasets: [
+        {
+          label: 'Vào',
+          data: [15, 20, 10, 45, 180, 120, 95, 80, 140, 195, 75, 30],
+          backgroundColor: '#00A8CC',
+          borderRadius: 4
+        },
+        {
+          label: 'Ra',
+          data: [8, 12, 15, 25, 60, 90, 110, 85, 115, 175, 105, 45],
+          backgroundColor: '#7CB342',
+          borderRadius: 4
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false }
+      },
+      scales: {
+        x: {
+          grid: { display: false },
+          ticks: { font: { family: 'Plus Jakarta Sans', size: 9, weight: '600' } }
+        },
+        y: {
+          grid: { color: '#F1F5F9' },
+          ticks: { font: { family: 'Plus Jakarta Sans', size: 9, weight: '600' } }
+        }
+      }
+    }
+  });
+}
+
+export function initDebtDonutChart(canvasEl) {
+  if (!canvasEl || typeof Chart === 'undefined') return null;
+  const ctx = canvasEl.getContext('2d');
+
+  return new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['Chưa đến hạn', 'Sắp đến hạn', 'Quá hạn'],
+      datasets: [{
+        data: [85.6, 32.45, 38.27],
+        backgroundColor: ['#7CB342', '#00A8CC', '#D92D20'],
+        borderWidth: 2,
+        borderColor: '#FFFFFF'
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: '70%',
+      plugins: {
+        legend: { display: false }
+      }
+    }
+  });
+}
+

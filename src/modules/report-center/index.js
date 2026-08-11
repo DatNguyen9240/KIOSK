@@ -1,5 +1,5 @@
 /**
- * Report Center Module
+ * Report Center Module with Revenue Chart Integration
  */
 
 import { initDebtManagementModule } from '#modules/debt-management/index.js';
@@ -61,24 +61,47 @@ export function initReportCenterModule(container) {
 
     if (key === 'revenue') {
       viewContainer.innerHTML = `
-        <div class="space-y-4">
-          <div class="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100">
-            <div>
-              <span class="text-slate-400 font-semibold text-xs block">Tổng doanh thu kỳ trước:</span>
-              <span class="font-black text-slate-900 text-lg">1.258.000.000 đ</span>
+        <div class="space-y-5">
+          <!-- 4 Stats Cards Row -->
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-slate-800">
+            <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <span class="text-[9px] text-slate-400 font-bold block">TỔNG DOANH THU</span>
+              <span class="text-sm sm:text-base font-black text-[#0B2C4D] block mt-1">3.650.000.000 đ</span>
             </div>
-            <button id="download-revenue-btn" class="px-3.5 py-1.5 bg-[#0B2C4D] hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition">
-              Tải xuống PDF
-            </button>
+            <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <span class="text-[9px] text-slate-400 font-bold block">TIỀN MẶT</span>
+              <span class="text-sm sm:text-base font-black text-slate-700 block mt-1">350.000.000 đ</span>
+            </div>
+            <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <span class="text-[9px] text-slate-400 font-bold block">CHUYỂN KHOẢN</span>
+              <span class="text-sm sm:text-base font-black text-[#7CB342] block mt-1">2.800.000.000 đ</span>
+            </div>
+            <div class="p-4 bg-slate-50 border border-slate-100 rounded-2xl">
+              <span class="text-[9px] text-slate-400 font-bold block">VÍ ĐIỆN TỬ</span>
+              <span class="text-sm sm:text-base font-black text-[#00A8CC] block mt-1">500.000.000 đ</span>
+            </div>
           </div>
-          <div class="text-center py-12 text-slate-400 text-xs">
-            Hệ thống đang tổng hợp dữ liệu doanh thu thời gian thực...
+
+          <!-- Revenue Chart Container -->
+          <div class="bg-white border border-slate-100 rounded-3xl p-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+              <h4 class="text-xs font-black text-slate-800">Phân bổ Doanh thu theo Ngày</h4>
+              <button id="download-revenue-btn" class="px-3.5 py-1.5 bg-[#0B2C4D] hover:bg-slate-800 text-white rounded-xl text-xs font-bold transition">
+                Tải xuống PDF
+              </button>
+            </div>
+            <div class="relative h-[250px] w-full">
+              <canvas id="revenue-report-canvas"></canvas>
+            </div>
           </div>
         </div>
       `;
+
       viewContainer.querySelector('#download-revenue-btn').onclick = () => {
         toast.show('Đang xuất báo cáo doanh thu PDF...', 'info');
       };
+
+      setTimeout(() => renderRevenueChart(document.getElementById('revenue-report-canvas')), 50);
       return;
     }
 
@@ -118,6 +141,36 @@ export function initReportCenterModule(container) {
       `;
       return;
     }
+  };
+
+  const renderRevenueChart = (canvasEl) => {
+    if (!canvasEl || typeof Chart === 'undefined') return;
+    const ctx = canvasEl.getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23', '24', '25', '26', '27', '28', '29', '30', '31'],
+        datasets: [
+          {
+            label: 'Doanh thu (Triệu)',
+            data: [120, 150, 180, 90, 200, 220, 250, 280, 300, 310, 290, 330, 340, 380, 400, 420, 390, 410, 430, 450, 480, 500, 460, 470, 490, 520, 550, 580, 600, 620, 650],
+            backgroundColor: '#0B2C4D',
+            borderRadius: 3
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false }
+        },
+        scales: {
+          x: { grid: { display: false }, ticks: { font: { family: 'Plus Jakarta Sans', size: 8 } } },
+          y: { grid: { color: '#F1F5F9' }, ticks: { font: { family: 'Plus Jakarta Sans', size: 8 } } }
+        }
+      }
+    });
   };
 
   // Bind tab click events
