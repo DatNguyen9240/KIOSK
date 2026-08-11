@@ -23,7 +23,7 @@ export function renderReceiptHtml(transactionData = {}) {
   return `
     <div class="bg-white border border-slate-200 rounded-3xl p-6 shadow-xl max-w-md w-full mx-auto text-slate-800" id="printable-receipt">
       <div class="text-center pb-4 border-b border-slate-100 mb-4">
-        <div class="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-2xl mx-auto mb-2">✓</div>
+        <img src="assets/images/animated-icon.svg" alt="Thành công" class="w-16 h-16 mx-auto mb-2 object-contain" />
         <h2 class="text-xl font-black text-slate-900">THANH TOÁN THÀNH CÔNG</h2>
         <p class="text-xs text-slate-400 mt-1">Cảm ơn bạn đã sử dụng dịch vụ PARKING</p>
       </div>
@@ -73,8 +73,11 @@ export function renderReceiptHtml(transactionData = {}) {
       </div>
 
       <div class="flex gap-3">
-        <button type="button" onclick="window.print()" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl shadow-md transition">
-          🖨️ In phiếu thu
+        <button type="button" onclick="window.print()" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold py-3 rounded-xl shadow-md transition flex items-center justify-center gap-2">
+          <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+          </svg>
+          <span>In phiếu thu</span>
         </button>
       </div>
     </div>
